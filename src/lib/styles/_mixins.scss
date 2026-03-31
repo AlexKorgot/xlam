@@ -1,0 +1,65 @@
+// ============================================
+// 1. КОНФИГУРАЦИЯ БРЕЙКПОИНТОВ
+// ============================================
+// Централизованное хранение всех точек перелома
+// Mobile First подход: значения — это MIN-WIDTH
+$breakpoints: (
+        'sm': 576px,   // телефоны в ландшафте, крупные телефоны
+        'md': 768px,   // планшеты
+        'lg': 992px,   // небольшие десктопы
+        'xl': 1200px,  // средние десктопы
+        'xxl': 1400px  // крупные десктопы
+);
+
+// ============================================
+// 2. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ============================================
+
+// Функция получения значения брейкпоинта по ключу
+@function breakpoint-value($key) {
+  @if map-has-key($breakpoints, $key) {
+    @return map-get($breakpoints, $key);
+  }
+  @error 'Брейкпоинт `#{$key}` не найден. Доступны: #{map-keys($breakpoints)}';
+}
+
+// ============================================
+// 3. ОСНОВНЫЕ МИКСИНЫ (Mobile First)
+// ============================================
+
+// UP — от указанного брейкпоинта и выше (min-width)
+// Самый используемый миксин при Mobile First подходе
+@mixin up($breakpoint) {
+  $value: breakpoint-value($breakpoint);
+  @media (min-width: $value) {
+    @content;
+  }
+}
+
+// DOWN — до указанного брейкпоинта (max-width)
+// Используется редко, только для специфических случаев
+@mixin down($breakpoint) {
+  $value: breakpoint-value($breakpoint);
+  // Вычитаем 0.02px для избежания пересечения с min-width
+  @media (max-width: ($value - 0.02)) {
+    @content;
+  }
+}
+
+// BETWEEN — между двумя брейкпоинтами
+@mixin between($min, $max) {
+  $min-value: breakpoint-value($min);
+  $max-value: breakpoint-value($max);
+  @media (min-width: $min-value) and (max-width: ($max-value - 0.02)) {
+    @content;
+  }
+}
+
+// ============================================
+// 4. ОПЦИОНАЛЬНЫЙ МИКСИН ДЛЯ RETINA
+// ============================================
+@mixin retina {
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    @content;
+  }
+}
