@@ -21,7 +21,7 @@ export const AnimatedLogo = () => {
             scrollTrigger: {
                 trigger: document.body,
                 start: "top top",
-                end: "+=100%", // Анимация на всю высоту окна
+                end: "+=80", // Анимация на всю высоту окна
                 scrub: 1, // Плавная привязка к скроллу
                 invalidateOnRefresh: true,
             }
@@ -30,7 +30,9 @@ export const AnimatedLogo = () => {
         // Анимация большого логотипа в центре
         tl.to(centerLogoRef.current, {
             scale: 0,
-            opacity: 0,
+            y: -390,
+            x: -40,
+            // opacity: 0,
             duration: 1,
             ease: "none",
         }, 0);

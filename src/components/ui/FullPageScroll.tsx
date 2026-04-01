@@ -10,16 +10,19 @@ gsap.registerPlugin(Observer);
 interface FullPageScrollProps {
     children: ReactNode;
     animationDuration?: number;
+    progressCallback?: (value: number) => number
 }
 
 export default function FullPageScroll({
                                            children,
-                                           animationDuration = 0.8
+                                           animationDuration = 0.8,
+                                           progressCallback
                                        }: FullPageScrollProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const sectionsRef = useRef<HTMLElement[]>([]);
     const currentIndexRef = useRef(0);
     const isScrollingRef = useRef(false);
+    const progress = useRef(0);
 
     const scrollToSection = (index: number) => {
         if (!containerRef.current || !sectionsRef.current[index]) return;
@@ -31,6 +34,10 @@ export default function FullPageScroll({
             y: -index * window.innerHeight,
             duration: animationDuration,
             ease: 'power2.inOut',
+            onUpdate: () => {
+                progress.current += 1
+                if (progressCallback && index === 1) progressCallback(progress.current)
+            },
             onComplete: () => {
                 currentIndexRef.current = index;
                 setTimeout(() => {
@@ -62,11 +69,15 @@ export default function FullPageScroll({
 
         const observer = Observer.create({
             type: 'wheel,touch',
-            onDown: () => handleScrollDown(),
-            onUp: () => handleScrollUp(),
+            onDown: () => {
+                handleScrollDown()
+            },
+            onUp: () => {
+                handleScrollUp()
+            },
             wheelSpeed: 1,
             tolerance: 10,
-            preventDefault: true,
+            // preventDefault: true,
         });
 
         const handleResize = () => {

@@ -22,7 +22,7 @@ export const Header = () => {
             scrollTrigger: {
                 trigger: document.body,
                 start: "top top",
-                end: "+=100%",
+                end: "+=80",
                 scrub: 1,
             }
         });
