@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/.playwright-mcp/console-2026-04-01T20-34-33-146Z.log
+/.playwright-mcp/console-2026-04-01T20-34-39-878Z.log
+/.idea/easycode.ignore
+/.idea/jsLinters/eslint.xml
+/.idea/modules.xml
+/.playwright-mcp/page-2026-04-01T20-34-33-791Z.yml
+/.playwright-mcp/page-2026-04-01T20-34-41-379Z.yml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/vcs.xml
+/.idea/xlam.iml

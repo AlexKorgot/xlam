@@ -1,43 +1,29 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import clsx from "clsx";
 import { AnimatedLogo } from '../AnimatedLogo';
 import s from './Header.module.scss';
 
-gsap.registerPlugin(ScrollTrigger);
-
-export const Header = () => {
+export const Header = ({scrollProgress = 0}: {scrollProgress?: number}) => {
     const leftRef = useRef<HTMLDivElement>(null);
     const rightRef = useRef<HTMLDivElement>(null);
 
     useGSAP(() => {
         if (!leftRef.current || !rightRef.current) return;
 
-        // Анимация появления меню при скролле
-        const tl = gsap.timeline({
-            scrollTrigger: {
-                trigger: document.body,
-                start: "top top",
-                end: "+=80",
-                scrub: 1,
-            }
+        // Обновляем анимацию в зависимости от прогресса
+        const opacity = Math.min(scrollProgress, 1);
+        const visibility = opacity > 0 ? 'visible' : 'hidden';
+
+        gsap.set([leftRef.current, rightRef.current], {
+            opacity: opacity,
+            visibility: visibility,
         });
 
-        tl.to([leftRef.current, rightRef.current], {
-            opacity: 1,
-            visibility: 'visible',
-            duration: 1,
-            ease: "none",
-        }, 0);
-
-        return () => {
-            tl.kill();
-        };
-    }, []);
+    }, [scrollProgress]);
 
     return (
         <div className={clsx(s.wrapper, 'max-w-[1740px] m-auto fixed top-0 left-0 right-0 z-50 px-4 py-4')}>
@@ -55,7 +41,7 @@ export const Header = () => {
                 </div>
 
                 <div className={s.center}>
-                    <AnimatedLogo />
+                    <AnimatedLogo scrollProgress={scrollProgress} />
                 </div>
 
                 <div

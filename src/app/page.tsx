@@ -4,17 +4,19 @@
 import {Header} from "@/src/components/ui/Header/Header";
 import FullPageScroll from "@/src/components/ui/FullPageScroll";
 import FullPageSection from "@/src/components/ui/FullPageSection";
+import {useRef, useState} from "react";
 
 export default function Home() {
+    const [progress, setProgress] = useState(0)
     const callback = (value: number) => {
-        console.log(value)
+        setProgress(value)
     }
     return (
         <>
-            <Header />
+            <Header scrollProgress={progress} />
 
-            <FullPageScroll>
-                <FullPageSection  >
+            <FullPageScroll progressCallback={callback}>
+                <FullPageSection >
                     <div>1</div>
                 </FullPageSection>
 
