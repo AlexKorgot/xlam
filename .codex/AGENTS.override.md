@@ -21,6 +21,7 @@
 - Avoid adding custom CSS when Tailwind is enough
 - Extract repeated utility patterns into reusable components
 - Keep Tailwind class lists readable and grouped logically
+- Prefer existing reusable UI components before creating new utility-heavy markup
 
 ## GSAP Rules
 
@@ -32,3 +33,4 @@
 - Use Tailwind for simple hover/transition states
 - Use GSAP for complex motion, timelines, and scroll-based animation
 - Avoid using Tailwind transform utilities on elements animated by GSAP
+- Prefer animating opacity and transforms; avoid layout-thrashing properties when possible
