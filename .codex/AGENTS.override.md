@@ -31,3 +31,4 @@
 - Always clean up animations
 - Use Tailwind for simple hover/transition states
 - Use GSAP for complex motion, timelines, and scroll-based animation
+- Avoid using Tailwind transform utilities on elements animated by GSAP
