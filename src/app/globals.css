@@ -1,30 +1,44 @@
 @import "tailwindcss";
 
 :root {
-  --background: rgba(0, 0, 0, 1);
-  --foreground: rgba(255,255,255, 1);
+  --background: #050505;
+  --foreground: #f5f1e8;
+  --surface: rgba(255, 255, 255, 0.06);
+  --surface-strong: rgba(255, 255, 255, 0.1);
+  --border: rgba(255, 255, 255, 0.12);
+  --muted: rgba(245, 241, 232, 0.68);
+  --accent: #b8ff2c;
+  --font-normalidad-compact: "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #050505;
+    --foreground: #f5f1e8;
   }
+}
+
+html {
+  background:
+    radial-gradient(circle at top, rgba(184, 255, 44, 0.08), transparent 28%),
+    linear-gradient(180deg, #050505 0%, #0a0c10 100%);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-normalidad-compact);
+  text-rendering: optimizeLegibility;
 }
-
-
-
 
 @keyframes fade-in {
   from {

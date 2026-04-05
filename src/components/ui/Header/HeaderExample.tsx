@@ -45,7 +45,7 @@ export const HeaderExample = ({ transitionProgress }: HeaderProps) => {
                 </div>
 
                 <div className={s.center}>
-                    <AnimatedLogo transitionProgress={transitionProgress} />
+                    <AnimatedLogo />
                 </div>
 
                 <div ref={rightRef} className={s.right}>
