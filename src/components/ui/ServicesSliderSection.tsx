@@ -1,6 +1,9 @@
 ﻿'use client';
 
 import FullPageSection from '@/src/components/ui/FullPageSection';
+import { useRef } from "react";
+import { useGSAP } from '@gsap/react';
+import { gsap } from 'gsap';
 import { FULLPAGE_SCROLL_IGNORE_ATTR } from '@/src/components/ui/FullPageScroll';
 
 type ServiceSlide = {
@@ -19,28 +22,28 @@ const slides: ServiceSlide[] = [
     title: 'ШОУ ПОД КЛЮЧ',
     description:
       'ОТ ИДЕИ ДО ПРЕМЬЕРЫ, РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР.',
-    overlayClass: 'bg-black/60',
+    overlayClass: 'bg-black/60 panel',
   },
   {
     id: 'ads',
     title: 'РЕКЛАМА',
     description:
       'РАЗРАБАТЫВАЕМ РЕКЛАМНЫЕ ВИДЕО, УСИЛИВАЕМ БРЕНД И ПРИВОДИМ К РЕЗУЛЬТАТУ.',
-    overlayClass: 'bg-gradient-to-b from-[#102d34]/65 to-black/80',
+    overlayClass: 'bg-gradient-to-b from-[#102d34]/65 to-black/80 panel',
   },
   {
     id: 'b2b',
     title: 'B2B КОНТЕНТ',
     description:
       'ПРОИЗВОДИМ СИСТЕМНЫЙ КОНТЕНТ ДЛЯ БИЗНЕСА: ИМИДЖ, ПРОДУКТ, КОММУНИКАЦИИ.',
-    overlayClass: 'bg-gradient-to-b from-[#0c2d1c]/65 to-black/80',
+    overlayClass: 'bg-gradient-to-b from-[#0c2d1c]/65 to-black/80 panel',
   },
   {
     id: 'branding',
     title: 'БРЕНДИНГ',
     description:
       'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ.',
-    overlayClass: 'bg-black/65',
+    overlayClass: 'bg-black/65 panel',
   },
 ];
 
@@ -48,6 +51,27 @@ const supportingLine =
   'ЗАНИМАЕМСЯ ВСЕМИ ЭТАПАМИ СОЗДАНИЯ ПРОДУКТА: ПИШЕМ СЦЕНАРИИ, ОРГАНИЗУЕМ СЪЕМКИ, ВИДЕОСЪЕМКИ, МОНТАЖ, САУНД ДИЗАЙН, И СОЗДАЕМ ВСЕ АНИМАЦИИ';
 
 export function ServicesSliderSection() {
+  const component = useRef(null);
+  const slider = useRef(null);
+
+  useGSAP(() => {
+    const ctx = gsap.context(() => {
+      const panels = gsap.utils.toArray(".panel");
+      gsap.to(panels, {
+        xPercent: -100 * (panels.length - 1),
+        ease: "none",
+        scrollTrigger: {
+          trigger: slider.current,
+          pin: true,
+          scrub: 1,
+          snap: 1 / (panels.length - 1),
+          end: () => "+=" + slider.current.offsetWidth,
+          markers: true
+        }
+      });
+    }, component);
+    return () => ctx.revert();
+  });
   return (
     <FullPageSection id="services" className="items-stretch bg-black text-white">
       <div className="flex h-full w-full flex-col items-center justify-center px-4 py-6 sm:px-6 lg:px-12">
