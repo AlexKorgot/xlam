@@ -2,8 +2,9 @@
 
 import FullPageSection from '@/src/components/ui/FullPageSection';
 import { useRef } from "react";
-import { useGSAP } from '@gsap/react';
-import { gsap } from 'gsap';
+
+import useEmblaCarousel from 'embla-carousel-react'
+import WheelGesturesPlugin from 'embla-carousel-wheel-gestures'
 import { FULLPAGE_SCROLL_IGNORE_ATTR } from '@/src/components/ui/FullPageScroll';
 
 type ServiceSlide = {
@@ -23,6 +24,7 @@ const slides: ServiceSlide[] = [
     description:
       'ОТ ИДЕИ ДО ПРЕМЬЕРЫ, РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР.',
     overlayClass: 'bg-black/60 panel',
+    embda: 'embla__slide'
   },
   {
     id: 'ads',
@@ -30,6 +32,7 @@ const slides: ServiceSlide[] = [
     description:
       'РАЗРАБАТЫВАЕМ РЕКЛАМНЫЕ ВИДЕО, УСИЛИВАЕМ БРЕНД И ПРИВОДИМ К РЕЗУЛЬТАТУ.',
     overlayClass: 'bg-gradient-to-b from-[#102d34]/65 to-black/80 panel',
+    embda: 'embla__slide'
   },
   {
     id: 'b2b',
@@ -37,6 +40,7 @@ const slides: ServiceSlide[] = [
     description:
       'ПРОИЗВОДИМ СИСТЕМНЫЙ КОНТЕНТ ДЛЯ БИЗНЕСА: ИМИДЖ, ПРОДУКТ, КОММУНИКАЦИИ.',
     overlayClass: 'bg-gradient-to-b from-[#0c2d1c]/65 to-black/80 panel',
+    embda: 'embla__slide'
   },
   {
     id: 'branding',
@@ -44,6 +48,31 @@ const slides: ServiceSlide[] = [
     description:
       'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ.',
     overlayClass: 'bg-black/65 panel',
+    embda: 'embla__slide'
+  },
+  {
+    id: 'branding',
+    title: 'БРЕНДИНГ',
+    description:
+        'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ.',
+    overlayClass: 'bg-black/65 panel',
+    embda: 'embla__slide'
+  },
+  {
+    id: 'branding',
+    title: 'БРЕНДИНГ',
+    description:
+        'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ.',
+    overlayClass: 'bg-black/65 panel',
+    embda: 'embla__slide'
+  },
+  {
+    id: 'branding',
+    title: 'БРЕНДИНГ',
+    description:
+        'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ.',
+    overlayClass: 'bg-black/65 panel',
+    embda: 'embla__slide'
   },
 ];
 
@@ -54,37 +83,21 @@ export function ServicesSliderSection() {
   const component = useRef(null);
   const slider = useRef(null);
 
-  useGSAP(() => {
-    const ctx = gsap.context(() => {
-      const panels = gsap.utils.toArray(".panel");
-      gsap.to(panels, {
-        xPercent: -100 * (panels.length - 1),
-        ease: "none",
-        scrollTrigger: {
-          trigger: slider.current,
-          pin: true,
-          scrub: 1,
-          snap: 1 / (panels.length - 1),
-          end: () => "+=" + slider.current.offsetWidth,
-          markers: true
-        }
-      });
-    }, component);
-    return () => ctx.revert();
-  });
+  const [emblaRef] = useEmblaCarousel(
+      { loop: true },
+      [WheelGesturesPlugin({
+        forceWheelAxis: 'x'
+      })])
+
   return (
     <FullPageSection id="services" className="items-stretch bg-black text-white">
       <div className="flex h-full w-full flex-col items-center justify-center px-4 py-6 sm:px-6 lg:px-12">
-        <div className="flex w-full max-w-[1500px] flex-col gap-10">
-          <div
-            data-reveal
-            {...scrollIgnoreAttr}
-            className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible lg:snap-none"
-          >
+        <div className="embla flex w-full max-w-[1500px] flex-col gap-10">
+          <div ref={emblaRef} data-reveal {...scrollIgnoreAttr}  className="embla__container flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible lg:snap-none">
             {slides.map((slide) => (
               <article
                 key={slide.id}
-                className="relative aspect-[3/4] min-w-[70%] flex-shrink-0 snap-center overflow-hidden border border-white/15 bg-black sm:min-w-[45%] lg:min-w-0"
+                className={`${slide.embda} relative aspect-[3/4] min-w-[70%] flex-shrink-0 snap-center overflow-hidden border border-white/15 bg-black sm:min-w-[45%] lg:min-w-0`}
               >
                 <video
                   className="absolute inset-0 h-full w-full object-cover"
