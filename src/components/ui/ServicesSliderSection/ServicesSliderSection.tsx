@@ -38,6 +38,25 @@ const edgeWheelUnlockDelay = 700;
 export function ServicesSliderSection({
   allowSectionScrollOnEdges = false,
 }: ServicesSliderSectionProps) {
+
+  const haandleLeave = (ref: ServiceVideoRef) => {
+    return () => {
+      const video = ref.current;
+      if (!video) {
+        return;
+      }
+
+      video.pause();
+      video.currentTime = 0;
+    };
+  }
+
+  const handleEnter = (ref: ServiceVideoRef) => {
+    return () => {
+      void ref.current?.play().catch(() => undefined);
+    };
+  }
+
   const slides: ServiceSlide[] = [
     {
       id: 'show',
@@ -46,22 +65,8 @@ export function ServicesSliderSection({
         'ОТ ИДЕИ ДО ПРЕМЬЕРЫ, РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР.',
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
-        handleMouseLeave(ref) {
-          return () => {
-            const video = ref.current;
-            if (!video) {
-              return;
-            }
-
-            video.pause();
-            video.currentTime = 0;
-          };
-        },
-        handleMouseEnter(ref) {
-          return () => {
-            void ref.current?.play().catch(() => undefined);
-          };
-        },
+        handleMouseLeave: (ref) => haandleLeave(ref),
+        handleMouseEnter: (ref) => handleEnter(ref)
       },
     },
     {
@@ -71,22 +76,8 @@ export function ServicesSliderSection({
         'РАЗРАБАТЫВАЕМ РЕКЛАМНЫЕ ВИДЕО, УСИЛИВАЕМ БРЕНД И ПРИВОДИМ К РЕЗУЛЬТАТУ.',
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
-        handleMouseLeave(ref) {
-          return () => {
-            const video = ref.current;
-            if (!video) {
-              return;
-            }
-
-            video.pause();
-            video.currentTime = 0;
-          };
-        },
-        handleMouseEnter(ref) {
-          return () => {
-            void ref.current?.play().catch(() => undefined);
-          };
-        },
+        handleMouseLeave: (ref) => haandleLeave(ref),
+        handleMouseEnter: (ref) => handleEnter(ref)
       },
     },
     {
@@ -96,22 +87,8 @@ export function ServicesSliderSection({
         'ПРОИЗВОДИМ СИСТЕМНЫЙ КОНТЕНТ ДЛЯ БИЗНЕСА: ИМИДЖ, ПРОДУКТ, КОММУНИКАЦИИ.',
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
-        handleMouseLeave(ref) {
-          return () => {
-            const video = ref.current;
-            if (!video) {
-              return;
-            }
-
-            video.pause();
-            video.currentTime = 0;
-          };
-        },
-        handleMouseEnter(ref) {
-          return () => {
-            void ref.current?.play().catch(() => undefined);
-          };
-        },
+        handleMouseLeave: (ref) => haandleLeave(ref),
+        handleMouseEnter: (ref) => handleEnter(ref)
       },
     },
     {
@@ -121,22 +98,8 @@ export function ServicesSliderSection({
         'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ.',
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
-        handleMouseLeave(ref) {
-          return () => {
-            const video = ref.current;
-            if (!video) {
-              return;
-            }
-
-            video.pause();
-            video.currentTime = 0;
-          };
-        },
-        handleMouseEnter(ref) {
-          return () => {
-            void ref.current?.play().catch(() => undefined);
-          };
-        },
+        handleMouseLeave: (ref) => haandleLeave(ref),
+        handleMouseEnter: (ref) => handleEnter(ref)
       },
     },
     {
@@ -146,22 +109,8 @@ export function ServicesSliderSection({
           'ОТ ИДЕИ ДО ПРЕМЬЕРЫ, РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР.',
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
-        handleMouseLeave(ref) {
-          return () => {
-            const video = ref.current;
-            if (!video) {
-              return;
-            }
-
-            video.pause();
-            video.currentTime = 0;
-          };
-        },
-        handleMouseEnter(ref) {
-          return () => {
-            void ref.current?.play().catch(() => undefined);
-          };
-        },
+        handleMouseLeave: (ref) => haandleLeave(ref),
+        handleMouseEnter: (ref) => handleEnter(ref)
       },
     },
     {
@@ -171,22 +120,8 @@ export function ServicesSliderSection({
           'РАЗРАБАТЫВАЕМ РЕКЛАМНЫЕ ВИДЕО, УСИЛИВАЕМ БРЕНД И ПРИВОДИМ К РЕЗУЛЬТАТУ.',
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
-        handleMouseLeave(ref) {
-          return () => {
-            const video = ref.current;
-            if (!video) {
-              return;
-            }
-
-            video.pause();
-            video.currentTime = 0;
-          };
-        },
-        handleMouseEnter(ref) {
-          return () => {
-            void ref.current?.play().catch(() => undefined);
-          };
-        },
+        handleMouseLeave: (ref) => haandleLeave(ref),
+        handleMouseEnter: (ref) => handleEnter(ref)
       },
     },
     {
@@ -221,22 +156,8 @@ export function ServicesSliderSection({
           'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ.',
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
-        handleMouseLeave(ref) {
-          return () => {
-            const video = ref.current;
-            if (!video) {
-              return;
-            }
-
-            video.pause();
-            video.currentTime = 0;
-          };
-        },
-        handleMouseEnter(ref) {
-          return () => {
-            void ref.current?.play().catch(() => undefined);
-          };
-        },
+        handleMouseLeave: (ref) => haandleLeave(ref),
+        handleMouseEnter: (ref) => handleEnter(ref)
       },
     },
   ];
@@ -359,7 +280,7 @@ export function ServicesSliderSection({
   return (
     <FullPageSection id="services" className="items-stretch bg-black pt-40 text-white">
       <div className="flex h-full w-full max-w-[1570px] flex-col items-center justify-center">
-        <div className="embda__wrapper lg:h-[70vh]">
+        <div className="embda__wrapper w-full h-[clamp(343px,70vh,643px)]">
           <div className="embla h-full">
             <div
               className="h-full overflow-hidden"
@@ -374,7 +295,7 @@ export function ServicesSliderSection({
                   >
                     <video
                       ref={slide.videoRefConfig.ref}
-                      className="h-full object-cover grayscale transition duration-500 ease-in-out hover:grayscale-0"
+                      className="h-full w-full object-cover grayscale transition duration-500 ease-in-out hover:grayscale-0"
                       src={sliderVideoSrc}
                       playsInline
                       loop
