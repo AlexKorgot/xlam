@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import FullPageSection from '@/src/components/ui/FullPageSection';
-import { useRef } from "react";
+import { useRef, type RefObject } from "react";
 
 import useEmblaCarousel from 'embla-carousel-react'
 import WheelGesturesPlugin from 'embla-carousel-wheel-gestures'
@@ -11,14 +11,20 @@ type ServiceSlide = {
   id: string;
   title: string;
   description: string;
+  videoRefConfig: VideoRefConfig;
+};
+
+type ServiceVideoRef = RefObject<HTMLVideoElement | null>;
+
+type VideoRefConfig = {
+  ref: ServiceVideoRef;
+  handleMouseLeave: (ref: ServiceVideoRef) => () => void;
+  handleMouseEnter: (ref: ServiceVideoRef) => () => void;
 };
 
 const sliderVideoSrc = '/video/3_slider_content_video.mov';
 const scrollIgnoreAttr = { [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' } as const;
-
-
-
-const supportingLine =
+  const supportingLine =
   'ЗАНИМАЕМСЯ ВСЕМИ ЭТАПАМИ СОЗДАНИЯ ПРОДУКТА: ПИШЕМ СЦЕНАРИИ, ОРГАНИЗУЕМ СЪЕМКИ, ВИДЕОСЪЕМКИ, МОНТАЖ, САУНД ДИЗАЙН, И СОЗДАЕМ ВСЕ АНИМАЦИИ';
 
 export function ServicesSliderSection() {
@@ -29,16 +35,21 @@ export function ServicesSliderSection() {
       description:
           'ОТ ИДЕИ ДО ПРЕМЬЕРЫ, РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР.',
       videoRefConfig: {
-        ref: useRef(null),
+        ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave(ref){
          return () => {
-           ref.current?.pause()
-           ref.current.currentTime = 0;
+           const video = ref.current;
+           if (!video) {
+             return;
+           }
+
+           video.pause();
+           video.currentTime = 0;
          }
         },
         handleMouseEnter(ref) {
           return () => {
-            ref.current?.play();
+            void ref.current?.play().catch(() => undefined);
           }
         }
       }
@@ -49,16 +60,21 @@ export function ServicesSliderSection() {
       description:
           'РАЗРАБАТЫВАЕМ РЕКЛАМНЫЕ ВИДЕО, УСИЛИВАЕМ БРЕНД И ПРИВОДИМ К РЕЗУЛЬТАТУ.',
       videoRefConfig: {
-        ref: useRef(null),
+        ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => {
          return () => {
-           ref.current?.pause()
-           ref.current.currentTime = 0;
+           const video = ref.current;
+           if (!video) {
+             return;
+           }
+
+           video.pause();
+           video.currentTime = 0;
          }
         },
         handleMouseEnter(ref) {
           return () => {
-            ref.current?.play();
+            void ref.current?.play().catch(() => undefined);
           }
         }
       }
@@ -69,16 +85,21 @@ export function ServicesSliderSection() {
       description:
           'ПРОИЗВОДИМ СИСТЕМНЫЙ КОНТЕНТ ДЛЯ БИЗНЕСА: ИМИДЖ, ПРОДУКТ, КОММУНИКАЦИИ.',
       videoRefConfig: {
-        ref: useRef(null),
+        ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => {
           return () => {
-            ref.current?.pause()
-            ref.current.currentTime = 0;
+            const video = ref.current;
+            if (!video) {
+              return;
+            }
+
+            video.pause();
+            video.currentTime = 0;
           }
         },
         handleMouseEnter(ref) {
           return () => {
-            ref.current?.play();
+            void ref.current?.play().catch(() => undefined);
           }
         }
       }
@@ -89,33 +110,26 @@ export function ServicesSliderSection() {
       description:
           'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ.',
       videoRefConfig: {
-        ref: useRef(null),
+        ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => {
           return () => {
-            ref.current?.pause()
-            ref.current.currentTime = 0;
+            const video = ref.current;
+            if (!video) {
+              return;
+            }
+
+            video.pause();
+            video.currentTime = 0;
           }
         },
         handleMouseEnter(ref) {
           return () => {
-            ref.current?.play();
+            void ref.current?.play().catch(() => undefined);
           }
         }
       }
     },
   ];
-
-  const component = useRef(null);
-  const slider = useRef(null);
-
-  // const handleMouseEnter = () => {
-  //   videoRef.current?.play();
-  // };
-  //
-  // const handleMouseLeave = () => {
-  //   videoRef.current?.pause();
-  //   videoRef.current.currentTime = 0; // сброс (по желанию)
-  // };
 
   const [emblaRef] = useEmblaCarousel(
       { loop: true },
@@ -128,7 +142,11 @@ export function ServicesSliderSection() {
       <div className="flex h-full w-full flex-col items-center justify-center max-w-[1570px]">
         <div className='embda__wrapper lg:h-[70vh]'>
           <div className="embla h-full">
-            <div className="overflow-hidden h-full" ref={emblaRef}>
+            <div
+              className="overflow-hidden h-full"
+              ref={emblaRef}
+              {...scrollIgnoreAttr}
+            >
               <div className="embla__container flex touch-pan-y touch-pinch-zoom h-full ml-[-22px]">
                 {slides.map((i) =>(
                     <div key={i.id} className="embla__slide pl-[22px] flex-none basis-1/4 min-w-0 h-full relative">
