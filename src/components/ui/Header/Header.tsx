@@ -71,7 +71,7 @@ export const Header = forwardRef<HeaderHandle>(function Header(_props, ref) {
         ref={headerRef}
         className={clsx(
           s.header,
-          'pointer-events-none mx-auto max-w-[1460px] uppercase',
+          'pointer-events-none mx-auto max-w-[1570px] uppercase',
         )}
       >
         <div ref={leftRef} className={clsx(s.left, 'pointer-events-auto')}>

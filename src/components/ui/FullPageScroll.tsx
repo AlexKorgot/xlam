@@ -190,7 +190,7 @@ export default function FullPageScroll({
       });
 
       const observer = Observer.create({
-        type: 'wheel,touch,pointer',
+        type: 'wheel,touch',
         onDown: handleScrollDown,
         onUp: handleScrollUp,
         wheelSpeed: 1,

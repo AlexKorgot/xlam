@@ -8,7 +8,7 @@ import {
   SecondSectionDesign,
   type SecondSectionDesignHandle,
 } from '@/src/components/ui/SecondSectionDesign';
-import { ServicesSliderSection } from '@/src/components/ui/ServicesSliderSection';
+import { ServicesSliderSection } from '@/src/components/ui/ServicesSliderSection/ServicesSliderSection';
 
 export const MainScene = () => {
   const headerRef = useRef<HeaderHandle>(null);
