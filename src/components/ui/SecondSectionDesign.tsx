@@ -342,15 +342,8 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
             className="absolute inset-x-0 top-[36%] z-20 mx-auto flex max-w-[80rem] flex-col items-center px-4 text-center sm:top-[37%] lg:top-[39%]"
             style={{ willChange: 'transform, opacity' }}
           >
-            <h2 className="text-[clamp(2rem,4.4vw,4.15rem)] font-black uppercase leading-[0.9] tracking-[-0.05em] text-white">
-              {lines.map((line) => (
-                <span
-                  key={line}
-                  className="mx-auto block w-fit max-w-full px-1 md:whitespace-nowrap"
-                >
-                  {line}
-                </span>
-              ))}
+            <h2 className="text-[60px] font-bold uppercase leading-[1.121]  text-white">
+                Наш продакшн начинается с идей, которые другие бы выбросили
             </h2>
           </div>
         </section>

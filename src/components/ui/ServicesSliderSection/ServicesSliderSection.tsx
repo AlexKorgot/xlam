@@ -30,8 +30,6 @@ interface ServicesSliderSectionProps {
 
 const sliderVideoSrc = '/video/3_slider_content_video.mov';
 const scrollIgnoreAttr = { [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' } as const;
-const supportingLine =
-  'ЗАНИМАЕМСЯ ВСЕМИ ЭТАПАМИ СОЗДАНИЯ ПРОДУКТА: ПИШЕМ СЦЕНАРИИ, ОРГАНИЗУЕМ СЪЕМКИ, ВИДЕОСЪЕМКИ, МОНТАЖ, САУНД ДИЗАЙН, И СОЗДАЕМ ВСЕ АНИМАЦИИ';
 const edgeWheelThreshold = 48;
 const edgeWheelUnlockDelay = 700;
 
@@ -278,7 +276,7 @@ export function ServicesSliderSection({
   }, [allowSectionScrollOnEdges, emblaApi]);
 
   return (
-    <FullPageSection id="services" className="items-stretch bg-black pt-40 text-white">
+    <FullPageSection id="services" className="items-stretch bg-black pt-30 text-white">
       <div className="flex h-full w-full max-w-[1570px] flex-col items-center justify-center">
         <div className="embda__wrapper w-full h-[clamp(343px,70vh,643px)]">
           <div className="embla h-full">
@@ -305,7 +303,7 @@ export function ServicesSliderSection({
                       preload="metadata"
                     />
                     <div className="absolute bottom-0 px-1.5 text-center">
-                      <p>{slide.description}</p>
+                      <p className='text-[12px]'>{slide.description}</p>
                       <h4 className="text-[30px] font-black text-[#63ff45]">
                         {slide.title}
                       </h4>
@@ -316,11 +314,11 @@ export function ServicesSliderSection({
             </div>
           </div>
         </div>
-        <div className="space-y-6 text-center" data-reveal>
-          <p className="text-[0.68rem] font-semibold uppercase leading-6 tracking-[0.4em] text-white/70">
-            {supportingLine}
+        <div className="text-center" data-reveal>
+          <p className="text-[25px] font-bold uppercase leading-[1.14] mt-[50px] text-white">
+            ЗАНИМАЕМСЯ ВСЕМИ ЭТАПАМИ СОЗДАНИЯ ПРОДУКТА: ПИШЕМ СЦЕНАРИИ, ОРГАНИЗУЕМ СЪЕМКИ, ВИДЕОСЪЕМКИ, МОНТАЖ, САУНД ДИЗАЙН, И СОЗДАЕМ ВСЕ АНИМАЦИИ
           </p>
-          <p className="text-[clamp(2.6rem,7vw,5.8rem)] font-black uppercase tracking-[-0.02em] text-white">
+          <p className="text-[157px] leading-[0.99] tracking-[0.08em] font-black uppercase  text-white">
             ХЛАМ MEDI<span className="text-[#63ff45]">A</span>
           </p>
         </div>
