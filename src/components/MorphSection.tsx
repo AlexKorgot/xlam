@@ -185,7 +185,8 @@ export default function MorphSection({
     const buildMActivation = (
         outlineTargets: SVGPathElement[],
         overlayTargets: SVGPathElement[],
-        startAt: number
+        startAt: number,
+        doubleFlicker = false
     ) => {
         const tl = gsap.timeline();
 
@@ -193,48 +194,114 @@ export default function MorphSection({
             const overlayTarget = overlayTargets[i];
             const delay = startAt + i * 0.04;
 
-            // 1. короткий электрический удар
-            tl.to(
-                outlineTarget,
-                {
-                    stroke: '#0f0f0f',
-                    filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
-                    duration: 0.06,
-                    ease: 'none',
-                },
-                delay
-            )
-
-                // 2. мгновенно включаем зелёный контур
-                .set(
+            if (doubleFlicker) {
+                tl.to(
                     outlineTarget,
                     {
-                        stroke: '#66FF66',
-                        filter: 'drop-shadow(0 0 18px rgba(102,255,102,0.65))',
+                        stroke: '#0f0f0f',
+                        filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
+                        duration: 0.05,
+                        ease: 'none',
                     },
-                    '>'
+                    delay
                 )
+                    // 1-е включение
+                    .set(
+                        outlineTarget,
+                        {
+                            stroke: '#66FF66',
+                            filter: 'drop-shadow(0 0 18px rgba(102,255,102,0.65))',
+                        },
+                        '>'
+                    )
+                    .to(
+                        outlineTarget,
+                        {
+                            filter: 'drop-shadow(0 0 24px rgba(102,255,102,0.85))',
+                            duration: 0.1,
+                            ease: 'power1.out',
+                        },
+                        '>'
+                    )
 
-                // 3. чуть наращиваем glow
-                .to(
+                    // короткое погасание
+                    .to(
+                        outlineTarget,
+                        {
+                            stroke: '#111111',
+                            filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
+                            duration: 0.06,
+                            ease: 'none',
+                        },
+                        '>'
+                    )
+
+                    // 2-е включение
+                    .set(
+                        outlineTarget,
+                        {
+                            stroke: '#66FF66',
+                            filter: 'drop-shadow(0 0 18px rgba(102,255,102,0.7))',
+                        },
+                        '>'
+                    )
+                    .to(
+                        outlineTarget,
+                        {
+                            filter: 'drop-shadow(0 0 26px rgba(102,255,102,0.9))',
+                            duration: 0.16,
+                            ease: 'power1.out',
+                        },
+                        '>'
+                    );
+
+                if (overlayTarget) {
+                    tl.set(
+                        overlayTarget,
+                        {
+                            opacity: 1,
+                        },
+                        delay + 0.42
+                    );
+                }
+            } else {
+                tl.to(
                     outlineTarget,
                     {
-                        filter: 'drop-shadow(0 0 26px rgba(102,255,102,0.9))',
-                        duration: 0.18,
-                        ease: 'power1.out',
+                        stroke: '#0f0f0f',
+                        filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
+                        duration: 0.06,
+                        ease: 'none',
                     },
-                    '>'
-                );
+                    delay
+                )
+                    .set(
+                        outlineTarget,
+                        {
+                            stroke: '#66FF66',
+                            filter: 'drop-shadow(0 0 18px rgba(102,255,102,0.65))',
+                        },
+                        '>'
+                    )
+                    .to(
+                        outlineTarget,
+                        {
+                            filter: 'drop-shadow(0 0 26px rgba(102,255,102,0.9))',
+                            duration: 0.18,
+                            ease: 'power1.out',
+                        },
+                        '>'
+                    );
 
-            // 4. И ТОЛЬКО ПОТОМ включаем зелёную заливку
-            if (overlayTarget) {
-                tl.set(
-                    overlayTarget,
-                    {
-                        opacity: 1,
-                    },
-                    delay + 0.32
-                );
+                if (overlayTarget) {
+                    tl.set(
+                        overlayTarget,
+                        {
+                            opacity: 1,
+                        },
+                        delay + 0.32
+                    );
+                }
             }
         });
 
@@ -278,10 +345,10 @@ export default function MorphSection({
 
 // зелёный слой держится дольше;
 // исчезновение и видео стартуют примерно с середины расширения
-            const VIDEO_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION * 0.52;
+            const VIDEO_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION;
 
 // контур тоже начинаем уводить в белый примерно с середины
-            const OUTLINE_TO_WHITE_START = M_REVEAL_START + M_REVEAL_DURATION * 0.5;
+            const OUTLINE_TO_WHITE_START = VIDEO_REVEAL_START + 0.02;
 
             const topRow = topRowRef.current;
             const bottomRow = bottomRowRef.current;
@@ -359,9 +426,10 @@ export default function MorphSection({
 
             gsap.set([topVideo, bottomVideo], {
                 opacity: 0,
-                scale: 1.05,
+                scale: 1.025,
+                filter: 'blur(6px)',
                 transformOrigin: 'center center',
-            });
+            })
 
             gsap.set([topOverlayPath, bottomOverlayPath], {
                 opacity: 0,
@@ -416,7 +484,8 @@ export default function MorphSection({
                 buildMActivation(
                     [topOutlinePath],
                     [topOverlayPath],
-                    M_ACTIVATION_START
+                    M_ACTIVATION_START,
+                    true,
                 ),
                 0
             );
@@ -425,7 +494,8 @@ export default function MorphSection({
                 buildMActivation(
                     [bottomOutlinePath],
                     [bottomOverlayPath],
-                    M_ACTIVATION_START + 0.04
+                    M_ACTIVATION_START + 0.04,
+                    false
                 ),
                 0
             );
@@ -452,7 +522,6 @@ export default function MorphSection({
                     M_REVEAL_START
                 )
 
-                // видео подготавливаем чуть заранее, но показывать начинаем только с середины расширения
                 .call(
                     () => {
                         topVideo.currentTime = 0;
@@ -461,30 +530,39 @@ export default function MorphSection({
                         bottomVideo.play().catch(() => {});
                     },
                     [],
-                    VIDEO_REVEAL_START - 0.08
+                    VIDEO_REVEAL_START
                 )
 
-                // зелёный fill в ОБЕИХ M дольше держится и только с середины начинает исчезать
+                // зелёный слой исчезает только после полного расширения букв
                 .to(
                     [topOverlayPath, bottomOverlayPath],
                     {
                         opacity: 0,
-                        duration: M_REVEAL_DURATION * 0.55,
-                        ease: 'power2.out',
+                        duration: 1.1,
+                        ease: 'sine.out',
                     },
                     VIDEO_REVEAL_START
                 )
 
-                // видео в ОБЕИХ M тоже с середины начинает плавно появляться
+                // видео появляется только после полного расширения букв
                 .to(
                     [topVideo, bottomVideo],
                     {
                         opacity: 1,
                         scale: 1,
-                        duration: M_REVEAL_DURATION * 0.58,
-                        ease: 'power2.out',
+                        duration: 1.6,
+                        ease: 'sine.out',
                     },
-                    VIDEO_REVEAL_START + 0.02
+                    VIDEO_REVEAL_START + 0.12
+                )
+                .to(
+                    [topVideo, bottomVideo],
+                    {
+                        filter: 'blur(0px)',
+                        duration: 1.4,
+                        ease: 'sine.out',
+                    },
+                    VIDEO_REVEAL_START + 0.12
                 )
 
                 // уже с середины расширения glow начинает ослабляться
