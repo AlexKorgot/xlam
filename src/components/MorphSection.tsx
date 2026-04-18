@@ -345,11 +345,16 @@ export default function MorphSection({
 
 // зелёный слой держится дольше;
 // исчезновение и видео стартуют примерно с середины расширения
+            const TOP_VIDEO_DURATION = 1.0;
+            const TOP_BLUR_DURATION = 0.9;
             const VIDEO_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION * 0.5;
-            const REVEAL_DURATION = M_REVEAL_DURATION * 0.65;
+            const TOP_VIDEO_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION * 0.55;
 
 // контур тоже начинаем уводить в белый примерно с середины
             const OUTLINE_TO_WHITE_START = VIDEO_REVEAL_START + 0.05;
+
+            const BOTTOM_VOLTAGE_START =
+                TOP_VIDEO_REVEAL_START + TOP_VIDEO_DURATION + 1 + 0.08;
 
             const topRow = topRowRef.current;
             const bottomRow = bottomRowRef.current;
@@ -427,10 +432,10 @@ export default function MorphSection({
 
             gsap.set([topVideo, bottomVideo], {
                 opacity: 0,
-                scale: 1.025,
-                filter: 'blur(6px)',
+                scale: 1.035,
+                filter: 'blur(10px)',
                 transformOrigin: 'center center',
-            })
+            });
 
             gsap.set([topOverlayPath, bottomOverlayPath], {
                 opacity: 0,
@@ -536,34 +541,167 @@ export default function MorphSection({
 
                 // зелёный слой исчезает только после полного расширения букв
                 .to(
-                    [topOverlayPath, bottomOverlayPath],
+                    topOverlayPath,
                     {
                         opacity: 0,
-                        duration: REVEAL_DURATION,
-                        ease: 'none',
+                        duration: 0.55,
+                        ease: 'sine.out',
                     },
-                    VIDEO_REVEAL_START
+                    TOP_VIDEO_REVEAL_START
                 )
 
-                // видео появляется только после полного расширения букв
                 .to(
-                    [topVideo, bottomVideo],
+                    topVideo,
                     {
                         opacity: 1,
                         scale: 1,
-                        duration: REVEAL_DURATION,
-                        ease: 'none',
+                        duration: 0.9,
+                        ease: 'sine.out',
                     },
-                    VIDEO_REVEAL_START + 0.05
+                    TOP_VIDEO_REVEAL_START + 0.04
                 )
+
                 .to(
-                    [topVideo, bottomVideo],
+                    topVideo,
                     {
                         filter: 'blur(0px)',
-                        duration: REVEAL_DURATION,
+                        duration: 0.75,
+                        ease: 'sine.out',
+                    },
+                    TOP_VIDEO_REVEAL_START
+                )
+                // нижняя M: voltage reveal после завершения расширения
+                .call(
+                    () => {
+                        bottomVideo.currentTime = 0;
+                        bottomVideo.play().catch(() => {});
+                    },
+                    [],
+                    BOTTOM_VOLTAGE_START - 0.04
+                )
+
+                .set(
+                    bottomVideo,
+                    {
+                        opacity: 0,
+                        scale: 1.015,
+                        filter: 'blur(4px)',
+                    },
+                    BOTTOM_VOLTAGE_START
+                )
+
+                .set(
+                    bottomOverlayPath,
+                    {
+                        opacity: 1,
+                    },
+                    BOTTOM_VOLTAGE_START
+                )
+
+                // 1-й скачок: видео резко проступает
+                .to(
+                    bottomVideo,
+                    {
+                        opacity: 0.75,
+                        filter: 'blur(1.5px)',
+                        duration: 0.08,
                         ease: 'none',
                     },
-                    VIDEO_REVEAL_START
+                    BOTTOM_VOLTAGE_START
+                )
+                .to(
+                    bottomOverlayPath,
+                    {
+                        opacity: 0.35,
+                        duration: 0.08,
+                        ease: 'none',
+                    },
+                    BOTTOM_VOLTAGE_START
+                )
+
+                // откат обратно в зелёный
+                .to(
+                    bottomVideo,
+                    {
+                        opacity: 0.18,
+                        filter: 'blur(3px)',
+                        duration: 0.06,
+                        ease: 'none',
+                    },
+                    '>'
+                )
+                .to(
+                    bottomOverlayPath,
+                    {
+                        opacity: 0.9,
+                        duration: 0.06,
+                        ease: 'none',
+                    },
+                    '<'
+                )
+
+                // 2-й скачок сильнее
+                .to(
+                    bottomVideo,
+                    {
+                        opacity: 1,
+                        filter: 'blur(0.8px)',
+                        duration: 0.09,
+                        ease: 'none',
+                    },
+                    '>'
+                )
+                .to(
+                    bottomOverlayPath,
+                    {
+                        opacity: 0.2,
+                        duration: 0.09,
+                        ease: 'none',
+                    },
+                    '<'
+                )
+
+                // ещё один микро-провал
+                .to(
+                    bottomVideo,
+                    {
+                        opacity: 0.55,
+                        filter: 'blur(2px)',
+                        duration: 0.05,
+                        ease: 'none',
+                    },
+                    '>'
+                )
+                .to(
+                    bottomOverlayPath,
+                    {
+                        opacity: 0.55,
+                        duration: 0.05,
+                        ease: 'none',
+                    },
+                    '<'
+                )
+
+                // финальное закрепление: остаётся видео
+                .to(
+                    bottomVideo,
+                    {
+                        opacity: 1,
+                        scale: 1,
+                        filter: 'blur(0px)',
+                        duration: 0.22,
+                        ease: 'power1.out',
+                    },
+                    '>'
+                )
+                .to(
+                    bottomOverlayPath,
+                    {
+                        opacity: 0,
+                        duration: 0.22,
+                        ease: 'power1.out',
+                    },
+                    '<'
                 )
 
                 // уже с середины расширения glow начинает ослабляться
