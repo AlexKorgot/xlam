@@ -192,65 +192,49 @@ export default function MorphSection({
         outlineTargets.forEach((target, i) => {
             const delay = startAt + i * 0.04;
 
+            // короткий "электрический" рывок
             tl.to(
                 target,
                 {
-                    stroke: '#ffffff',
-                    filter: 'drop-shadow(0 0 4px rgba(102,255,102,0.10))',
-                    duration: 0.18,
-                    ease: 'power1.out',
+                    stroke: '#0f0f0f',
+                    filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
+                    duration: 0.06,
+                    ease: 'none',
                 },
                 delay
             )
-                .to(
-                    target,
-                    {
-                        stroke: '#d8ffd8',
-                        filter: 'drop-shadow(0 0 10px rgba(102,255,102,0.22))',
-                        duration: 0.22,
-                        ease: 'power1.out',
-                    },
-                    '>'
-                )
-                .to(
+
+                // мгновенное включение зелёного
+                .set(
                     target,
                     {
                         stroke: '#66FF66',
-                        filter: 'drop-shadow(0 0 14px rgba(102,255,102,0.38))',
-                        duration: 0.26,
-                        ease: 'power2.out',
+                        filter: 'drop-shadow(0 0 18px rgba(102,255,102,0.65))',
+                    },
+                    '>'
+                )
+
+                // чуть усиливаем glow (но уже плавно)
+                .to(
+                    target,
+                    {
+                        filter: 'drop-shadow(0 0 26px rgba(102,255,102,0.9))',
+                        duration: 0.18,
+                        ease: 'power1.out',
                     },
                     '>'
                 );
         });
 
         overlayTargets.forEach((target, i) => {
-            const delay = startAt + 0.34 + i * 0.04;
+            const delay = startAt + 0.08 + i * 0.04;
 
-            tl.to(
-                target,
-                {
-                    opacity: 0.22,
-                    duration: 0.18,
-                    ease: 'power1.out',
-                },
-                delay
-            ).to(
-                target,
-                {
-                    opacity: 0.72,
-                    duration: 0.24,
-                    ease: 'power2.out',
-                },
-                '>'
-            ).to(
+            tl.set(
                 target,
                 {
                     opacity: 1,
-                    duration: 0.22,
-                    ease: 'power2.out',
                 },
-                '>'
+                delay
             );
         });
 
