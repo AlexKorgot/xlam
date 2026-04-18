@@ -227,14 +227,14 @@ export default function MorphSection({
         });
 
         overlayTargets.forEach((target, i) => {
-            const delay = startAt + 0.08 + i * 0.04;
+            const delay = startAt + 0.50 + i * 0.08;
 
             tl.set(
                 target,
                 {
                     opacity: 1,
                 },
-                delay
+                delay + 0.07
             );
         });
 
