@@ -189,12 +189,13 @@ export default function MorphSection({
     ) => {
         const tl = gsap.timeline();
 
-        outlineTargets.forEach((target, i) => {
+        outlineTargets.forEach((outlineTarget, i) => {
+            const overlayTarget = overlayTargets[i];
             const delay = startAt + i * 0.04;
 
-            // короткий "электрический" рывок
+            // 1. короткий электрический удар
             tl.to(
-                target,
+                outlineTarget,
                 {
                     stroke: '#0f0f0f',
                     filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
@@ -204,9 +205,9 @@ export default function MorphSection({
                 delay
             )
 
-                // мгновенное включение зелёного
+                // 2. мгновенно включаем зелёный контур
                 .set(
-                    target,
+                    outlineTarget,
                     {
                         stroke: '#66FF66',
                         filter: 'drop-shadow(0 0 18px rgba(102,255,102,0.65))',
@@ -214,9 +215,9 @@ export default function MorphSection({
                     '>'
                 )
 
-                // чуть усиливаем glow (но уже плавно)
+                // 3. чуть наращиваем glow
                 .to(
-                    target,
+                    outlineTarget,
                     {
                         filter: 'drop-shadow(0 0 26px rgba(102,255,102,0.9))',
                         duration: 0.18,
@@ -224,18 +225,17 @@ export default function MorphSection({
                     },
                     '>'
                 );
-        });
 
-        overlayTargets.forEach((target, i) => {
-            const delay = startAt + 0.50 + i * 0.08;
-
-            tl.set(
-                target,
-                {
-                    opacity: 1,
-                },
-                delay + 0.07
-            );
+            // 4. И ТОЛЬКО ПОТОМ включаем зелёную заливку
+            if (overlayTarget) {
+                tl.set(
+                    overlayTarget,
+                    {
+                        opacity: 1,
+                    },
+                    delay + 0.32
+                );
+            }
         });
 
         return tl;
