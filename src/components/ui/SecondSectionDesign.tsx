@@ -305,7 +305,7 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
         }
       },
     }));
-
+   
     return (
       <FullPageSection
         id="production"

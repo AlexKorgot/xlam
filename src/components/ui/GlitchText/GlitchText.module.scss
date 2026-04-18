@@ -1,0 +1,14 @@
+.top {
+  clip-path: inset(0 0 58%);
+}
+
+.bottom {
+  clip-path: inset(41% 0 0);
+}
+
+.glitch {
+  position: absolute;
+  display: inline-block;
+  top: 0;
+  left: 0;
+}

@@ -26,7 +26,7 @@ export const Header = forwardRef<HeaderHandle>(function Header(_props, ref) {
       }
 
       gsap.set([leftRef.current, rightRef.current], {
-        autoAlpha: 0,
+        autoAlpha: 1, // 0
         y: -18,
       });
 

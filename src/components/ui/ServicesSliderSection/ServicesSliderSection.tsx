@@ -289,11 +289,11 @@ export function ServicesSliderSection({
                 {slides.map((slide) => (
                   <div
                     key={slide.id}
-                    className="embla__slide relative h-full min-w-0 flex-none basis-1/4 pl-[22px]"
+                    className="embla__slide relative h-full min-w-0 flex-none basis-1/4 pl-[22px] "
                   >
                     <video
                       ref={slide.videoRefConfig.ref}
-                      className="h-full w-full object-cover grayscale transition duration-500 ease-in-out hover:grayscale-0"
+                      className="h-full w-full object-cover "
                       src={sliderVideoSrc}
                       playsInline
                       loop

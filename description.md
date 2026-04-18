@@ -25,10 +25,10 @@
   - `sectionChangeCallback(index)` to inform parents when the section index updates. Also accepts `targetSection` prop to programmatically jump.
   Observer prevents default scroll to create a snap-to-section behavior and keeps cleanup for listeners/timelines.
 - `FullPageSection.tsx`: tiny helper returning a full-viewport flexbox wrapper. Used to ensure every scroll section matches viewport height.
-- `Header/Header.tsx`: `forwardRef` component exposing `setProgress`. Uses `gsap.timeline` to fade/slide nav text and synchronize with the animated logo. Text labels are currently Cyrillic but appear mojibake due to encoding—needs UTF-8 literal fix. `Header.module.scss` handles grid layout and responsive behavior, hiding side menus below 768px.
-- `AnimatedLogo.tsx`: controls the hero-to-header logo morph. Places a centered logo (`logo.svg`) in the viewport and a compact plate/mark pinned to the top. Calculates translation/scale of the center logo so it lands exactly on the header logo. Progress is controlled imperatively (via `setProgress`) and synced with window resize to keep measurements accurate. Uses `next/image` with `unoptimized` so large PNG/SVG assets render as-is.
-- `SecondSectionDesign.tsx`: `forwardRef` section that displays multiple floating brand objects (spring, sphere, metal tube, etc.) pulled from `src/lib/assets/main`. Maintains a GSAP timeline where each asset animates from custom offsets/rotations/delays. A pointer-driven parallax effect (using `gsap.quickTo`) activates once the reveal reaches ~96%. Title text lines (currently mojibake) fade/scale in between progress 0.52–0.94.
-- `AnimatedLogo.tsx` + `SecondSectionDesign.tsx` both rely on `gsap.utils.mapRange` and custom progress mapping to sync with the `FullPageScroll` progress.
+- `Header/Header.tsx`: `forwardRef` component exposing `setProgress`. Uses `gsap.timeline` to fade/slide nav text and synchronize with the animated logo. Text labels are currently Cyrillic but appear mojibake due to encodingï¿½needs UTF-8 literal fix. `Header.module.scss` handles grid layout and responsive behavior, hiding side menus below 768px.
+- `AnimatedLogoNew.tsx`: controls the hero-to-header logo morph. Places a centered logo (`logo.svg`) in the viewport and a compact plate/mark pinned to the top. Calculates translation/scale of the center logo so it lands exactly on the header logo. Progress is controlled imperatively (via `setProgress`) and synced with window resize to keep measurements accurate. Uses `next/image` with `unoptimized` so large PNG/SVG assets render as-is.
+- `SecondSectionDesign.tsx`: `forwardRef` section that displays multiple floating brand objects (spring, sphere, metal tube, etc.) pulled from `src/lib/assets/main`. Maintains a GSAP timeline where each asset animates from custom offsets/rotations/delays. A pointer-driven parallax effect (using `gsap.quickTo`) activates once the reveal reaches ~96%. Title text lines (currently mojibake) fade/scale in between progress 0.52ï¿½0.94.
+- `AnimatedLogoNew.tsx` + `SecondSectionDesign.tsx` both rely on `gsap.utils.mapRange` and custom progress mapping to sync with the `FullPageScroll` progress.
 - `AsyncWrapper.tsx`: async server component returning its children after a 2s timeout (unused currently).
 - `fallbacks/MainFallback.tsx`: simple suspense fallback showing `logo_big.svg` centered on screen.
 - `grid/Container.tsx`: width-limited wrapper (`max-w-[1740px]`), not yet used in `MainScene`.
@@ -41,7 +41,7 @@
 - `styles/_mixins.scss`: collection of breakpoint and retina mixins with comments (currently mojibake). Not imported anywhere yet.
 
 ## Other top-level folders
-- `designInScreen/`: design references (PNG exports). `3.png` mirrors the "Óñëóãè" slider concept with four mirrored portraits and neon green captions; useful for reproducing the horizontal slider with ScrollTrigger later.
+- `designInScreen/`: design references (PNG exports). `3.png` mirrors the "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½" slider concept with four mirrored portraits and neon green captions; useful for reproducing the horizontal slider with ScrollTrigger later.
 - `public/`: default SVG placeholders from the initial Next template (unused in current UI).
 - `.playwright-mcp/`, `.idea/`, `.codex/`: tooling/config directories; `.next/` contains build outputs (ignore).
 

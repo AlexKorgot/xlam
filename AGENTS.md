@@ -45,7 +45,7 @@ Before finishing any non-trivial change, run:
 - Use semicolons
 - Match existing quote style in touched files
 - Keep route folders lowercase under `src/app`
-- Use PascalCase for component filenames, for example `Header.tsx` or `AnimatedLogo.tsx`
+- Use PascalCase for component filenames, for example `Header.tsx` or `AnimatedLogoNew.tsx`
 - Use the `@/` path alias for project-root imports where appropriate
 
 ## Styling Rules
