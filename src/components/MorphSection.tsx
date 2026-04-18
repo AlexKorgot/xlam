@@ -276,11 +276,12 @@ export default function MorphSection({
             const M_REVEAL_START = 3.48;
             const M_REVEAL_DURATION = 1.05;
 
-// старт ухода зелёного слоя / появления видео
-            const VIDEO_REVEAL_START = M_REVEAL_START + 0.24;
+// зелёный слой держится дольше;
+// исчезновение и видео стартуют примерно с середины расширения
+            const VIDEO_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION * 0.52;
 
-// финальное гашение glow и возврат белого контура
-            const OUTLINE_SETTLE_START = VIDEO_REVEAL_START + 0.72;
+// контур тоже начинаем уводить в белый примерно с середины
+            const OUTLINE_TO_WHITE_START = M_REVEAL_START + M_REVEAL_DURATION * 0.5;
 
             const topRow = topRowRef.current;
             const bottomRow = bottomRowRef.current;
@@ -451,7 +452,7 @@ export default function MorphSection({
                     M_REVEAL_START
                 )
 
-                // видео запускаем чуть после старта роста
+                // видео подготавливаем чуть заранее, но показывать начинаем только с середины расширения
                 .call(
                     () => {
                         topVideo.currentTime = 0;
@@ -460,53 +461,53 @@ export default function MorphSection({
                         bottomVideo.play().catch(() => {});
                     },
                     [],
-                    VIDEO_REVEAL_START + 0.14
+                    VIDEO_REVEAL_START - 0.08
                 )
 
-                // зелёный fill уходит
+                // зелёный fill в ОБЕИХ M дольше держится и только с середины начинает исчезать
                 .to(
                     [topOverlayPath, bottomOverlayPath],
                     {
                         opacity: 0,
-                        duration: 0.68,
+                        duration: M_REVEAL_DURATION * 0.55,
                         ease: 'power2.out',
                     },
                     VIDEO_REVEAL_START
                 )
 
-                // видео проявляется
+                // видео в ОБЕИХ M тоже с середины начинает плавно появляться
                 .to(
                     [topVideo, bottomVideo],
                     {
                         opacity: 1,
                         scale: 1,
-                        duration: 0.92,
+                        duration: M_REVEAL_DURATION * 0.58,
                         ease: 'power2.out',
                     },
-                    VIDEO_REVEAL_START - 0.02
+                    VIDEO_REVEAL_START + 0.02
                 )
 
-                // glow мягко ослабляется
+                // уже с середины расширения glow начинает ослабляться
                 .to(
                     [topOutlinePath, bottomOutlinePath],
                     {
-                        filter: 'drop-shadow(0 0 3px rgba(102,255,102,0.10))',
-                        duration: 0.45,
+                        filter: 'drop-shadow(0 0 8px rgba(102,255,102,0.22))',
+                        duration: 0.32,
                         ease: 'power1.out',
                     },
-                    OUTLINE_SETTLE_START
+                    OUTLINE_TO_WHITE_START
                 )
 
-                // и контур возвращается в белый
+                // и сразу же контур начинает плавно уходить в белый
                 .to(
                     [topOutlinePath, bottomOutlinePath],
                     {
                         stroke: '#ffffff',
                         filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
-                        duration: 0.72,
+                        duration: M_REVEAL_DURATION * 0.55,
                         ease: 'power2.out',
                     },
-                    '>'
+                    OUTLINE_TO_WHITE_START
                 );
 
 
