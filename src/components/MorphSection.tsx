@@ -182,32 +182,33 @@ export default function MorphSection({
         return tl;
     };
 
-    const buildVideoLetterIgnition = (
+    const buildMActivation = (
         outlineTargets: SVGPathElement[],
+        overlayTargets: SVGPathElement[],
         startAt: number
     ) => {
         const tl = gsap.timeline();
 
         outlineTargets.forEach((target, i) => {
-            const delay = startAt + i * 0.08;
+            const delay = startAt + i * 0.04;
 
             tl.to(
                 target,
                 {
-                    stroke: '#0d0d0d',
-                    filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
-                    duration: 0.12,
-                    ease: 'none',
+                    stroke: '#ffffff',
+                    filter: 'drop-shadow(0 0 4px rgba(102,255,102,0.10))',
+                    duration: 0.18,
+                    ease: 'power1.out',
                 },
                 delay
             )
                 .to(
                     target,
                     {
-                        stroke: '#ffffff',
-                        filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
-                        duration: 0.1,
-                        ease: 'none',
+                        stroke: '#d8ffd8',
+                        filter: 'drop-shadow(0 0 10px rgba(102,255,102,0.22))',
+                        duration: 0.22,
+                        ease: 'power1.out',
                     },
                     '>'
                 )
@@ -215,22 +216,42 @@ export default function MorphSection({
                     target,
                     {
                         stroke: '#66FF66',
-                        filter: 'drop-shadow(0 0 14px rgba(102,255,102,0.7))',
-                        duration: 0.28,
-                        ease: 'none',
-                    },
-                    '>'
-                )
-                .to(
-                    target,
-                    {
-                        stroke: '#66FF66',
-                        filter: 'drop-shadow(0 0 18px rgba(102,255,102,0.9))',
-                        duration: 0.18,
-                        ease: 'none',
+                        filter: 'drop-shadow(0 0 14px rgba(102,255,102,0.38))',
+                        duration: 0.26,
+                        ease: 'power2.out',
                     },
                     '>'
                 );
+        });
+
+        overlayTargets.forEach((target, i) => {
+            const delay = startAt + 0.34 + i * 0.04;
+
+            tl.to(
+                target,
+                {
+                    opacity: 0.22,
+                    duration: 0.18,
+                    ease: 'power1.out',
+                },
+                delay
+            ).to(
+                target,
+                {
+                    opacity: 0.72,
+                    duration: 0.24,
+                    ease: 'power2.out',
+                },
+                '>'
+            ).to(
+                target,
+                {
+                    opacity: 1,
+                    duration: 0.22,
+                    ease: 'power2.out',
+                },
+                '>'
+            );
         });
 
         return tl;
@@ -264,18 +285,19 @@ export default function MorphSection({
             const TOP_FLICKER_START = 1.18;
             const BOTTOM_FLICKER_START = 1.3;
 
-// общий момент, когда обе M уже "дозрели" и могут начинать основную фазу
-            const M_IGNITION_START = 2.35;
+// после того как остальные буквы уже почти домигали
+            const M_ACTIVATION_START = 2.75;
 
-// старт основной анимации M
-            const M_REVEAL_START = 3.15;
+// старт роста М
+            const M_REVEAL_START = 3.48;
             const M_REVEAL_DURATION = 1.05;
 
-// старт появления видео и ухода зелёного слоя
-            const VIDEO_REVEAL_START = M_REVEAL_START + 0.78;
+// старт ухода зелёного слоя / появления видео
+            const VIDEO_REVEAL_START = M_REVEAL_START + 0.24;
 
-// финальное гашение glow
-            const OUTLINE_SETTLE_START = VIDEO_REVEAL_START + 0.55;
+// финальное гашение glow и возврат белого контура
+            const OUTLINE_SETTLE_START = VIDEO_REVEAL_START + 0.72;
+
             const topRow = topRowRef.current;
             const bottomRow = bottomRowRef.current;
 
@@ -404,17 +426,26 @@ export default function MorphSection({
                 0
             );
 
-// 3. обе M зажигаются согласованно
+// 3. M не мигают — они отдельно "включаются"
             tl.add(
-                buildVideoLetterIgnition([topOutlinePath], M_IGNITION_START),
-                0
-            );
-            tl.add(
-                buildVideoLetterIgnition([bottomOutlinePath], M_IGNITION_START + 0.04),
+                buildMActivation(
+                    [topOutlinePath],
+                    [topOverlayPath],
+                    M_ACTIVATION_START
+                ),
                 0
             );
 
-// 4. основная анимация обеих M стартует одновременно и позже
+            tl.add(
+                buildMActivation(
+                    [bottomOutlinePath],
+                    [bottomOverlayPath],
+                    M_ACTIVATION_START + 0.04
+                ),
+                0
+            );
+
+// 4. как только M включились, они начинают расти
             tl.to(
                 topState,
                 {
@@ -436,7 +467,7 @@ export default function MorphSection({
                     M_REVEAL_START
                 )
 
-                // запускаем видео строго рядом с reveal, чтобы не было ощущения спешки
+                // видео запускаем чуть после старта роста
                 .call(
                     () => {
                         topVideo.currentTime = 0;
@@ -445,21 +476,21 @@ export default function MorphSection({
                         bottomVideo.play().catch(() => {});
                     },
                     [],
-                    VIDEO_REVEAL_START + 0.12
+                    VIDEO_REVEAL_START + 0.14
                 )
 
-                // зелёный фон уходит одновременно на обеих M
+                // зелёный fill уходит
                 .to(
                     [topOverlayPath, bottomOverlayPath],
                     {
                         opacity: 0,
-                        duration: 0.62,
+                        duration: 0.68,
                         ease: 'power2.out',
                     },
                     VIDEO_REVEAL_START
                 )
 
-                // видео проявляется одновременно и без спешки
+                // видео проявляется
                 .to(
                     [topVideo, bottomVideo],
                     {
@@ -471,22 +502,24 @@ export default function MorphSection({
                     VIDEO_REVEAL_START - 0.02
                 )
 
-                // мягко убираем glow
+                // glow мягко ослабляется
                 .to(
                     [topOutlinePath, bottomOutlinePath],
                     {
-                        filter: 'drop-shadow(0 0 4px rgba(102,255,102,0.15))',
+                        filter: 'drop-shadow(0 0 3px rgba(102,255,102,0.10))',
                         duration: 0.45,
                         ease: 'power1.out',
                     },
                     OUTLINE_SETTLE_START
                 )
+
+                // и контур возвращается в белый
                 .to(
                     [topOutlinePath, bottomOutlinePath],
                     {
                         stroke: '#ffffff',
                         filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
-                        duration: 0.7,
+                        duration: 0.72,
                         ease: 'power2.out',
                     },
                     '>'
