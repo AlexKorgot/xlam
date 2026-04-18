@@ -258,6 +258,24 @@ export default function MorphSection({
 
     useGSAP(
         () => {
+            const ENTER_START = 0;
+            const ENTER_DURATION = 1.7;
+
+            const TOP_FLICKER_START = 1.18;
+            const BOTTOM_FLICKER_START = 1.3;
+
+// общий момент, когда обе M уже "дозрели" и могут начинать основную фазу
+            const M_IGNITION_START = 2.15;
+
+// старт основной анимации M
+            const M_REVEAL_START = 3.15;
+            const M_REVEAL_DURATION = 1.05;
+
+// старт появления видео и ухода зелёного слоя
+            const VIDEO_REVEAL_START = M_REVEAL_START + 0.78;
+
+// финальное гашение glow
+            const OUTLINE_SETTLE_START = VIDEO_REVEAL_START + 0.55;
             const topRow = topRowRef.current;
             const bottomRow = bottomRowRef.current;
 
@@ -378,93 +396,101 @@ export default function MorphSection({
 
 // 2. flicker обычных букв
             tl.add(
-                buildFlickerSection(topLetters, [], 1.18),
+                buildFlickerSection(topLetters, [], TOP_FLICKER_START),
                 0
             );
             tl.add(
-                buildFlickerSection(bottomLetters, [], 1.3),
+                buildFlickerSection(bottomLetters, [], BOTTOM_FLICKER_START),
                 0
             );
 
-// 3. отдельное "зажигание" букв с видео: белые -> зелёные
+// 3. обе M зажигаются согласованно
             tl.add(
-                buildVideoLetterIgnition([topOutlinePath], 2.05),
+                buildVideoLetterIgnition([topOutlinePath], M_IGNITION_START),
                 0
             );
             tl.add(
-                buildVideoLetterIgnition([bottomOutlinePath], 2.15),
+                buildVideoLetterIgnition([bottomOutlinePath], M_IGNITION_START + 0.04),
                 0
             );
 
-// 4. основная анимация M + video
+// 4. основная анимация обеих M стартует одновременно и позже
             tl.to(
                 topState,
                 {
                     rightX: topEndWidth,
-                    duration: 1.05,
+                    duration: M_REVEAL_DURATION,
                     ease: 'power3.inOut',
                     onUpdate: renderTop,
                 },
-                2.75
+                M_REVEAL_START
             )
                 .to(
                     bottomState,
                     {
                         leftX: bottomLeftX,
-                        duration: 1.05,
+                        duration: M_REVEAL_DURATION,
                         ease: 'power3.inOut',
                         onUpdate: renderBottom,
                     },
-                    2.75
+                    M_REVEAL_START
                 )
+
+                // запускаем видео строго рядом с reveal, чтобы не было ощущения спешки
                 .call(
                     () => {
                         topVideo.currentTime = 0;
                         bottomVideo.currentTime = 0;
-                        topVideo.play().catch(() => {
-                        });
-                        bottomVideo.play().catch(() => {
-                        });
+                        topVideo.play().catch(() => {});
+                        bottomVideo.play().catch(() => {});
                     },
                     [],
-                    3.58
+                    VIDEO_REVEAL_START + 0.12
                 )
+
+                // зелёный фон уходит одновременно на обеих M
                 .to(
                     [topOverlayPath, bottomOverlayPath],
                     {
                         opacity: 0,
-                        duration: 0.55,
+                        duration: 0.62,
                         ease: 'power2.out',
                     },
-                    3.42
+                    VIDEO_REVEAL_START
                 )
+
+                // видео проявляется одновременно и без спешки
                 .to(
                     [topVideo, bottomVideo],
                     {
                         opacity: 1,
                         scale: 1,
-                        duration: 0.85,
+                        duration: 0.92,
                         ease: 'power2.out',
                     },
-                    3.38
-                ).to(
-                [topOutlinePath, bottomOutlinePath],
-                {
-                    filter: 'drop-shadow(0 0 4px rgba(102,255,102,0.15))',
-                    duration: 0.45,
-                    ease: 'power1.out',
-                },
-                3.9
-            ).to(
-                [topOutlinePath, bottomOutlinePath],
-                {
-                    stroke: '#ffffff',
-                    filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
-                    duration: 0.7,
-                    ease: 'power2.out',
-                },
-                '>'
-            );
+                    VIDEO_REVEAL_START - 0.02
+                )
+
+                // мягко убираем glow
+                .to(
+                    [topOutlinePath, bottomOutlinePath],
+                    {
+                        filter: 'drop-shadow(0 0 4px rgba(102,255,102,0.15))',
+                        duration: 0.45,
+                        ease: 'power1.out',
+                    },
+                    OUTLINE_SETTLE_START
+                )
+                .to(
+                    [topOutlinePath, bottomOutlinePath],
+                    {
+                        stroke: '#ffffff',
+                        filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
+                        duration: 0.7,
+                        ease: 'power2.out',
+                    },
+                    '>'
+                );
 
 
             if (autoPlayTimeline) {
