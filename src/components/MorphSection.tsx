@@ -1,8 +1,8 @@
 'use client';
 
-import { useId, useRef } from 'react';
+import {useId, useRef} from 'react';
 import gsap from 'gsap';
-import { useGSAP } from '@gsap/react';
+import {useGSAP} from '@gsap/react';
 
 type MorphSectionProps = {
     videoSrc: string;
@@ -84,7 +84,16 @@ export default function MorphSection({
     const bottomOverlayPathRef = useRef<SVGPathElement | null>(null);
     const bottomOutlinePathRef = useRef<SVGPathElement | null>(null);
 
+    const topLetterRefs = useRef<SVGPathElement[]>([]);
+    const bottomLetterRefs = useRef<SVGPathElement[]>([]);
 
+    const setTopLetterRef = (el: SVGPathElement | null, index: number) => {
+        if (el) topLetterRefs.current[index] = el;
+    };
+
+    const setBottomLetterRef = (el: SVGPathElement | null, index: number) => {
+        if (el) bottomLetterRefs.current[index] = el;
+    };
 
 
     const topClipId = useId().replace(/:/g, '') + '-top';
@@ -96,6 +105,156 @@ export default function MorphSection({
     const bottomSvgX = bottomLeftX;
     const bottomSvgWidth = 234.5 - bottomLeftX + 6;
     const bottomSvgHeight = 248;
+
+    const neonPulse = (
+        target: SVGPathElement,
+        startAt: number,
+        isOutline = false
+    ) => {
+        const tl = gsap.timeline();
+
+        const dimGlow = 'drop-shadow(0 0 0px rgba(102,255,102,0))';
+        const midGlow = 'drop-shadow(0 0 6px rgba(102,255,102,0.35))';
+        const strongGlow = 'drop-shadow(0 0 14px rgba(102,255,102,0.65))';
+
+        const toState = (
+            color: string,
+            duration: number,
+            at?: string | number,
+            glow: string = dimGlow
+        ) => {
+            tl.to(
+                target,
+                isOutline
+                    ? {
+                        stroke: color,
+                        filter: glow,
+                        duration,
+                        ease: 'none',
+                    }
+                    : {
+                        fill: color,
+                        filter: glow,
+                        duration,
+                        ease: 'none',
+                    },
+                at
+            );
+        };
+
+        const d1 = gsap.utils.random(0.05, 0.12);
+        const d2 = gsap.utils.random(0.08, 0.22);
+        const d3 = gsap.utils.random(0.05, 0.16);
+        const d4 = gsap.utils.random(0.1, 0.28);
+        const d5 = gsap.utils.random(0.08, 0.2);
+        const d6 = gsap.utils.random(0.18, 0.42);
+
+        const mode = gsap.utils.random(0, 3, 1);
+
+        if (mode === 0) {
+            toState('#111111', d1, startAt, dimGlow);
+            toState('#ffffff', d2, '>', dimGlow);
+            toState('#1a1a1a', d3, '>', dimGlow);
+            toState('#66FF66', d4, '>', strongGlow);
+            toState('#dfffdc', d5, '>', midGlow);
+            toState('#ffffff', d6, '>', dimGlow);
+        } else if (mode === 1) {
+            toState('#000000', d2, startAt, dimGlow);
+            toState('#2a2a2a', d1, '>', dimGlow);
+            toState('#66FF66', d4, '>', strongGlow);
+            toState('#153815', d3, '>', midGlow);
+            toState('#66FF66', d5, '>', strongGlow);
+            toState('#ffffff', d6, '>', dimGlow);
+        } else if (mode === 2) {
+            toState('#0d0d0d', d1, startAt, dimGlow);
+            toState('#ffffff', d1, '>', dimGlow);
+            toState('#050505', d2, '>', dimGlow);
+            toState('#66FF66', d3, '>', strongGlow);
+            toState('#ffffff', d6, '>', dimGlow);
+        } else {
+            toState('#202020', d2, startAt, dimGlow);
+            toState('#000000', d1, '>', dimGlow);
+            toState('#66FF66', d4, '>', strongGlow);
+            toState('#c8ffc8', d5, '>', midGlow);
+            toState('#ffffff', d6, '>', dimGlow);
+        }
+
+        return tl;
+    };
+
+    const buildVideoLetterIgnition = (
+        outlineTargets: SVGPathElement[],
+        startAt: number
+    ) => {
+        const tl = gsap.timeline();
+
+        outlineTargets.forEach((target, i) => {
+            const delay = startAt + i * 0.08;
+
+            tl.to(
+                target,
+                {
+                    stroke: '#0d0d0d',
+                    filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
+                    duration: 0.12,
+                    ease: 'none',
+                },
+                delay
+            )
+                .to(
+                    target,
+                    {
+                        stroke: '#ffffff',
+                        filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
+                        duration: 0.1,
+                        ease: 'none',
+                    },
+                    '>'
+                )
+                .to(
+                    target,
+                    {
+                        stroke: '#66FF66',
+                        filter: 'drop-shadow(0 0 14px rgba(102,255,102,0.7))',
+                        duration: 0.28,
+                        ease: 'none',
+                    },
+                    '>'
+                )
+                .to(
+                    target,
+                    {
+                        stroke: '#66FF66',
+                        filter: 'drop-shadow(0 0 18px rgba(102,255,102,0.9))',
+                        duration: 0.18,
+                        ease: 'none',
+                    },
+                    '>'
+                );
+        });
+
+        return tl;
+    };
+
+    const buildFlickerSection = (
+        letterTargets: SVGPathElement[],
+        outlineTargets: SVGPathElement[],
+        startAt: number
+    ) => {
+        const tl = gsap.timeline();
+
+        letterTargets.forEach((target, i) => {
+            const delay = startAt + gsap.utils.random(0, 0.45) + i * 0.035;
+            tl.add(neonPulse(target, delay, false), 0);
+        });
+
+        outlineTargets.forEach((target, i) => {
+            const delay = startAt + gsap.utils.random(0.08, 0.55) + i * 0.04;
+            tl.add(neonPulse(target, delay, true), 0);
+        });
+
+        return tl;
+    };
 
     useGSAP(
         () => {
@@ -112,6 +271,9 @@ export default function MorphSection({
             const bottomOverlayPath = bottomOverlayPathRef.current;
             const bottomOutlinePath = bottomOutlinePathRef.current;
 
+            const topLetters = topLetterRefs.current.filter(Boolean);
+            const bottomLetters = bottomLetterRefs.current.filter(Boolean);
+
             if (
                 !topRow ||
                 !bottomRow ||
@@ -127,8 +289,8 @@ export default function MorphSection({
                 return;
             }
 
-            const topState = { rightX: TOP_START_RIGHT_X };
-            const bottomState = { leftX: BOTTOM_START_LEFT_X };
+            const topState = {rightX: TOP_START_RIGHT_X};
+            const bottomState = {leftX: BOTTOM_START_LEFT_X};
 
             const renderTop = () => {
                 const d = buildMPathRight(topState.rightX);
@@ -145,27 +307,40 @@ export default function MorphSection({
             };
 
             gsap.set(topRow, {
-                xPercent: -120,
+                xPercent: -135,
                 opacity: 1,
+                filter: 'blur(10px)',
+                scale: 0.985,
+                transformOrigin: 'center center',
             });
 
             gsap.set(bottomRow, {
-                xPercent: 120,
+                xPercent: 135,
                 opacity: 1,
+                filter: 'blur(10px)',
+                scale: 0.985,
+                transformOrigin: 'center center',
             });
 
-            gsap.set([topRow, bottomRow], {
-                filter: 'blur(6px)',
+            gsap.set([...topLetters, ...bottomLetters], {
+                fill: '#ffffff',
+                filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
+            });
+
+            gsap.set([topOutlinePath, bottomOutlinePath], {
+                stroke: '#ffffff',
+                filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
             });
 
             gsap.set([topVideo, bottomVideo], {
                 opacity: 0,
-                scale: 1.04,
+                scale: 1.05,
                 transformOrigin: 'center center',
             });
 
             gsap.set([topOverlayPath, bottomOverlayPath], {
                 opacity: 1,
+                fill: '#66FF66',
             });
 
             renderTop();
@@ -178,68 +353,125 @@ export default function MorphSection({
                 },
             });
 
-            // 1. Выезд строк с разных сторон
-            tl.to(topRow, {
-                xPercent: 0,
-                duration: 1.5,
-                ease: 'expo.out',
-                filter: 'blur(0px)',
-            }, 0).to(bottomRow, {
-                xPercent: 0,
-                duration: 1.5,
-                ease: 'expo.out',
-                filter: 'blur(0px)',
-            }, 0);
+            // 1. cinematic въезд
+            tl.to(
+                topRow,
+                {
+                    xPercent: 0,
+                    duration: 1.7,
+                    ease: 'expo.out',
+                    filter: 'blur(0px)',
+                    scale: 1,
+                },
+                0
+            ).to(
+                bottomRow,
+                {
+                    xPercent: 0,
+                    duration: 1.7,
+                    ease: 'expo.out',
+                    filter: 'blur(0px)',
+                    scale: 1,
+                },
+                0.03
+            );
 
-            // 2. Твоя текущая анимация M + video
+// 2. flicker обычных букв
+            tl.add(
+                buildFlickerSection(topLetters, [], 1.18),
+                0
+            );
+            tl.add(
+                buildFlickerSection(bottomLetters, [], 1.3),
+                0
+            );
+
+// 3. отдельное "зажигание" букв с видео: белые -> зелёные
+            tl.add(
+                buildVideoLetterIgnition([topOutlinePath], 2.05),
+                0
+            );
+            tl.add(
+                buildVideoLetterIgnition([bottomOutlinePath], 2.15),
+                0
+            );
+
+// 4. основная анимация M + video
             tl.to(
                 topState,
                 {
                     rightX: topEndWidth,
-                    duration: 0.9,
+                    duration: 1.05,
+                    ease: 'power3.inOut',
                     onUpdate: renderTop,
                 },
-                0.9
-            ).to(
-                bottomState,
+                2.75
+            )
+                .to(
+                    bottomState,
+                    {
+                        leftX: bottomLeftX,
+                        duration: 1.05,
+                        ease: 'power3.inOut',
+                        onUpdate: renderBottom,
+                    },
+                    2.75
+                )
+                .call(
+                    () => {
+                        topVideo.currentTime = 0;
+                        bottomVideo.currentTime = 0;
+                        topVideo.play().catch(() => {
+                        });
+                        bottomVideo.play().catch(() => {
+                        });
+                    },
+                    [],
+                    3.58
+                )
+                .to(
+                    [topOverlayPath, bottomOverlayPath],
+                    {
+                        opacity: 0,
+                        duration: 0.55,
+                        ease: 'power2.out',
+                    },
+                    3.42
+                )
+                .to(
+                    [topVideo, bottomVideo],
+                    {
+                        opacity: 1,
+                        scale: 1,
+                        duration: 0.85,
+                        ease: 'power2.out',
+                    },
+                    3.38
+                ).to(
+                [topOutlinePath, bottomOutlinePath],
                 {
-                    leftX: bottomLeftX,
-                    duration: 0.9,
-                    onUpdate: renderBottom,
+                    filter: 'drop-shadow(0 0 4px rgba(102,255,102,0.15))',
+                    duration: 0.45,
+                    ease: 'power1.out',
                 },
-                0.9
-            ).call(
-                () => {
-                    topVideo.currentTime = 0;
-                    bottomVideo.currentTime = 0;
-
-                    topVideo.play().catch(() => {});
-                    bottomVideo.play().catch(() => {});
-                },
-                [],
-                1.8
+                3.9
             ).to(
-                [topOverlayPath, bottomOverlayPath],
+                [topOutlinePath, bottomOutlinePath],
                 {
-                    opacity: 0,
-                    duration: 0.42,
+                    stroke: '#ffffff',
+                    filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
+                    duration: 0.7,
+                    ease: 'power2.out',
                 },
-                1.72
-            ).to(
-                [topVideo, bottomVideo],
-                {
-                    opacity: 1,
-                    scale: 1,
-                    duration: 0.6,
-                },
-                1.72
+                '>'
             );
+
 
             if (autoPlayTimeline) {
                 tl.play(0);
             }
         },
-        { scope: rootRef, dependencies: [autoPlayTimeline, topEndWidth, bottomLeftX] }
+        {scope: rootRef, dependencies: [autoPlayTimeline, topEndWidth, bottomLeftX]}
     );
 
     return (
@@ -261,6 +493,7 @@ export default function MorphSection({
                     className="shrink-0"
                 >
                     <path
+                        ref={(el) => setTopLetterRef(el, 0)}
                         d="M144.63 247.71L103.85 176.27L63.71 247.71H0L71.04 123.14L0 0H68.81L107.36 67.49L144.95 0H208.66L139.85 120.62L213.44 247.71H144.63Z"
                         fill="white"
                     />
@@ -275,6 +508,7 @@ export default function MorphSection({
                     className="shrink-0"
                 >
                     <path
+                        ref={(el) => setTopLetterRef(el, 1)}
                         d="M0 181.29H2.55C15.29 181.29 23.47 175.07 27.08 162.62C30.69 150.18 32.5 130.07 32.5 102.31V0H210.9V247.71H147.19V61.03H91.44V102.31C91.44 131.51 90.01 155.62 87.14 174.65C84.27 193.68 79.65 208.52 73.28 219.17C66.91 229.82 58.63 237.24 48.43 241.43C38.24 245.62 25.92 247.71 11.48 247.71H0.00999451V181.3L0 181.29Z"
                         fill="white"
                     />
@@ -289,6 +523,7 @@ export default function MorphSection({
                     className="shrink-0"
                 >
                     <path
+                        ref={(el) => setTopLetterRef(el, 2)}
                         d="M71.85 0H164.24L232.09 247.71H164.87L152.13 200.32H74.72L61.98 247.71H4L71.85 0ZM89.05 146.47H137.79L113.26 54.93L89.05 146.47Z"
                         fill="white"
                     />
@@ -304,7 +539,7 @@ export default function MorphSection({
                 >
                     <defs>
                         <clipPath id={topClipId} clipPathUnits="userSpaceOnUse">
-                            <path ref={topClipPathRef} d={buildMPathRight(TOP_START_RIGHT_X)} />
+                            <path ref={topClipPathRef} d={buildMPathRight(TOP_START_RIGHT_X)}/>
                         </clipPath>
                     </defs>
 
@@ -355,7 +590,7 @@ export default function MorphSection({
                 >
                     <defs>
                         <clipPath id={bottomClipId} clipPathUnits="userSpaceOnUse">
-                            <path ref={bottomClipPathRef} d={buildMPathLeft(BOTTOM_START_LEFT_X)} />
+                            <path ref={bottomClipPathRef} d={buildMPathLeft(BOTTOM_START_LEFT_X)}/>
                         </clipPath>
                     </defs>
 
@@ -402,6 +637,7 @@ export default function MorphSection({
                     className="shrink-0"
                 >
                     <path
+                        ref={(el) => setBottomLetterRef(el, 0)}
                         d="M0 0.00997925H165.66V59.24H63.72V91.55H140.49V148.99H63.72V188.48H167.26V247.71H0.0100098V0L0 0.00997925Z"
                         fill="white"
                     />
@@ -416,6 +652,7 @@ export default function MorphSection({
                     className="shrink-0"
                 >
                     <path
+                        ref={(el) => setBottomLetterRef(el, 1)}
                         d="M0 0.0299988H87.61C105.66 0.0299988 121.75 2.00001 135.87 5.95001C149.99 9.90001 161.83 16.66 171.39 26.23C180.95 35.81 188.22 48.55 193.21 64.46C198.2 80.38 200.7 100.18 200.7 123.87C200.7 147.56 198.2 167.73 193.21 183.64C188.22 199.56 180.95 212.24 171.39 221.69C161.83 231.15 149.99 237.84 135.87 241.79C121.74 245.74 105.66 247.71 87.61 247.71H0V0V0.0299988ZM87.61 186.71C103.32 186.71 115.22 183.66 123.29 177.56C131.36 171.46 135.4 158.71 135.4 139.33V107.74C135.4 89.79 131.36 77.53 123.29 70.94C115.22 64.36 103.32 61.07 87.61 61.07H63.72V186.72H87.61V186.71Z"
                         fill="#ffffff"
                     />
@@ -429,7 +666,11 @@ export default function MorphSection({
                     xmlns="http://www.w3.org/2000/svg"
                     className="shrink-0"
                 >
-                    <path d="M0 0H63.71V247.71H0V0Z" fill="white" />
+                    <path
+                        ref={(el) => setBottomLetterRef(el, 2)}
+                        d="M0 0H63.71V247.71H0V0Z"
+                        fill="white"
+                    />
                 </svg>
 
                 <svg
@@ -441,6 +682,7 @@ export default function MorphSection({
                     className="shrink-0"
                 >
                     <path
+                        ref={(el) => setBottomLetterRef(el, 3)}
                         d="M71.85 0H164.24L232.09 247.71H164.87L152.13 200.32H74.72L61.98 247.71H4L71.85 0ZM89.05 146.47H137.79L113.26 54.93L89.05 146.47Z"
                         fill="white"
                     />
