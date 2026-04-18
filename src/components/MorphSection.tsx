@@ -345,10 +345,11 @@ export default function MorphSection({
 
 // зелёный слой держится дольше;
 // исчезновение и видео стартуют примерно с середины расширения
-            const VIDEO_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION;
+            const VIDEO_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION * 0.5;
+            const REVEAL_DURATION = M_REVEAL_DURATION * 0.65;
 
 // контур тоже начинаем уводить в белый примерно с середины
-            const OUTLINE_TO_WHITE_START = VIDEO_REVEAL_START + 0.02;
+            const OUTLINE_TO_WHITE_START = VIDEO_REVEAL_START + 0.05;
 
             const topRow = topRowRef.current;
             const bottomRow = bottomRowRef.current;
@@ -538,8 +539,8 @@ export default function MorphSection({
                     [topOverlayPath, bottomOverlayPath],
                     {
                         opacity: 0,
-                        duration: 1.1,
-                        ease: 'sine.out',
+                        duration: REVEAL_DURATION,
+                        ease: 'none',
                     },
                     VIDEO_REVEAL_START
                 )
@@ -550,19 +551,19 @@ export default function MorphSection({
                     {
                         opacity: 1,
                         scale: 1,
-                        duration: 1.6,
-                        ease: 'sine.out',
+                        duration: REVEAL_DURATION,
+                        ease: 'none',
                     },
-                    VIDEO_REVEAL_START + 0.12
+                    VIDEO_REVEAL_START + 0.05
                 )
                 .to(
                     [topVideo, bottomVideo],
                     {
                         filter: 'blur(0px)',
-                        duration: 1.4,
-                        ease: 'sine.out',
+                        duration: REVEAL_DURATION,
+                        ease: 'none',
                     },
-                    VIDEO_REVEAL_START + 0.12
+                    VIDEO_REVEAL_START
                 )
 
                 // уже с середины расширения glow начинает ослабляться
