@@ -348,7 +348,7 @@ export default function MorphSection({
             const TOP_VIDEO_DURATION = 1.0;
             const TOP_BLUR_DURATION = 0.9;
             const VIDEO_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION * 0.5;
-            const TOP_VIDEO_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION * 0.55;
+            const TOP_VIDEO_REVEAL_START = M_REVEAL_START;
 
 // контур тоже начинаем уводить в белый примерно с середины
             const OUTLINE_TO_WHITE_START = VIDEO_REVEAL_START + 0.05;
@@ -432,8 +432,8 @@ export default function MorphSection({
 
             gsap.set([topVideo, bottomVideo], {
                 opacity: 0,
-                scale: 1.035,
-                filter: 'blur(10px)',
+                scale: 1.02,
+                filter: 'blur(6px)',
                 transformOrigin: 'center center',
             });
 
@@ -541,34 +541,34 @@ export default function MorphSection({
 
                 // зелёный слой исчезает только после полного расширения букв
                 .to(
-                    topOverlayPath,
-                    {
-                        opacity: 0,
-                        duration: 0.55,
-                        ease: 'sine.out',
-                    },
-                    TOP_VIDEO_REVEAL_START
-                )
-
-                .to(
                     topVideo,
                     {
                         opacity: 1,
                         scale: 1,
-                        duration: 0.9,
+                        duration: 0.92,
                         ease: 'sine.out',
                     },
-                    TOP_VIDEO_REVEAL_START + 0.04
+                    TOP_VIDEO_REVEAL_START
                 )
 
                 .to(
                     topVideo,
                     {
                         filter: 'blur(0px)',
-                        duration: 0.75,
+                        duration: 0.82,
                         ease: 'sine.out',
                     },
                     TOP_VIDEO_REVEAL_START
+                )
+
+                .to(
+                    topOverlayPath,
+                    {
+                        opacity: 0,
+                        duration: 0.78,
+                        ease: 'sine.out',
+                    },
+                    TOP_VIDEO_REVEAL_START + 0.06
                 )
                 // нижняя M: voltage reveal после завершения расширения
                 .call(
