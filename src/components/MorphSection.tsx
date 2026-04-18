@@ -265,7 +265,7 @@ export default function MorphSection({
             const BOTTOM_FLICKER_START = 1.3;
 
 // общий момент, когда обе M уже "дозрели" и могут начинать основную фазу
-            const M_IGNITION_START = 2.15;
+            const M_IGNITION_START = 2.35;
 
 // старт основной анимации M
             const M_REVEAL_START = 3.15;
@@ -357,7 +357,7 @@ export default function MorphSection({
             });
 
             gsap.set([topOverlayPath, bottomOverlayPath], {
-                opacity: 1,
+                opacity: 0,
                 fill: '#66FF66',
             });
 
