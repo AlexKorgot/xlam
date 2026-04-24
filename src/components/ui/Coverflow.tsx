@@ -118,7 +118,7 @@ function getSlideStyle(offset: number) {
 export default function MatchboxWarpSlider() {
     const [activeIndex, setActiveIndex] = useState(2);
     const rootRef = useRef<HTMLDivElement | null>(null);
-    const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
+    const slideRefs = useRef<(HTMLElement | null)[]>([]);
     const titleRef = useRef<HTMLDivElement | null>(null);
     const guardRef = useRef(false);
 

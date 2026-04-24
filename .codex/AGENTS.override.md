@@ -34,3 +34,13 @@
 - Use GSAP for complex motion, timelines, and scroll-based animation
 - Avoid using Tailwind transform utilities on elements animated by GSAP
 - Prefer animating opacity and transforms; avoid layout-thrashing properties when possible
+
+## Coding Guidelines
+
+- Make the smallest safe change possible.
+- Do not invent APIs, props, hooks, utilities, or files that do not already exist.
+- Do not refactor unrelated code.
+- Preserve the existing architecture and naming conventions unless explicitly asked to change them.
+- Read the relevant files before editing.
+- Prefer targeted fixes over broad rewrites.
+- If source code changes are made, run the relevant lint/build/typecheck command when available.

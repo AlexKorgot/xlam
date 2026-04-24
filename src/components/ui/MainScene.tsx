@@ -9,11 +9,8 @@ import {
   type SecondSectionDesignHandle,
 } from '@/src/components/ui/SecondSectionDesign';
 import { ServicesSliderSection } from '@/src/components/ui/ServicesSliderSection/ServicesSliderSection';
-import HeaderDesktop from "@/src/components/ui/Header/HeaderDesktop";
-import {Container} from "@/src/components/ui/grid/Container";
-import HeaderMobile from "@/src/components/ui/Header/HeaderMobile";
-import MorphSection from "@/src/components/MorphSection";
-import MatchboxWarpSlider from "@/src/components/ui/Coverflow";
+import { Container } from '@/src/components/ui/grid/Container';
+import MorphSection from '@/src/components/MorphSection';
 
 export const MainScene = () => {
   const headerRef = useRef<HeaderHandle>(null);
@@ -22,7 +19,6 @@ export const MainScene = () => {
   return (
     <div className="font-normalidad relative min-h-screen bg-black text-foreground">
       <Header ref={headerRef} />
-        <Container> <HeaderDesktop ref={headerRef}/></Container>
 
       <FullPageScroll
         progressCallback={(progress) => {
@@ -41,15 +37,14 @@ export const MainScene = () => {
             data-reveal
             className="px-6 text-sm uppercase tracking-[0.4em] text-white/60"
           >
-              <Container>
-                  <main className="min-h-screen bg-black">
-                      {/*<MatchboxWarpSlider/>*/}
-                      <MorphSection
-                          videoSrc="/video/3_slider_content_video.mov"
-                          endWidth={820}
-                      />
-                  </main>
-              </Container>
+            <Container>
+              <main className="min-h-screen bg-black">
+                <MorphSection
+                  videoSrc="/video/3_slider_content_video.mov"
+                  topEndWidth={820}
+                />
+              </main>
+            </Container>
           </div>
         </FullPageSection>
       </FullPageScroll>

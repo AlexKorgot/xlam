@@ -1,15 +1,86 @@
-import {useRef} from "react";
-import {AnimatedLogoHandle, AnimatedLogoNew} from "@/src/components/ui/AnimatedLogoNew";
-import BurgerButton from "@/src/components/ui/BurgerButton";
-import BurgerButtonNew from "@/src/components/ui/BurgerButtonNew";
+'use client';
 
-export default function HeaderMobile() {
-    const logoRef = useRef<AnimatedLogoHandle>(null);
+import { forwardRef, useImperativeHandle, useRef } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { AnimatedLogoNew, type AnimatedLogoHandle } from '@/src/components/ui/AnimatedLogoNew';
+import BurgerButtonNew from '@/src/components/ui/BurgerButtonNew';
+import type { HeaderHandle } from '@/src/components/ui/Header/types';
 
-    return (<div className='flex justify-between items-center pt-[20px]'>
+gsap.registerPlugin(useGSAP);
 
-        <AnimatedLogoNew ref={logoRef}/>
-        {/*<BurgerButton/>*/}
-        <BurgerButtonNew />
-    </div>)
-}
+const HeaderMobile = forwardRef<HeaderHandle>(function HeaderMobile(_props, ref) {
+  const headerRef = useRef<HTMLElement>(null);
+  const logoSlotRef = useRef<HTMLDivElement>(null);
+  const burgerRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<AnimatedLogoHandle>(null);
+  const timelineRef = useRef<gsap.core.Timeline | null>(null);
+  const progressRef = useRef(0);
+
+  useGSAP(
+    () => {
+      if (!logoSlotRef.current || !burgerRef.current) {
+        return;
+      }
+
+      gsap.set([logoSlotRef.current, burgerRef.current], {
+        autoAlpha: 1,
+        y: -18,
+      });
+
+      timelineRef.current = gsap
+        .timeline({
+          paused: true,
+          defaults: {
+            ease: 'power2.out',
+          },
+        })
+        .to(
+          [logoSlotRef.current, burgerRef.current],
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.24,
+            stagger: 0.04,
+          },
+          0.58,
+        );
+
+      timelineRef.current.progress(progressRef.current);
+
+      return () => {
+        timelineRef.current?.kill();
+      };
+    },
+    { scope: headerRef },
+  );
+
+  useImperativeHandle(ref, () => ({
+    setProgress(progress: number) {
+      progressRef.current = gsap.utils.clamp(0, 1, progress);
+      timelineRef.current?.progress(progressRef.current);
+      logoRef.current?.setProgress(progressRef.current);
+    },
+  }));
+
+  return (
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 px-4 pt-5 sm:px-8 sm:pt-7 md:hidden">
+      <div className="mx-auto w-full max-w-[1740px] px-[15px]">
+        <header
+          ref={headerRef}
+          className="flex items-start justify-between font-normalidad font-medium uppercase"
+        >
+          <div ref={logoSlotRef} className="pointer-events-none">
+            <AnimatedLogoNew ref={logoRef} variant="mobile" />
+          </div>
+
+          <div ref={burgerRef} className="pointer-events-auto">
+            <BurgerButtonNew />
+          </div>
+        </header>
+      </div>
+    </div>
+  );
+});
+
+export default HeaderMobile;
