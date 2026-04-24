@@ -121,14 +121,6 @@ export default function GlitchText({ children, size }: {
                     x: 0,
                     duration: 0.2,
                 })
-                .to(`.${s.glitch}`, {
-                    scaleY: 1 + 0.06 * Math.min(k, 1.5),
-                    duration: 0.02,
-                })
-                .to(`.${s.glitch}`, {
-                    scaleY: 1,
-                    duration: 0.04,
-                });
 
             return () => {
                 tlRef.current?.kill();

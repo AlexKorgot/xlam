@@ -87,6 +87,8 @@ export default function MorphSection({
     const topLetterRefs = useRef<SVGPathElement[]>([]);
     const bottomLetterRefs = useRef<SVGPathElement[]>([]);
 
+    const textRef = useRef<HTMLParagraphElement | null>(null);
+
     const setTopLetterRef = (el: SVGPathElement | null, index: number) => {
         if (el) topLetterRefs.current[index] = el;
     };
@@ -356,6 +358,8 @@ export default function MorphSection({
             const BOTTOM_VOLTAGE_START =
                 TOP_VIDEO_REVEAL_START + TOP_VIDEO_DURATION + 1 + 0.08;
 
+            const TEXT_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION * 0.72;
+
             const topRow = topRowRef.current;
             const bottomRow = bottomRowRef.current;
 
@@ -442,6 +446,12 @@ export default function MorphSection({
                 fill: '#66FF66',
             });
 
+            gsap.set(textRef.current, {
+                opacity: 0,
+                y: 18,
+                filter: 'blur(8px)',
+            });
+
             renderTop();
             renderBottom();
 
@@ -451,6 +461,18 @@ export default function MorphSection({
                     ease: 'power3.inOut',
                 },
             });
+
+            tl.to(
+                textRef.current,
+                {
+                    opacity: 1,
+                    y: 0,
+                    filter: 'blur(0px)',
+                    duration: 1.05,
+                    ease: 'power2.out',
+                },
+                TEXT_REVEAL_START
+            );
 
             // 1. cinematic въезд
             tl.to(
@@ -948,6 +970,12 @@ export default function MorphSection({
                         fill="white"
                     />
                 </svg>
+            </div>
+
+            <div className="text-center">
+                <p  ref={textRef} className="text-[40px] font-bold uppercase leading-[1.14] mt-[50px] text-white">
+                    МЫ СОЗДАЕМ КРЕАТИВНЫЕ ВИДЕО, ШОУ, РЕКЛАМУ и БРЕНДЫ, которые звучат дольше, чем длятся
+                </p>
             </div>
         </section>
     );
