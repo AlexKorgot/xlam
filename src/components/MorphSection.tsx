@@ -1,8 +1,14 @@
 'use client';
 
-import {useId, useRef} from 'react';
+import {forwardRef, useId, useImperativeHandle, useRef} from 'react';
 import gsap from 'gsap';
 import {useGSAP} from '@gsap/react';
+
+export interface MorphSectionHandle {
+    playForward: () => void;
+    playReverse: () => void;
+    reset: () => void;
+}
 
 type MorphSectionProps = {
     videoSrc: string;
@@ -63,16 +69,17 @@ function buildMPathLeft(leftX: number) {
   `;
 }
 
-export default function MorphSection({
-                                         videoSrc,
-                                         autoPlayTimeline = true,
-                                         className = '',
-                                         topEndWidth = 820,
-                                         bottomLeftX = -585,
-                                     }: MorphSectionProps) {
+const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function MorphSection({
+    videoSrc,
+    autoPlayTimeline = true,
+    className = '',
+    topEndWidth = 820,
+    bottomLeftX = -585,
+}: MorphSectionProps, ref) {
     const rootRef = useRef<HTMLDivElement | null>(null);
     const topRowRef = useRef<HTMLDivElement | null>(null);
     const bottomRowRef = useRef<HTMLDivElement | null>(null);
+    const timelineRef = useRef<gsap.core.Timeline | null>(null);
 
     const topVideoRef = useRef<HTMLVideoElement | null>(null);
     const topClipPathRef = useRef<SVGPathElement | null>(null);
@@ -95,6 +102,23 @@ export default function MorphSection({
 
     const setBottomLetterRef = (el: SVGPathElement | null, index: number) => {
         if (el) bottomLetterRefs.current[index] = el;
+    };
+
+    const pauseVideo = (video: HTMLVideoElement | null, reset = false) => {
+        if (!video) {
+            return;
+        }
+
+        video.pause();
+
+        if (reset) {
+            video.currentTime = 0;
+        }
+    };
+
+    const pauseVideos = (reset = false) => {
+        pauseVideo(topVideoRef.current, reset);
+        pauseVideo(bottomVideoRef.current, reset);
     };
 
 
@@ -332,9 +356,6 @@ export default function MorphSection({
 
     useGSAP(
         () => {
-            const ENTER_START = 0;
-            const ENTER_DURATION = 1.7;
-
             const TOP_FLICKER_START = 1.18;
             const BOTTOM_FLICKER_START = 1.3;
 
@@ -348,7 +369,6 @@ export default function MorphSection({
 // зелёный слой держится дольше;
 // исчезновение и видео стартуют примерно с середины расширения
             const TOP_VIDEO_DURATION = 1.0;
-            const TOP_BLUR_DURATION = 0.9;
             const VIDEO_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION * 0.5;
             const TOP_VIDEO_REVEAL_START = M_REVEAL_START;
 
@@ -456,10 +476,38 @@ export default function MorphSection({
             renderBottom();
 
             const tl = gsap.timeline({
-                paused: !autoPlayTimeline,
+                paused: true,
                 defaults: {
                     ease: 'power3.inOut',
                 },
+            });
+
+            const resetIfBeforeThreshold = (
+                video: HTMLVideoElement | null,
+                threshold: number,
+                currentTime: number,
+            ) => {
+                if (!video || currentTime >= threshold) {
+                    return;
+                }
+
+                video.pause();
+
+                if (video.currentTime !== 0) {
+                    video.currentTime = 0;
+                }
+            };
+
+            tl.eventCallback('onUpdate', () => {
+                const currentTime = tl.time();
+
+                resetIfBeforeThreshold(topVideoRef.current, VIDEO_REVEAL_START, currentTime);
+                resetIfBeforeThreshold(bottomVideoRef.current, BOTTOM_VOLTAGE_START - 0.04, currentTime);
+            });
+
+            tl.eventCallback('onReverseComplete', () => {
+                pauseVideos(true);
+                tl.pause(0);
             });
 
             tl.to(
@@ -749,13 +797,51 @@ export default function MorphSection({
                     OUTLINE_TO_WHITE_START
                 );
 
+            timelineRef.current = tl;
 
             if (autoPlayTimeline) {
                 tl.play(0);
+            } else {
+                tl.pause(0);
+                pauseVideos(true);
             }
+
+            return () => {
+                pauseVideos(true);
+                timelineRef.current?.kill();
+                timelineRef.current = null;
+            };
         },
         {scope: rootRef, dependencies: [autoPlayTimeline, topEndWidth, bottomLeftX]}
     );
+
+    useImperativeHandle(ref, () => ({
+        playForward() {
+            const timeline = timelineRef.current;
+
+            if (!timeline) {
+                return;
+            }
+
+            timeline.timeScale(1);
+            timeline.play();
+        },
+        playReverse() {
+            const timeline = timelineRef.current;
+
+            if (!timeline) {
+                return;
+            }
+
+            pauseVideos();
+            timeline.timeScale(1);
+            timeline.reverse();
+        },
+        reset() {
+            pauseVideos(true);
+            timelineRef.current?.pause(0);
+        },
+    }));
 
     return (
         <section
@@ -979,4 +1065,6 @@ export default function MorphSection({
             </div>
         </section>
     );
-}
+});
+
+export default MorphSection;

@@ -9,6 +9,7 @@ gsap.registerPlugin(Observer);
 
 export const FULLPAGE_SCROLL_IGNORE_ATTR = 'data-fullpage-scroll-ignore';
 export const FULLPAGE_SCROLL_EVENT = 'fullpage-scroll-request';
+export const FULLPAGE_SECTION_REVEAL_DELAY = 0.24;
 
 type ScrollRequestDetail = {
   direction: 'up' | 'down';
@@ -19,6 +20,7 @@ interface FullPageScrollProps {
   animationDuration?: number;
   progressCallback?: (value: number) => void;
   sectionChangeCallback?: (index: number) => void;
+  transitionStartCallback?: (startIndex: number, targetIndex: number) => void;
   targetSection?: number;
 }
 
@@ -27,6 +29,7 @@ export default function FullPageScroll({
   animationDuration = 0.95,
   progressCallback,
   sectionChangeCallback,
+  transitionStartCallback,
   targetSection,
 }: FullPageScrollProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -77,6 +80,7 @@ export default function FullPageScroll({
     const nextReveal = getRevealElements(nextSection);
 
     animationRef.current?.kill();
+    transitionStartCallback?.(startIndex, index);
 
     if (nextReveal.length > 0) {
       gsap.set(nextReveal, {
@@ -133,11 +137,11 @@ export default function FullPageScroll({
             ease: 'power2.out',
             clearProps: 'transform',
           },
-          0.24,
+          FULLPAGE_SECTION_REVEAL_DELAY,
         );
       }
     },
-    [animationDuration, sectionChangeCallback, syncProgress],
+    [animationDuration, sectionChangeCallback, syncProgress, transitionStartCallback],
   );
 
   const handleScrollDown = useCallback(() => {
