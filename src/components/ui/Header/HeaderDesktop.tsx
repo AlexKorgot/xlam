@@ -82,7 +82,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
       <div className="mx-auto w-full max-w-[1740px] px-[15px]">
         <header
           ref={headerRef}
-          className="grid grid-cols-[1fr_auto_1fr] items-start font-normalidad font-medium uppercase"
+          className="grid grid-cols-[1fr_auto_1fr] items-center font-normalidad font-medium uppercase"
         >
           <div
             ref={leftRef}

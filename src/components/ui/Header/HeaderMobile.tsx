@@ -75,7 +75,7 @@ const HeaderMobile = forwardRef<HeaderHandle, HeaderMobileProps>(function Header
       <div className="mx-auto w-full max-w-[1740px] px-[15px]">
         <header
           ref={headerRef}
-          className="flex items-start justify-between font-normalidad font-medium uppercase"
+          className="flex items-center justify-between font-normalidad font-medium uppercase"
         >
           <div ref={logoSlotRef} className="pointer-events-none">
             <AnimatedLogoNew

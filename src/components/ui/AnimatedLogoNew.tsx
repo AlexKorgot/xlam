@@ -20,19 +20,23 @@ interface AnimatedLogoNewProps {
 const logoVariants = {
   desktop: {
     centerWidthClass: 'w-[min(58vw,32rem)]',
-    plateWidthClass: 'w-[11rem] sm:w-[13rem] lg:w-[15.5rem]',
-    logoWidthClass: 'w-[3.5rem] sm:w-[4rem] lg:w-[4.75rem]',
+    plateWidthClass: 'w-[95px]',
+    logoWidthClass: 'w-[95px]',
     imageClassName: 'w-[95px] h-[48px] max-w-full',
     plateSizes: '(max-width: 768px) 11rem, 15.5rem',
   },
   mobile: {
     centerWidthClass: 'w-[min(68vw,22rem)]',
-    plateWidthClass: 'w-[7.5rem] sm:w-[8.5rem]',
-    logoWidthClass: 'w-[2.7rem] sm:w-[3rem]',
+    plateWidthClass: 'w-[72px] sm:w-[82px]',
+    logoWidthClass: 'w-[72px] sm:w-[82px]',
     imageClassName: 'w-[72px] h-auto max-w-full sm:w-[82px]',
     plateSizes: '8rem',
   },
 } as const;
+
+const LOGO_MORPH_DURATION = 0.86;
+const LOGO_CROSSFADE_START = 0.78;
+const LOGO_CROSSFADE_DURATION = LOGO_MORPH_DURATION - LOGO_CROSSFADE_START;
 
 export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewProps>(
   function AnimatedLogoNew({ variant = 'desktop', initialProgress = 0 }, ref) {
@@ -84,77 +88,62 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
             y: 0,
             scale: 1,
             autoAlpha: 1,
+            transformOrigin: 'center center',
           });
 
           gsap.set(headerPlateRef.current, {
-            autoAlpha: 0,
-            y: -20,
-            scale: 0.96,
+            autoAlpha: 1,
+            y: 0,
+            scale: 1,
           });
 
           gsap.set(headerLogoRef.current, {
             autoAlpha: 0,
-            scale: 0.88,
+            scale: 1,
+            transformOrigin: 'center center',
           });
 
           timelineRef.current = gsap
             .timeline({
               paused: true,
               defaults: {
-                ease: 'power3.inOut',
+                ease: 'none',
               },
             })
             .to(
               centerLogoRef.current,
               {
-                keyframes: [
-                  {
-                    x: x * 0.92,
-                    y: y * 0.92,
-                    scale: scale * 1.05,
-                    duration: 0.62,
-                    ease: 'power3.inOut',
-                  },
-                  {
-                    x,
-                    y,
-                    scale,
-                    duration: 0.18,
-                    ease: 'power2.out',
-                  },
-                ],
+                x,
+                y,
+                scale,
+                duration: LOGO_MORPH_DURATION,
+                ease: 'power2.inOut',
               },
               0,
-            )
-            .to(
-              headerPlateRef.current,
-              {
-                autoAlpha: 1,
-                y: 0,
-                scale: 1,
-                duration: 0.18,
-                ease: 'power2.out',
-              },
-              0.66,
             )
             .to(
               headerLogoRef.current,
               {
                 autoAlpha: 1,
-                scale: 1,
-                duration: 0.1,
-                ease: 'power2.out',
+                duration: LOGO_CROSSFADE_DURATION,
               },
-              0.76,
+              LOGO_CROSSFADE_START,
             )
             .to(
               centerLogoRef.current,
               {
                 autoAlpha: 0,
-                duration: 0.06,
-                ease: 'power2.in',
+                duration: LOGO_CROSSFADE_DURATION,
               },
-              0.78,
+              LOGO_CROSSFADE_START,
+            )
+            .to(
+              centerLogoRef.current,
+              {
+                autoAlpha: 0,
+                duration: 0,
+              },
+              LOGO_MORPH_DURATION,
             );
 
           timelineRef.current.progress(progressRef.current);
@@ -212,10 +201,10 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
           className={styles.plateWidthClass}
           style={{ willChange: 'transform, opacity' }}
         >
-          <div className="relative aspect-[895/367] w-full">
+          <div className="relative w-full">
             <div
               ref={headerLogoRef}
-              className={`absolute inset-x-0 bottom-[18%] mx-auto ${styles.logoWidthClass}`}
+              className={`relative mx-auto ${styles.logoWidthClass}`}
               style={{ willChange: 'transform, opacity' }}
             >
               <Image
