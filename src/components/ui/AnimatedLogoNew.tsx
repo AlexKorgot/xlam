@@ -35,8 +35,6 @@ const logoVariants = {
 } as const;
 
 const LOGO_MORPH_DURATION = 0.86;
-const LOGO_CROSSFADE_START = 0.78;
-const LOGO_CROSSFADE_DURATION = LOGO_MORPH_DURATION - LOGO_CROSSFADE_START;
 
 export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewProps>(
   function AnimatedLogoNew({ variant = 'desktop', initialProgress = 0 }, ref) {
@@ -121,27 +119,17 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
               },
               0,
             )
-            .to(
+            .set(
               headerLogoRef.current,
               {
                 autoAlpha: 1,
-                duration: LOGO_CROSSFADE_DURATION,
               },
-              LOGO_CROSSFADE_START,
+              LOGO_MORPH_DURATION,
             )
-            .to(
+            .set(
               centerLogoRef.current,
               {
                 autoAlpha: 0,
-                duration: LOGO_CROSSFADE_DURATION,
-              },
-              LOGO_CROSSFADE_START,
-            )
-            .to(
-              centerLogoRef.current,
-              {
-                autoAlpha: 0,
-                duration: 0,
               },
               LOGO_MORPH_DURATION,
             );
