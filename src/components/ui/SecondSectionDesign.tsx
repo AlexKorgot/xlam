@@ -14,6 +14,7 @@ import FullPageSection from '@/src/components/ui/FullPageSection';
 import Spring from '@/src/lib/assets/main/spring.png';
 import Sphere from '@/src/lib/assets/main/circle.png';
 import StoneM from '@/src/lib/assets/main/m.png';
+import GreenBrick from '@/src/lib/assets/main/lego_green.png';
 import FurryX from '@/src/lib/assets/main/x.png';
 import Shield from '@/src/lib/assets/main/sield.png';
 import Tube from '@/src/lib/assets/main/tube.png';
@@ -27,6 +28,7 @@ type ArtKey =
   | 'spring'
   | 'sphere'
   | 'stoneM'
+  | 'greenBrick'
   | 'furryX'
   | 'shield'
   | 'tube'
@@ -51,7 +53,7 @@ const artItems: ArtItemConfig[] = [
     src: Spring,
     alt: 'Blue spring',
     className:
-      'absolute left-[4%] top-[-9%] w-[42vw] max-w-[33rem] min-w-[15rem] md:left-[5%] lg:left-[12%] lg:top-[-8%]',
+      'absolute left-[5%] top-[-17%] w-[40vw] max-w-[41rem] min-w-[15rem] md:left-[7%] md:top-[-20%] lg:left-[9.3%] lg:top-[-23.5%] lg:w-[34.2vw]',
     imageClassName: 'w-full',
     depth: 0.9,
     delay: 0,
@@ -64,7 +66,7 @@ const artItems: ArtItemConfig[] = [
     src: Sphere,
     alt: 'Black sphere',
     className:
-      'absolute left-[42.5%] top-[11%] w-[16vw] max-w-[12rem] min-w-[6.5rem] lg:left-[42.5%] lg:top-[11%]',
+      'absolute left-[38%] top-[4%] w-[22vw] max-w-[34rem] min-w-[8rem] md:left-[36%] md:top-[1%] lg:left-[35.1%] lg:top-[-1.4%] lg:w-[28vw]',
     imageClassName: 'w-full',
     depth: 0.55,
     delay: 0.34,
@@ -77,7 +79,7 @@ const artItems: ArtItemConfig[] = [
     src: StoneM,
     alt: 'Stone M',
     className:
-      'absolute right-[1%] top-[-6%] w-[42vw] max-w-[33rem] min-w-[15rem] md:right-[2%] lg:right-[9%] lg:top-[-5%]',
+      'absolute left-[53%] top-[-14%] w-[42vw] max-w-[56.5rem] min-w-[15rem] md:left-[49%] md:top-[-22%] lg:left-[46.5%] lg:top-[-28.8%] lg:w-[47vw]',
     imageClassName: 'w-full',
     depth: 0.85,
     delay: 0.16,
@@ -86,11 +88,24 @@ const artItems: ArtItemConfig[] = [
     startRotate: 18,
   },
   {
+    key: 'greenBrick',
+    src: GreenBrick,
+    alt: 'Green brick',
+    className:
+      'absolute left-[26%] top-[-31%] w-[58vw] max-w-[46rem] min-w-[18rem] md:left-[29%] md:top-[-34%] md:w-[46vw] lg:left-[31%] lg:top-[-36%] lg:w-[38vw]',
+    imageClassName: 'w-full rotate-[-34deg]',
+    depth: 0.7,
+    delay: 0.08,
+    startX: 80,
+    startY: -460,
+    startRotate: -20,
+  },
+  {
     key: 'furryX',
     src: FurryX,
     alt: 'Green X',
     className:
-      'absolute left-[7%] bottom-[-31%] w-[39vw] max-w-[31rem] min-w-[13rem] md:left-[8%] lg:left-[12%] lg:bottom-[-28%]',
+      'absolute left-[5%] top-[54%] w-[43vw] max-w-[42rem] min-w-[13rem] md:left-[12%] md:top-[53%] lg:left-[15.2%] lg:top-[52.8%] lg:w-[40vw]',
     imageClassName: 'w-full',
     depth: 0.8,
     delay: 0.52,
@@ -103,7 +118,7 @@ const artItems: ArtItemConfig[] = [
     src: Shield,
     alt: 'Shield',
     className:
-      'absolute left-[38.5%] bottom-[7%] w-[20vw] max-w-[14rem] min-w-[6.5rem] lg:left-[39%] lg:bottom-[7%]',
+      'absolute left-[39%] top-[50%] w-[22vw] max-w-[23rem] min-w-[7rem] md:left-[35%] md:top-[44%] lg:left-[38%] lg:top-[38.5%] lg:w-[22vw]',
     imageClassName: 'w-full',
     depth: 0.45,
     delay: 0.7,
@@ -116,7 +131,7 @@ const artItems: ArtItemConfig[] = [
     src: Tube,
     alt: 'Metal tube',
     className:
-      'absolute left-[31%] bottom-[-36%] w-[28vw] max-w-[21rem] min-w-[9rem] lg:left-[32%] lg:bottom-[-33%]',
+      'absolute left-[31%] top-[78%] w-[28vw] max-w-[21rem] min-w-[9rem] md:left-[31%] md:top-[76%] lg:left-[32%] lg:top-[74%]',
     imageClassName: 'w-full rotate-[38deg]',
     depth: 0.35,
     delay: 1.06,
@@ -129,7 +144,7 @@ const artItems: ArtItemConfig[] = [
     src: DarkBrick,
     alt: 'Dark brick',
     className:
-      'absolute right-[4%] bottom-[-26%] w-[37vw] max-w-[29rem] min-w-[12rem] md:right-[5%] lg:right-[10%] lg:bottom-[-23%]',
+      'absolute left-[57%] top-[69%] w-[44vw] max-w-[77rem] min-w-[12rem] md:left-[50%] md:top-[50%] lg:left-[42.4%] lg:top-[31.3%] lg:w-[64vw]',
     imageClassName: 'w-full rotate-[12deg]',
     depth: 0.65,
     delay: 0.88,
@@ -330,6 +345,7 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
                   src={item.src}
                   alt={item.alt}
                   unoptimized
+                  loading={item.key === 'greenBrick' ? 'eager' : 'lazy'}
                   className={item.imageClassName}
                   sizes="(max-width: 1024px) 30vw, 18vw"
                 />
@@ -339,10 +355,13 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
 
           <div
             ref={titleRef}
-            className="absolute inset-x-0 top-[36%] z-20 mx-auto flex max-w-[80rem] flex-col items-center px-4 text-center sm:top-[37%] lg:top-[39%]"
+            className="absolute inset-x-0 top-[39.8%] z-20 mx-auto flex max-w-[760px] flex-col items-center px-4 text-center lg:max-w-[850px] 2xl:max-w-[1164px]"
             style={{ willChange: 'transform, opacity' }}
           >
-            <h2 className="text-[60px] font-bold uppercase leading-[1.121]  text-white">
+            <h2
+              aria-label={lines.join(' ')}
+              className="text-[34px] font-bold uppercase leading-[1.21] text-white sm:text-[40px] lg:text-[48px] 2xl:text-[60px]"
+            >
                 Наш продакшн начинается с идей, которые другие бы выбросили
             </h2>
           </div>
