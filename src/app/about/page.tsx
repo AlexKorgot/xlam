@@ -1,7 +1,5 @@
-import {WhyUsSection} from "@/pageComponent/WhyUsSection";
+import { TeamSection } from '@/pageComponent/TeamSection';
 
 export default function Main() {
-    return (
-        <WhyUsSection/>
-    );
+  return <TeamSection />;
 }

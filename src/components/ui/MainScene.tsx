@@ -14,7 +14,6 @@ import { Container } from '@/src/components/ui/grid/Container';
 import MorphSection, {
   type MorphSectionHandle,
 } from '@/src/components/MorphSection';
-import {WhyUsSection} from "@/pageComponent/WhyUsSection";
 import { useHeaderProgress } from '@/src/components/ui/Header/HeaderProvider';
 
 export const MainScene = () => {
