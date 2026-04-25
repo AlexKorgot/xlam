@@ -279,10 +279,10 @@ export default function MatchboxWarpSlider() {
     const activeSlide = slides[activeIndex];
 
     return (
-        <section className="min-h-screen bg-[#111111] text-[#f2efe8]">
+        <section className="min-[100svh] bg-[#111111] text-[#f2efe8]">
             <div
                 ref={rootRef}
-                className="relative mx-auto flex min-h-screen w-full max-w-[1800px] flex-col justify-center overflow-hidden px-4 py-10 md:px-8"
+                className="relative mx-auto flex min-[100svh] w-full max-w-[1800px] flex-col justify-center overflow-hidden px-4 py-10 md:px-8"
             >
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,248,220,0.16),transparent_30%,transparent_58%,rgba(0,0,0,0.72)_100%)]" />
                 <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.65)_0%,rgba(0,0,0,0.12)_20%,rgba(255,255,255,0.05)_50%,rgba(0,0,0,0.12)_80%,rgba(0,0,0,0.68)_100%)]" />

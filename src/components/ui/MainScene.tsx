@@ -15,6 +15,7 @@ import { Container } from '@/src/components/ui/grid/Container';
 import MorphSection, {
   type MorphSectionHandle,
 } from '@/src/components/MorphSection';
+import {WhyUsSection} from "@/pageComponent/WhyUsSection";
 
 export const MainScene = () => {
   const headerRef = useRef<HeaderHandle>(null);
@@ -39,7 +40,7 @@ export const MainScene = () => {
   );
 
   return (
-    <div className="font-normalidad relative min-h-screen bg-black text-foreground">
+    <div className="font-normalidad relative min-h-[100svh] bg-black text-foreground">
       <Header ref={headerRef} />
 
       <FullPageScroll
@@ -74,7 +75,7 @@ export const MainScene = () => {
             className="px-6 text-sm uppercase tracking-[0.4em] text-white/60"
           >
             <Container>
-              <main className="min-h-screen bg-black">
+              <main className="min-[100svh] bg-black">
                 <MorphSection
                   ref={morphSectionRef}
                   videoSrc="/video/3_slider_content_video.mov"

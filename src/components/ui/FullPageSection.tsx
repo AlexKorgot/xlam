@@ -16,7 +16,7 @@ export default function FullPageSection({
   return (
     <section
       id={id}
-      className={`flex h-screen w-full items-center justify-center ${className}`}
+      className={`flex h-[100svh] w-full items-center justify-center ${className}`}
     >
       {children}
     </section>

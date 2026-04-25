@@ -274,7 +274,7 @@ export default function FullPageScroll({
   }, [handleScrollDown, handleScrollUp]);
 
   return (
-    <div className="relative h-screen w-full overflow-hidden">
+    <div className="relative h-[100svh] w-full overflow-hidden">
       <div
         ref={containerRef}
         className="absolute left-0 top-0 w-full"
