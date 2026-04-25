@@ -38,7 +38,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
       }
 
       gsap.set([leftRef.current, rightRef.current], {
-        autoAlpha: 1,
+        autoAlpha: 0,
         y: -18,
       });
 

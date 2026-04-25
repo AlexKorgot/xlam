@@ -159,3 +159,41 @@ When editing UI:
 - preserve visual consistency with nearby sections
 - keep class order readable and grouped logically
 - favor semantic markup and accessible focus states
+
+## Agent Workflow
+
+Before editing:
+1. Inspect `package.json` to confirm the actual Next.js version and available scripts.
+2. Inspect the relevant route, layout, component, and style files before making changes.
+3. For framework-level changes involving layouts, routing, metadata, server/client boundaries, or config, first check the relevant Next.js documentation and the existing code patterns in this repository.
+4. Make a short implementation plan before editing non-trivial UI, routing, or animation logic.
+5. Prefer the smallest safe change that solves the task.
+
+During editing:
+- Do not rewrite files from scratch unless explicitly requested.
+- Do not rename files, components, classes, or variables unless necessary.
+- Do not introduce new architectural patterns when an existing pattern already solves the task.
+- Do not add new dependencies unless explicitly requested.
+- Do not modify unrelated sections, routes, or shared components.
+
+After editing:
+- Summarize changed files.
+- Explain why each changed file was necessary.
+- Mention any assumptions.
+- Mention validation commands run, or clearly state if they were not run.
+
+## Minimal Change Policy
+
+Codex should prefer targeted edits over broad refactors.
+
+Avoid:
+- rewriting working components for style only
+- changing folder structure without a clear need
+- replacing Sass with Tailwind or Tailwind with Sass unless requested
+- changing animation architecture when a small fix is enough
+- touching unrelated sections while working on one section
+- “cleanup” changes mixed into feature work
+
+Allowed cleanup:
+- only cleanup that is directly required for the requested change
+- only cleanup inside files already being changed for the task

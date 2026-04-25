@@ -26,12 +26,12 @@ const HeaderMobile = forwardRef<HeaderHandle, HeaderMobileProps>(function Header
 
   useGSAP(
     () => {
-      if (!logoSlotRef.current || !burgerRef.current) {
+      if (!burgerRef.current) {
         return;
       }
 
-      gsap.set([logoSlotRef.current, burgerRef.current], {
-        autoAlpha: 1,
+      gsap.set(burgerRef.current, {
+        autoAlpha: 0,
         y: -18,
       });
 
@@ -43,7 +43,7 @@ const HeaderMobile = forwardRef<HeaderHandle, HeaderMobileProps>(function Header
           },
         })
         .to(
-          [logoSlotRef.current, burgerRef.current],
+          burgerRef.current,
           {
             autoAlpha: 1,
             y: 0,
