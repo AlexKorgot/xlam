@@ -13,4 +13,4 @@ const nextConfig: NextConfig = {
     assetPrefix: isProd ? `/${repo}/` : '',
 }
 
-export default nextConfig
+module.exports = nextConfig

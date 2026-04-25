@@ -31,6 +31,16 @@
   }
 }
 
+@layer base {
+  * {
+    @apply caret-transparent;
+  }
+
+  *:focus {
+    @apply outline-none;
+  }
+}
+
 html {
   background:
     radial-gradient(circle at top, rgba(184, 255, 44, 0.08), transparent 28%),

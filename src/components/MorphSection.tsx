@@ -847,7 +847,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
         <section
             ref={rootRef}
             className={[
-                'w-full overflow-hidden bg-black px-6 py-8 md:px-10 md:py-10',
+                'w-full overflow-hidden bg-transparent px-6 py-8 md:px-10 md:py-10',
                 className,
             ].join(' ')}
         >

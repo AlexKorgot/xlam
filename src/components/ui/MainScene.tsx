@@ -72,7 +72,7 @@ export const MainScene = () => {
             className="px-6 text-sm uppercase tracking-[0.4em] text-white/60"
           >
             <Container>
-              <main className="min-[100svh] bg-black">
+              <main className="min-[100svh]">
                 <MorphSection
                   ref={morphSectionRef}
                   videoSrc="/video/3_slider_content_video.mov"
