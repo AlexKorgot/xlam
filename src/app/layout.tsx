@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import localFont from 'next/font/local'
+import { HeaderProvider } from '@/src/components/ui/Header/HeaderProvider';
 
 const sans = localFont({
   src: [
@@ -45,7 +46,9 @@ export default function RootLayout({
       lang="ru"
       className={`h-full antialiased ${sans.variable}`}
     >
-      <body className="flex min-h-[100svh] flex-col overflow-x-hidden">{children}</body>
+      <body className="flex min-h-[100svh] flex-col overflow-x-hidden">
+        <HeaderProvider>{children}</HeaderProvider>
+      </body>
     </html>
   );
 }

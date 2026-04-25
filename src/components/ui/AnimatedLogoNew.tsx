@@ -5,7 +5,6 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import Image from 'next/image';
 import Logo from '@/src/lib/assets/logo.svg';
-import HeaderPlate from '@/src/lib/assets/main/rectangle.png';
 
 gsap.registerPlugin(useGSAP);
 
@@ -15,6 +14,7 @@ export interface AnimatedLogoHandle {
 
 interface AnimatedLogoNewProps {
   variant?: 'desktop' | 'mobile';
+  initialProgress?: number;
 }
 
 const logoVariants = {
@@ -35,13 +35,13 @@ const logoVariants = {
 } as const;
 
 export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewProps>(
-  function AnimatedLogoNew({ variant = 'desktop' }, ref) {
+  function AnimatedLogoNew({ variant = 'desktop', initialProgress = 0 }, ref) {
     const containerRef = useRef<HTMLDivElement>(null);
     const centerLogoRef = useRef<HTMLDivElement>(null);
     const headerPlateRef = useRef<HTMLDivElement>(null);
     const headerLogoRef = useRef<HTMLDivElement>(null);
     const timelineRef = useRef<gsap.core.Timeline | null>(null);
-    const progressRef = useRef(0);
+    const progressRef = useRef(gsap.utils.clamp(0, 1, initialProgress));
     const styles = logoVariants[variant];
 
     useGSAP(
@@ -212,17 +212,7 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
           className={styles.plateWidthClass}
           style={{ willChange: 'transform, opacity' }}
         >
-          <div className="relative w-full">
-            <Image
-              src={HeaderPlate}
-              alt=""
-              unoptimized
-              width={895}
-              height={367}
-              sizes={styles.plateSizes}
-              className="w-full"
-              style={{ height: 'auto' }}
-            />
+          <div className="relative aspect-[895/367] w-full">
             <div
               ref={headerLogoRef}
               className={`absolute inset-x-0 bottom-[18%] mx-auto ${styles.logoWidthClass}`}

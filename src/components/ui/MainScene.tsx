@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { Header, type HeaderHandle } from '@/src/components/ui/Header/Header';
 import FullPageScroll, {
   FULLPAGE_SECTION_REVEAL_DELAY,
 } from '@/src/components/ui/FullPageScroll';
@@ -16,9 +15,10 @@ import MorphSection, {
   type MorphSectionHandle,
 } from '@/src/components/MorphSection';
 import {WhyUsSection} from "@/pageComponent/WhyUsSection";
+import { useHeaderProgress } from '@/src/components/ui/Header/HeaderProvider';
 
 export const MainScene = () => {
-  const headerRef = useRef<HeaderHandle>(null);
+  const setHeaderProgress = useHeaderProgress();
   const secondSectionRef = useRef<SecondSectionDesignHandle>(null);
   const morphSectionRef = useRef<MorphSectionHandle>(null);
   const morphStartTimeoutRef = useRef<number | null>(null);
@@ -41,11 +41,9 @@ export const MainScene = () => {
 
   return (
     <div className="font-normalidad relative min-h-[100svh] bg-black text-foreground">
-      <Header ref={headerRef} />
-
       <FullPageScroll
         progressCallback={(progress) => {
-          headerRef.current?.setProgress(progress);
+          setHeaderProgress(progress);
           secondSectionRef.current?.setProgress(progress);
         }}
         transitionStartCallback={(startIndex, targetIndex) => {

@@ -16,13 +16,20 @@ const desktopMenu = {
   right: ['Контакты', 'Связаться с нами'],
 } as const;
 
-const HeaderDesktop = forwardRef<HeaderHandle>(function HeaderDesktop(_props, ref) {
+interface HeaderDesktopProps {
+  initialProgress?: number;
+}
+
+const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function HeaderDesktop(
+  { initialProgress = 0 },
+  ref,
+) {
   const headerRef = useRef<HTMLElement>(null);
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<AnimatedLogoHandle>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
-  const progressRef = useRef(0);
+  const progressRef = useRef(gsap.utils.clamp(0, 1, initialProgress));
 
   useGSAP(
     () => {
@@ -89,7 +96,11 @@ const HeaderDesktop = forwardRef<HeaderHandle>(function HeaderDesktop(_props, re
           </div>
 
           <div className="pointer-events-none flex justify-center px-4">
-            <AnimatedLogoNew ref={logoRef} variant="desktop" />
+            <AnimatedLogoNew
+              ref={logoRef}
+              variant="desktop"
+              initialProgress={initialProgress}
+            />
           </div>
 
           <div

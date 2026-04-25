@@ -7,7 +7,14 @@ import type { HeaderHandle } from '@/src/components/ui/Header/types';
 
 export type { HeaderHandle } from '@/src/components/ui/Header/types';
 
-export const Header = forwardRef<HeaderHandle>(function Header(_props, ref) {
+interface HeaderProps {
+  initialProgress?: number;
+}
+
+export const Header = forwardRef<HeaderHandle, HeaderProps>(function Header(
+  { initialProgress = 0 },
+  ref,
+) {
   const desktopRef = useRef<HeaderHandle>(null);
   const mobileRef = useRef<HeaderHandle>(null);
 
@@ -20,8 +27,8 @@ export const Header = forwardRef<HeaderHandle>(function Header(_props, ref) {
 
   return (
     <>
-      <HeaderDesktop ref={desktopRef} />
-      <HeaderMobile ref={mobileRef} />
+      <HeaderDesktop ref={desktopRef} initialProgress={initialProgress} />
+      <HeaderMobile ref={mobileRef} initialProgress={initialProgress} />
     </>
   );
 });

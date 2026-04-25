@@ -9,13 +9,20 @@ import type { HeaderHandle } from '@/src/components/ui/Header/types';
 
 gsap.registerPlugin(useGSAP);
 
-const HeaderMobile = forwardRef<HeaderHandle>(function HeaderMobile(_props, ref) {
+interface HeaderMobileProps {
+  initialProgress?: number;
+}
+
+const HeaderMobile = forwardRef<HeaderHandle, HeaderMobileProps>(function HeaderMobile(
+  { initialProgress = 0 },
+  ref,
+) {
   const headerRef = useRef<HTMLElement>(null);
   const logoSlotRef = useRef<HTMLDivElement>(null);
   const burgerRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<AnimatedLogoHandle>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
-  const progressRef = useRef(0);
+  const progressRef = useRef(gsap.utils.clamp(0, 1, initialProgress));
 
   useGSAP(
     () => {
@@ -71,7 +78,11 @@ const HeaderMobile = forwardRef<HeaderHandle>(function HeaderMobile(_props, ref)
           className="flex items-start justify-between font-normalidad font-medium uppercase"
         >
           <div ref={logoSlotRef} className="pointer-events-none">
-            <AnimatedLogoNew ref={logoRef} variant="mobile" />
+            <AnimatedLogoNew
+              ref={logoRef}
+              variant="mobile"
+              initialProgress={initialProgress}
+            />
           </div>
 
           <div ref={burgerRef} className="pointer-events-auto">
