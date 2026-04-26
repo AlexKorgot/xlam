@@ -39,7 +39,7 @@ export const MainScene = () => {
   );
 
   return (
-    <div className="font-normalidad relative min-h-[100svh] bg-black text-foreground">
+    <div className="font-normalidad relative min-h-[100svh]">
       <FullPageScroll
         progressCallback={(progress) => {
           setHeaderProgress(progress);
@@ -60,28 +60,20 @@ export const MainScene = () => {
           }
         }}
       >
-        <FullPageSection id="intro" className="bg-black">
+        <FullPageSection id="intro" >
           <div className="sr-only">XLAM Media</div>
         </FullPageSection>
 
         <SecondSectionDesign ref={secondSectionRef} />
         <ServicesSliderSection />
-        <FullPageSection id="next" className="bg-[#050505] text-center">
-          <div
-            data-reveal
-            className="px-6 text-sm uppercase tracking-[0.4em] text-white/60"
-          >
-            <Container>
-              <main className="min-[100svh]">
-                <MorphSection
-                  ref={morphSectionRef}
-                  videoSrc="/video/3_slider_content_video.mov"
-                  autoPlayTimeline={false}
-                  topEndWidth={820}
-                />
-              </main>
-            </Container>
-          </div>
+        <FullPageSection id="next">
+          <MorphSection
+              ref={morphSectionRef}
+              className={'flex flex-col items-center'}
+              videoSrc="/video/3_slider_content_video.mov"
+              autoPlayTimeline={false}
+              topEndWidth={820}
+          />
         </FullPageSection>
       </FullPageScroll>
     </div>
