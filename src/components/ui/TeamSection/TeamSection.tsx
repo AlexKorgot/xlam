@@ -75,7 +75,7 @@ export function TeamSection() {
       className="relative isolate min-h-[100svh] overflow-hidden bg-black font-normalidad text-white"
       aria-labelledby="team-heading"
     >
-      <div className="mx-auto flex min-h-[100svh] w-full max-w-[1920px] flex-col px-5 pb-8 pt-6 sm:px-8 lg:px-[92px] lg:pb-[132px] lg:pt-0">
+      <div className="mx-auto flex min-h-[100svh] w-full max-w-[1920px] flex-col px-5 pb-8 pt-6 sm:px-8 lg:px-[92px] lg:pt-0">
         <div className="relative flex flex-1 flex-col pt-16 sm:pt-20 lg:block lg:pt-0">
           <div className="relative z-20 max-w-[673px] lg:mt-[271px]">
             <h2

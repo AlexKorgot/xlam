@@ -6,13 +6,14 @@ import { useGSAP } from '@gsap/react';
 import { AnimatedLogoNew, type AnimatedLogoHandle } from '@/src/components/ui/AnimatedLogoNew';
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
 import type { HeaderHandle } from '@/src/components/ui/Header/types';
+import Link from "next/link";
 
 gsap.registerPlugin(useGSAP);
 
 const MENU_ITEM_SIZE = '20';
 
 const desktopMenu = {
-  left: ['Услуги', 'Портфолио'],
+  left: [{ elem: <Link href={'/about'}>Услуги</Link>, key: 'about'}, {elem: <Link href={'/contacts'}>Портфолио</Link>, key: 'contacts'}],
   right: ['Контакты', 'Связаться с нами'],
 } as const;
 
@@ -89,8 +90,8 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
             className="pointer-events-auto flex items-center gap-[20px] text-white lg:gap-[32px]"
           >
             {desktopMenu.left.map((item) => (
-              <GlitchText key={item} size={MENU_ITEM_SIZE}>
-                {item}
+              <GlitchText key={item.key} size={MENU_ITEM_SIZE}>
+                {item.elem}
               </GlitchText>
             ))}
           </div>

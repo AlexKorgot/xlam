@@ -5,6 +5,7 @@ import {
   useImperativeHandle,
   useMemo,
   useRef,
+  type CSSProperties,
   type MutableRefObject,
 } from 'react';
 import gsap from 'gsap';
@@ -22,6 +23,8 @@ import DarkBrick from '@/src/lib/assets/main/lego_dark.png';
 
 export interface SecondSectionDesignHandle {
   setProgress: (progress: number) => void;
+  playEnter: () => void;
+  playExit: () => void;
 }
 
 type ArtKey =
@@ -40,11 +43,17 @@ interface ArtItemConfig {
   alt: string;
   className: string;
   imageClassName: string;
+  left: number;
+  top: number;
+  size: number;
   depth: number;
   delay: number;
   startX: number;
   startY: number;
   startRotate: number;
+  exitX: number;
+  exitY: number;
+  exitRotate: number;
 }
 
 const artItems: ArtItemConfig[] = [
@@ -52,105 +61,145 @@ const artItems: ArtItemConfig[] = [
     key: 'spring',
     src: Spring,
     alt: 'Blue spring',
-    className:
-      'absolute left-[5%] top-[-17%] w-[40vw] max-w-[41rem] min-w-[15rem] md:left-[7%] md:top-[-20%] lg:left-[9.3%] lg:top-[-23.5%] lg:w-[34.2vw]',
+    className: 'absolute',
     imageClassName: 'w-full',
+    left: 158,
+    top: -225,
+    size: 584,
     depth: 0.9,
     delay: 0,
     startX: -520,
     startY: -340,
     startRotate: -34,
+    exitX: -460,
+    exitY: -280,
+    exitRotate: -24,
   },
   {
     key: 'sphere',
     src: Sphere,
     alt: 'Black sphere',
-    className:
-      'absolute left-[38%] top-[4%] w-[22vw] max-w-[34rem] min-w-[8rem] md:left-[36%] md:top-[1%] lg:left-[35.1%] lg:top-[-1.4%] lg:w-[28vw]',
+    className: 'absolute',
     imageClassName: 'w-full',
+    left: 600,
+    top: -13,
+    size: 481,
     depth: 0.55,
     delay: 0.34,
     startX: 0,
     startY: -420,
     startRotate: 22,
+    exitX: 0,
+    exitY: -360,
+    exitRotate: 18,
   },
   {
     key: 'stoneM',
     src: StoneM,
     alt: 'Stone M',
-    className:
-      'absolute left-[53%] top-[-14%] w-[42vw] max-w-[56.5rem] min-w-[15rem] md:left-[49%] md:top-[-22%] lg:left-[46.5%] lg:top-[-28.8%] lg:w-[47vw]',
+    className: 'absolute hidden md:block',
     imageClassName: 'w-full',
+    left: 795,
+    top: -277,
+    size: 803,
     depth: 0.85,
     delay: 0.16,
     startX: 560,
     startY: -320,
     startRotate: 18,
+    exitX: 560,
+    exitY: -320,
+    exitRotate: 18,
   },
   {
     key: 'greenBrick',
     src: GreenBrick,
     alt: 'Green brick',
-    className:
-      'absolute left-[26%] top-[-31%] w-[58vw] max-w-[46rem] min-w-[18rem] md:left-[29%] md:top-[-34%] md:w-[46vw] lg:left-[31%] lg:top-[-36%] lg:w-[38vw]',
+    className: 'absolute',
     imageClassName: 'w-full rotate-[-34deg]',
+    left: 431,
+    top: -505,
+    size: 886,
     depth: 0.7,
     delay: 0.08,
     startX: 80,
     startY: -460,
     startRotate: -20,
+    exitX: 120,
+    exitY: -520,
+    exitRotate: -22,
   },
   {
     key: 'furryX',
     src: FurryX,
     alt: 'Green X',
-    className:
-      'absolute left-[5%] top-[54%] w-[43vw] max-w-[42rem] min-w-[13rem] md:left-[12%] md:top-[53%] lg:left-[15.2%] lg:top-[52.8%] lg:w-[40vw]',
+    className: 'absolute',
     imageClassName: 'w-full',
+    left: 25,
+    top: 441,
+    size: 830,
     depth: 0.8,
     delay: 0.52,
     startX: -500,
     startY: 420,
     startRotate: -40,
+    exitX: -520,
+    exitY: 420,
+    exitRotate: -28,
   },
   {
     key: 'shield',
     src: Shield,
     alt: 'Shield',
-    className:
-      'absolute left-[39%] top-[50%] w-[22vw] max-w-[23rem] min-w-[7rem] md:left-[35%] md:top-[44%] lg:left-[38%] lg:top-[38.5%] lg:w-[22vw]',
+    className: 'absolute hidden md:block',
     imageClassName: 'w-full',
+    left: 556,
+    top: 456,
+    size: 524,
     depth: 0.45,
     delay: 0.7,
     startX: 0,
     startY: 420,
     startRotate: -24,
+    exitX: 80,
+    exitY: 380,
+    exitRotate: 18,
   },
   {
     key: 'tube',
     src: Tube,
     alt: 'Metal tube',
-    className:
-      'absolute left-[31%] top-[78%] w-[28vw] max-w-[21rem] min-w-[9rem] md:left-[31%] md:top-[76%] lg:left-[32%] lg:top-[74%]',
+    className: 'absolute hidden md:block',
     imageClassName: 'w-full rotate-[38deg]',
+    left: 369,
+    top: 603,
+    size: 839,
     depth: 0.35,
     delay: 1.06,
     startX: -260,
     startY: 560,
     startRotate: 32,
+    exitX: -220,
+    exitY: 520,
+    exitRotate: 22,
   },
   {
     key: 'brick',
     src: DarkBrick,
     alt: 'Dark brick',
-    className:
-      'absolute left-[57%] top-[69%] w-[44vw] max-w-[77rem] min-w-[12rem] md:left-[50%] md:top-[50%] lg:left-[42.4%] lg:top-[31.3%] lg:w-[64vw]',
+    className: 'absolute',
     imageClassName: 'w-full rotate-[12deg]',
+    left: 540,
+    top: 270,
+    size: 1095,
     depth: 0.65,
     delay: 0.88,
     startX: 560,
     startY: 460,
     startRotate: 26,
+    exitX: 600,
+    exitY: 460,
+    exitRotate: 22,
   },
 ];
 
@@ -171,6 +220,7 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
     const artRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const parallaxRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const timelineRef = useRef<gsap.core.Timeline | null>(null);
+    const scatterTimelineRef = useRef<gsap.core.Timeline | null>(null);
     const titleNodeRef = useRef<HTMLDivElement | null>(null);
     const progressRef = useRef(0);
 
@@ -199,6 +249,8 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
         gsap.set(titleRef.current, {
           autoAlpha: 0,
           scale: 0,
+          xPercent: -50,
+          yPercent: -50,
           transformOrigin: 'center center',
         });
 
@@ -294,6 +346,7 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
           sectionRef.current?.removeEventListener('pointermove', handlePointerMove);
           sectionRef.current?.removeEventListener('pointerleave', resetParallax);
           timelineRef.current?.kill();
+          scatterTimelineRef.current?.kill();
         };
       },
       { scope: sectionRef },
@@ -301,6 +354,7 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
 
     useImperativeHandle(ref, () => ({
       setProgress(progress: number) {
+        scatterTimelineRef.current?.kill();
         progressRef.current = gsap.utils.clamp(0, 1, progress);
         const revealProgress = gsap.utils.mapRange(0.46, 1, 0, 1, progressRef.current);
         timelineRef.current?.progress(gsap.utils.clamp(0, 1, revealProgress));
@@ -316,8 +370,100 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
           gsap.set(titleNodeRef.current, {
             autoAlpha: easedTitleProgress,
             scale: easedTitleProgress,
+            xPercent: -50,
+            yPercent: -50,
           });
         }
+      },
+      playEnter() {
+        scatterTimelineRef.current?.kill();
+
+        const timeline = gsap.timeline({
+          defaults: {
+            duration: 0.82,
+            ease: 'power3.out',
+          },
+        });
+
+        artItems.forEach((item) => {
+          const artNode = artRefs.current[item.key];
+
+          if (!artNode) {
+            return;
+          }
+
+          timeline.to(
+            artNode,
+            {
+              x: 0,
+              y: 0,
+              rotate: 0,
+              autoAlpha: 1,
+            },
+            item.delay * 0.22,
+          );
+        });
+
+        if (titleNodeRef.current) {
+          timeline.to(
+            titleNodeRef.current,
+            {
+              autoAlpha: 1,
+              scale: 1,
+              xPercent: -50,
+              yPercent: -50,
+              duration: 0.62,
+            },
+            0.12,
+          );
+        }
+
+        scatterTimelineRef.current = timeline;
+      },
+      playExit() {
+        scatterTimelineRef.current?.kill();
+
+        const timeline = gsap.timeline({
+          defaults: {
+            duration: 0.74,
+            ease: 'power3.inOut',
+          },
+        });
+
+        artItems.forEach((item) => {
+          const artNode = artRefs.current[item.key];
+
+          if (!artNode) {
+            return;
+          }
+
+          timeline.to(
+            artNode,
+            {
+              x: item.exitX,
+              y: item.exitY,
+              rotate: item.exitRotate,
+              autoAlpha: 0,
+            },
+            item.delay * 0.08,
+          );
+        });
+
+        if (titleNodeRef.current) {
+          timeline.to(
+            titleNodeRef.current,
+            {
+              autoAlpha: 0,
+              scale: 0.92,
+              xPercent: -50,
+              yPercent: -58,
+              duration: 0.58,
+            },
+            0,
+          );
+        }
+
+        scatterTimelineRef.current = timeline;
       },
     }));
    
@@ -330,39 +476,57 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
           ref={sectionRef}
           className="relative h-full w-full overflow-hidden"
         >
-          {artItems.map((item) => (
-            <div
-              key={item.key}
-              ref={getOrCreateRef(artRefs, item.key)}
-              className={item.className}
-              style={{ willChange: 'transform, opacity' }}
-            >
-              <div
-                ref={getOrCreateRef(parallaxRefs, item.key)}
-                style={{ willChange: 'transform' }}
-              >
-                <Image
-                  src={item.src}
-                  alt={item.alt}
-                  unoptimized
-                  loading={item.key === 'greenBrick' ? 'eager' : 'lazy'}
-                  className={item.imageClassName}
-                  sizes="(max-width: 1024px) 30vw, 18vw"
-                />
-              </div>
+          <div className="pointer-events-none absolute inset-0 z-10 mx-auto w-full max-w-[1710px] overflow-visible">
+            <div className="absolute left-1/2 top-1/2 h-[962px] w-[1710px] origin-center -translate-x-1/2 -translate-y-1/2 scale-[0.46] sm:scale-[0.58] md:scale-[0.75] lg:scale-[0.84] xl:scale-[0.9] 2xl:scale-100">
+              {artItems.map((item) => (
+                <div
+                  key={item.key}
+                  ref={getOrCreateRef(artRefs, item.key)}
+                  className={`${item.className} pointer-events-none`}
+                  style={
+                    {
+                      left: item.left,
+                      top: item.top,
+                      width: item.size,
+                      height: item.size,
+                      willChange: 'transform, opacity',
+                    } as CSSProperties
+                  }
+                >
+                  <div
+                    ref={getOrCreateRef(parallaxRefs, item.key)}
+                    style={{ willChange: 'transform' }}
+                  >
+                    <Image
+                      src={item.src}
+                      alt=""
+                      aria-hidden="true"
+                      unoptimized
+                      loading={item.key === 'greenBrick' ? 'eager' : 'lazy'}
+                      className={item.imageClassName}
+                      sizes="(max-width: 1710px) 100vw, 1710px"
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
 
           <div
             ref={titleRef}
-            className="absolute inset-x-0 top-[39.8%] z-20 mx-auto flex max-w-[760px] flex-col items-center px-4 text-center lg:max-w-[850px] 2xl:max-w-[1164px]"
+            className="absolute left-1/2 top-1/2 z-30 flex w-[88%] max-w-[1100px] flex-col items-center px-4 py-[14svh] text-center lg:w-[57%]"
+            data-safe-zone="heading"
             style={{ willChange: 'transform, opacity' }}
           >
             <h2
               aria-label={lines.join(' ')}
-              className="text-[34px] font-bold uppercase leading-[1.21] text-white sm:text-[40px] lg:text-[48px] 2xl:text-[60px]"
+              className="text-[clamp(2rem,3.125vw,3.75rem)] font-bold uppercase leading-[1.21] text-white"
             >
-                Наш продакшн начинается с идей, которые другие бы выбросили
+              {lines.map((line) => (
+                <span key={line} className="block">
+                  {line}
+                </span>
+              ))}
             </h2>
           </div>
         </section>

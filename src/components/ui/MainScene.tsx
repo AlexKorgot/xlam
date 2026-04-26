@@ -10,7 +10,6 @@ import {
   type SecondSectionDesignHandle,
 } from '@/src/components/ui/SecondSectionDesign';
 import { ServicesSliderSection } from '@/src/components/ui/ServicesSliderSection/ServicesSliderSection';
-import { Container } from '@/src/components/ui/grid/Container';
 import MorphSection, {
   type MorphSectionHandle,
 } from '@/src/components/MorphSection';
@@ -47,6 +46,14 @@ export const MainScene = () => {
         }}
         transitionStartCallback={(startIndex, targetIndex) => {
           clearMorphStartTimeout();
+
+          if (startIndex === 1 && targetIndex === 2) {
+            secondSectionRef.current?.playExit();
+          }
+
+          if (startIndex === 2 && targetIndex === 1) {
+            secondSectionRef.current?.playEnter();
+          }
 
           if (startIndex === 2 && targetIndex === 3) {
             morphStartTimeoutRef.current = window.setTimeout(() => {

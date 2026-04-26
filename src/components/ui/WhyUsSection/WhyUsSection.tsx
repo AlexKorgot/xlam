@@ -19,7 +19,7 @@ const featureRows = [
 export function WhyUsSection() {
   return (
     <section
-      className="relative isolate h-[100svh] overflow-hidden bg-black font-normalidad text-white"
+      className="relative isolate h-[100svh] overflow-hidden bg-black font-normalidad text-white pt-[150px]"
       aria-labelledby="why-us-heading"
     >
       <Image

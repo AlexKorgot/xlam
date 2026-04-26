@@ -198,7 +198,7 @@ export function BaseModal({
               aria-label={closeLabel}
               onClick={onClose}
             >
-              ×
+              x
             </button>
 
             {children}
