@@ -365,6 +365,8 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
 // старт роста М
             const M_REVEAL_START = 3.48;
             const M_REVEAL_DURATION = 1.05;
+            const BOTTOM_M_ACTIVATION_START = M_ACTIVATION_START + 0.04;
+            const BOTTOM_VIDEO_PLAY_START = BOTTOM_M_ACTIVATION_START + 0.32;
 
 // зелёный слой держится дольше;
 // исчезновение и видео стартуют примерно с середины расширения
@@ -502,7 +504,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 const currentTime = tl.time();
 
                 resetIfBeforeThreshold(topVideoRef.current, VIDEO_REVEAL_START, currentTime);
-                resetIfBeforeThreshold(bottomVideoRef.current, BOTTOM_VOLTAGE_START - 0.04, currentTime);
+                resetIfBeforeThreshold(bottomVideoRef.current, BOTTOM_VIDEO_PLAY_START, currentTime);
             });
 
             tl.eventCallback('onReverseComplete', () => {
@@ -601,12 +603,18 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 .call(
                     () => {
                         topVideo.currentTime = 0;
-                        bottomVideo.currentTime = 0;
                         topVideo.play().catch(() => {});
-                        bottomVideo.play().catch(() => {});
                     },
                     [],
                     VIDEO_REVEAL_START
+                )
+
+                .call(
+                    () => {
+                        bottomVideo.play().catch(() => {});
+                    },
+                    [],
+                    BOTTOM_VIDEO_PLAY_START
                 )
 
                 // зелёный слой исчезает только после полного расширения букв
@@ -643,7 +651,6 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 // нижняя M: voltage reveal после завершения расширения
                 .call(
                     () => {
-                        bottomVideo.currentTime = 0;
                         bottomVideo.play().catch(() => {});
                     },
                     [],
