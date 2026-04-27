@@ -160,7 +160,7 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
 
         return (
             <div ref={containerRef} className="relative">
-                <div className="fixed inset-0 z-40 flex items-center justify-center">
+                <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center">
                     <div
                         ref={centerLogoRef}
                         className={styles.centerWidthClass}
@@ -196,7 +196,7 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
                             className={`relative mx-auto ${styles.logoWidthClass}`}
                             style={{willChange: 'transform, opacity'}}
                         >
-                            <Link href={'/'}>
+                            <Link className="pointer-events-auto block" href={'/'}>
                                 <Image
                                 src={Logo}
                                 alt="XLAM Media"
