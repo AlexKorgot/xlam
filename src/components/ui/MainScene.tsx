@@ -14,6 +14,7 @@ import MorphSection, {
   type MorphSectionHandle,
 } from '@/src/components/MorphSection';
 import { useHeaderProgress } from '@/src/components/ui/Header/HeaderProvider';
+import { publicAssetPath } from '@/src/lib/publicAssetPath';
 
 export const MainScene = () => {
   const setHeaderProgress = useHeaderProgress();
@@ -77,7 +78,7 @@ export const MainScene = () => {
           <MorphSection
               ref={morphSectionRef}
               className={'flex flex-col items-center'}
-              videoSrc="/video/3_slider_content_video.mov"
+              videoSrc={publicAssetPath('/video/3_slider_content_video.mov')}
               autoPlayTimeline={false}
               topEndWidth={820}
           />

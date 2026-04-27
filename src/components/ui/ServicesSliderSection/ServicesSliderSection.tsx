@@ -5,6 +5,7 @@ import {
   FULLPAGE_SCROLL_EVENT,
   FULLPAGE_SCROLL_IGNORE_ATTR,
 } from '@/src/components/ui/FullPageScroll';
+import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import useEmblaCarousel from 'embla-carousel-react';
 import WheelGesturesPlugin from 'embla-carousel-wheel-gestures';
 import {
@@ -43,7 +44,7 @@ interface ServicesSliderSectionProps {
   allowSectionScrollOnEdges?: boolean;
 }
 
-const sliderVideoSrc = '/video/3_slider_content_video.mov';
+const sliderVideoSrc = publicAssetPath('/video/3_slider_content_video.mov');
 const scrollIgnoreAttr = { [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' } as const;
 const edgeWheelThreshold = 48;
 const edgeWheelUnlockDelay = 700;
