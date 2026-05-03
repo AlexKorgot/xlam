@@ -47,7 +47,8 @@ export default function RootLayout({
       className={`h-full antialiased ${sans.variable}`}
     >
       <body className="flex min-h-[100svh] flex-col overflow-x-hidden">
-        <HeaderProvider>{children}</HeaderProvider>
+        {/*<HeaderProvider>{children}</HeaderProvider>*/}
+        {children}
       </body>
     </html>
   );
