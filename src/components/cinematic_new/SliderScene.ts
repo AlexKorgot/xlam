@@ -241,6 +241,7 @@ export class SliderScene {
       if (index === this.activeIndex) {
         this.timeline?.to(plane.mesh.position, { x: 0, y: 0, z: 0, duration }, 0);
         this.timeline?.to(plane.mesh.rotation, { x: 0, y: 0, z: 0, duration }, 0);
+        this.timeline?.to(plane.scaleState, { value: 1, duration, onUpdate: () => plane.setScale(plane.scaleState.value) }, 0);
         this.timeline?.to(plane.uniforms.uPlaneSize.value, { x: this.viewport.x, y: this.viewport.y, duration }, 0);
         this.timeline?.to(plane.uniforms.uTransitionProgress, { value: 1, duration: duration * 0.86 }, 0);
         this.timeline?.to(plane.uniforms.uBend, { value: 0, duration: duration * 0.7 }, 0);
@@ -288,6 +289,11 @@ export class SliderScene {
       plane.mesh.renderOrder = this.getRenderOrder(offset, index);
       this.timeline?.to(plane.mesh.position, { x: layout.x, y: layout.y, z: layout.z, duration }, 0.06);
       this.timeline?.to(plane.mesh.rotation, { x: 0, y: layout.rotationY, z: 0, duration }, 0.06);
+      this.timeline?.to(
+        plane.scaleState,
+        { value: layout.scale, duration, onUpdate: () => plane.setScale(plane.scaleState.value) },
+        0.06,
+      );
       this.timeline?.to(plane.uniforms.uPlaneSize.value, { x: layout.width, y: layout.height, duration }, 0.06);
       this.timeline?.to(plane.uniforms.uTransitionProgress, { value: 0, duration: duration * 0.72 }, 0.06);
       this.timeline?.to(plane.uniforms.uBend, { value: layout.bend, duration: duration * 0.72 }, 0.12);
@@ -577,36 +583,38 @@ export class SliderScene {
     const height = this.viewport.y;
     const isMobile = width < 760;
     const absoluteOffset = Math.abs(offset);
-    const activeWidth = width * (isMobile ? 0.72 : 0.64);
+    const distance = clamp(absoluteOffset, 0, 1);
+    const distanceEase = easeOut(distance);
+    const activeWidth = width * (isMobile ? 0.72 : 0.62);
     const activeHeight = activeWidth / SLIDER_ASPECT;
-    const angleStep = isMobile ? 0.34 : 0.36;
-    const sideCenterX = width * (isMobile ? 0.58 : 0.56);
+    const angleStep = isMobile ? 0.3 : 0.32;
+    const sideCenterX = width * (isMobile ? 0.5 : 0.48);
     const radius = sideCenterX / Math.sin(angleStep);
     const maxAngle = angleStep * 1.95;
     const angle = clamp(offset * angleStep, -maxAngle, maxAngle);
     const arcX = Math.sin(angle) * radius;
     const arcZ = -(1 - Math.cos(angle)) * radius;
     const hiddenProgress = clamp(absoluteOffset - 1, 0, 1);
+    const scale = lerp(1, isMobile ? 0.9 : 0.86, distanceEase);
     const bandY = isMobile ? -height * 0.015 : -height * 0.04;
     const velocity = Math.abs(this.slideVelocity);
 
     if (absoluteOffset <= 1) {
-      const progress = easeOut(absoluteOffset);
-
       return {
         x: arcX,
         y: bandY,
         z: arcZ,
         width: activeWidth,
         height: activeHeight,
+        scale,
         rotationY: -angle * 0.85,
-        bend: lerp(isMobile ? 8 : 14, isMobile ? 7 : 12, progress),
-        opacity: lerp(1, isMobile ? 0.9 : 0.94, progress),
-        darkness: 0.04,
+        bend: lerp(isMobile ? 8 : 12, isMobile ? 10 : 16, distanceEase),
+        opacity: lerp(1, isMobile ? 0.78 : 0.84, distanceEase),
+        darkness: lerp(0.02, 0.32, distanceEase),
         velocity: velocity * (1 - absoluteOffset * 0.25),
-        blur: lerp(0, 0.15, progress),
-        cornerRadius: lerp(isMobile ? 12 : 14, isMobile ? 10 : 12, progress),
-        edgeCurve: lerp(isMobile ? 7 : 14, isMobile ? 6 : 10, progress),
+        blur: lerp(0, 0.08, distanceEase),
+        cornerRadius: lerp(isMobile ? 12 : 14, isMobile ? 10 : 12, distanceEase),
+        edgeCurve: lerp(isMobile ? 7 : 12, isMobile ? 9 : 15, distanceEase),
       };
     }
 
@@ -616,12 +624,13 @@ export class SliderScene {
       z: arcZ - hiddenProgress * (isMobile ? 90 : 140),
       width: activeWidth,
       height: activeHeight,
+      scale: lerp(scale, isMobile ? 0.74 : 0.7, hiddenProgress),
       rotationY: -angle * 0.85,
       bend: lerp(isMobile ? 6 : 9, 0, hiddenProgress),
       opacity: lerp(isMobile ? 0.2 : 0.28, 0, hiddenProgress),
-      darkness: 0.04,
+      darkness: lerp(0.42, 0.62, hiddenProgress),
       velocity: velocity * 0.35,
-      blur: lerp(0.15, 0.24, hiddenProgress),
+      blur: lerp(0.1, 0.2, hiddenProgress),
       cornerRadius: lerp(isMobile ? 9 : 10, isMobile ? 6 : 8, hiddenProgress),
       edgeCurve: lerp(isMobile ? 5 : 8, 0, hiddenProgress),
     };
@@ -629,10 +638,10 @@ export class SliderScene {
 
   private getRenderOrder(offset: number, index: number) {
     if (index === this.activeTextureIndex) {
-      return 20;
+      return 20 + Math.round((1 - Math.min(Math.abs(offset), 1)) * 40);
     }
 
-    return Math.max(1, 10 - Math.round(Math.abs(offset) * 3));
+    return Math.max(1, 50 - Math.round(Math.abs(offset) * 20));
   }
 
   private getCameraZ(height: number) {
