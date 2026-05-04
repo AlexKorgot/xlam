@@ -585,10 +585,7 @@ export class SliderScene {
 
       mediaSize.set(video.videoWidth || 16, video.videoHeight || 9);
 
-      // IMPORTANT:
-      // Do NOT assign this texture to the plane during slider motion.
-      // Side slides must not switch poster -> video while moving,
-      // otherwise they visibly brighten/darken.
+      this.planes[index]?.setTexture(texture, mediaSize);
     };
 
     video.addEventListener('loadedmetadata', assignWhenReady);
@@ -603,6 +600,7 @@ export class SliderScene {
       handleMetadata: assignWhenReady,
     };
 
+    assignWhenReady();
     void this.playVideo(video);
   }
 
