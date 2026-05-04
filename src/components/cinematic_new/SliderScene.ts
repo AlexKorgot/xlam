@@ -25,8 +25,6 @@ type TransitionVideo = {
 const SLIDER_ASPECT = 16 / 6.6;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
-const easeOut = (value: number) => 1 - Math.pow(1 - value, 3);
-const smoothstep = (value: number) => value * value * (3 - 2 * value);
 
 function wrapIndex(index: number, total: number) {
   return ((index % total) + total) % total;
@@ -129,7 +127,6 @@ export class SliderScene {
   private activeIndex = 0;
   private activeTextureIndex = 0;
   private slidePosition = 0;
-  private slideVelocity = 0;
   private isVisible = true;
   private isDestroyed = false;
   private hasSeededPosterTextures = false;
@@ -260,8 +257,6 @@ export class SliderScene {
         this.timeline?.to(plane.uniforms.uCornerRadius, { value: 0, duration: duration * 0.78 }, 0);
         this.timeline?.to(plane.uniforms.uEdgeCurve, { value: 0, duration: duration * 0.68 }, 0);
         this.timeline?.to(plane.uniforms.uDarkness, { value: 0.24, duration }, 0);
-        this.timeline?.to(plane.uniforms.uVelocity, { value: 0, duration: duration * 0.7 }, 0);
-        this.timeline?.to(plane.uniforms.uBlur, { value: 0, duration: duration * 0.7 }, 0);
         return;
       }
 
@@ -298,7 +293,7 @@ export class SliderScene {
       const offset = centeredOffset(index, this.slidePosition, this.slides.length);
       const layout = this.getLayoutForOffset(offset);
 
-      plane.mesh.renderOrder = this.getRenderOrder(offset, index);
+      plane.mesh.renderOrder = this.getRenderOrder(offset);
       this.timeline?.to(plane.mesh.position, { x: layout.x, y: layout.y, z: layout.z, duration }, 0.06);
       this.timeline?.to(plane.mesh.rotation, { x: 0, y: layout.rotationY, z: 0, duration }, 0.06);
       this.timeline?.to(
@@ -318,8 +313,6 @@ export class SliderScene {
       this.timeline?.to(plane.uniforms.uEdgeCurve, { value: layout.edgeCurve, duration: duration * 0.72 }, 0.12);
       this.timeline?.to(plane.uniforms.uOpacity, { value: layout.opacity, duration: duration * 0.68, ease: 'power2.out' }, 0.16);
       this.timeline?.to(plane.uniforms.uDarkness, { value: layout.darkness, duration }, 0.06);
-      this.timeline?.to(plane.uniforms.uVelocity, { value: 0, duration }, 0.06);
-      this.timeline?.to(plane.uniforms.uBlur, { value: layout.blur, duration }, 0.06);
     });
   }
 
@@ -394,8 +387,8 @@ export class SliderScene {
     const from = this.slidePosition;
     const to = from + direction;
     const targetIndex = wrapIndex(Math.round(to), this.slides.length);
-    const duration = this.reducedMotion ? 0.01 : 1.24;
-    const motion = { position: from, velocity: direction };
+    const duration = this.reducedMotion ? 0.01 : 1.35;
+    const motion = { position: from };
     let hasCommittedTarget = false;
 
     const commitTarget = () => {
@@ -414,11 +407,10 @@ export class SliderScene {
     this.prepareIncomingVideo(targetIndex);
 
     this.timeline = gsap.timeline({
-      defaults: { ease: 'power2.inOut', overwrite: 'auto' },
+      defaults: { ease: 'power4.inOut', overwrite: 'auto' },
       onComplete: () => {
         commitTarget();
         this.slidePosition = targetIndex;
-        this.slideVelocity = 0;
         this.mode = 'slider';
         this.callbacks.onOverlayStateChange?.('slider');
         this.applySliderLayout();
@@ -429,11 +421,9 @@ export class SliderScene {
       motion,
       {
         position: to,
-        velocity: 0,
         duration,
         onUpdate: () => {
           this.slidePosition = motion.position;
-          this.slideVelocity = motion.velocity;
           this.applySliderLayout();
         },
       },
@@ -515,15 +505,10 @@ export class SliderScene {
     const handleMetadata = () => {
       mediaSize.set(video.videoWidth || 16, video.videoHeight || 9);
 
-      if (this.transitionVideo?.video === video) {
-        this.planes[index]?.setTexture(texture, mediaSize);
-      }
     };
 
     video.addEventListener('loadedmetadata', handleMetadata);
     this.transitionVideo = { index, video, texture, mediaSize, handleMetadata };
-    this.planes[index]?.setActive(true);
-    this.planes[index]?.setTexture(texture, mediaSize);
     void this.playVideo(video);
   }
 
@@ -705,69 +690,66 @@ export class SliderScene {
 
   private getLayoutForOffset(offset: number): VideoPlaneLayout {
     const width = this.viewport.x;
-    const height = this.viewport.y;
     const isMobile = width < 760;
-    const absoluteOffset = Math.abs(offset);
-    const distance = clamp(absoluteOffset, 0, 1);
-    const distanceEase = smoothstep(distance);
-    const activeWidth = isMobile ? Math.min(width * 0.84, 560) : Math.min(width * 0.56, 780);
+    const absOffset = Math.abs(offset);
+    const direction = Math.sign(offset) || 1;
+    const activeWidth = isMobile ? width * 0.84 : Math.min(width * 0.64, 980);
     const frameHeight = activeWidth / SLIDER_ASPECT;
-    const sideWidth = activeWidth * (isMobile ? 0.58 : 0.48);
+    const sideWidth = activeWidth * (isMobile ? 0.58 : 0.54);
     const sideHeight = frameHeight;
-    const sideX = isMobile ? activeWidth * 0.52 : width * 0.39;
-    const hiddenX = isMobile ? width * 0.62 : width * 0.54;
-    const sideZ = isMobile ? -70 : -105;
-    const farZ = isMobile ? -150 : -230;
-    const sign = offset < 0 ? -1 : 1;
-    const hiddenProgress = clamp(absoluteOffset - 1, 0, 1);
-    const hiddenEase = easeOut(hiddenProgress);
-    const bandY = isMobile ? -height * 0.005 : -height * 0.018;
-    const velocity = Math.abs(this.slideVelocity);
+    const sideGap = isMobile ? 8 : 12;
+    const sideX = activeWidth * 0.5 + sideWidth * 0.46 + sideGap;
+    const hiddenX = sideX + sideWidth * 0.78;
+    const bandY = isMobile ? 0 : 24;
+    const sideZ = isMobile ? -42 : -58;
+    const farZ = isMobile ? -120 : -170;
 
-    if (absoluteOffset <= 1) {
+    if (absOffset <= 1) {
+      const t = 1 - Math.pow(1 - absOffset, 3);
+
       return {
-        x: sign * lerp(0, sideX, distanceEase),
+        x: direction * lerp(0, sideX, t),
         y: bandY,
-        z: lerp(0, sideZ, distanceEase),
-        width: lerp(activeWidth, sideWidth, distanceEase),
+        z: lerp(0, sideZ, t),
+        width: lerp(activeWidth, sideWidth, t),
         height: sideHeight,
         scaleX: 1,
         scaleY: 1,
-        rotationY: -sign * lerp(0, isMobile ? 0.34 : 0.56, distanceEase),
-        bend: lerp(isMobile ? 6 : 8, isMobile ? 13 : 18, distanceEase),
-        opacity: lerp(1, isMobile ? 0.78 : 0.68, distanceEase),
-        darkness: lerp(0.04, isMobile ? 0.34 : 0.46, distanceEase),
-        velocity: velocity * (1 - absoluteOffset * 0.18),
-        blur: lerp(0, 0.035, distanceEase),
-        cornerRadius: lerp(isMobile ? 8 : 10, isMobile ? 7 : 8, distanceEase),
-        edgeCurve: lerp(isMobile ? 5 : 7, isMobile ? 11 : 15, distanceEase),
+        rotationY: -direction * lerp(0, isMobile ? 0.1 : 0.14, t),
+        bend: lerp(isMobile ? 4 : 5, isMobile ? 5 : 7, t),
+        opacity: lerp(1, isMobile ? 0.68 : 0.76, t),
+        darkness: lerp(0.02, isMobile ? 0.24 : 0.3, t),
+        cornerRadius: lerp(isMobile ? 8 : 10, isMobile ? 7 : 9, t),
+        edgeCurve: lerp(isMobile ? 3 : 4, isMobile ? 4 : 6, t),
       };
     }
 
+    const t = Math.min(absOffset - 1, 1);
+
     return {
-      x: sign * lerp(sideX, hiddenX, hiddenEase),
+      x: direction * lerp(sideX, hiddenX, t),
       y: bandY,
-      z: lerp(sideZ, farZ, hiddenEase),
-      width: lerp(sideWidth, sideWidth * 0.78, hiddenEase),
+      z: lerp(sideZ, farZ, t),
+      width: lerp(sideWidth, sideWidth * 0.9, t),
       height: sideHeight,
       scaleX: 1,
       scaleY: 1,
-      rotationY: -sign * lerp(isMobile ? 0.34 : 0.56, isMobile ? 0.62 : 0.86, hiddenEase),
-      bend: lerp(isMobile ? 13 : 18, isMobile ? 10 : 13, hiddenEase),
-      opacity: lerp(isMobile ? 0.22 : 0.26, isMobile ? 0.05 : 0.07, hiddenEase),
-      darkness: lerp(isMobile ? 0.5 : 0.62, 0.76, hiddenEase),
-      velocity: velocity * 0.28,
-      blur: lerp(0.08, 0.18, hiddenEase),
-      cornerRadius: lerp(isMobile ? 7 : 8, isMobile ? 5 : 6, hiddenEase),
-      edgeCurve: lerp(isMobile ? 9 : 12, 0, hiddenEase),
+      rotationY: -direction * lerp(isMobile ? 0.1 : 0.14, isMobile ? 0.2 : 0.26, t),
+      bend: lerp(isMobile ? 5 : 7, isMobile ? 2 : 3, t),
+      opacity: lerp(isMobile ? 0.26 : 0.32, 0.02, t),
+      darkness: lerp(isMobile ? 0.46 : 0.52, 0.82, t),
+      cornerRadius: lerp(isMobile ? 7 : 9, isMobile ? 5 : 6, t),
+      edgeCurve: lerp(isMobile ? 4 : 6, 0, t),
     };
   }
 
-  private getRenderOrder(offset: number, index: number) {
-    const distance = Math.min(Math.abs(offset), 2);
-    const activeTextureBoost = index === this.activeTextureIndex ? 2 : 0;
+  private getRenderOrder(offset: number) {
+    const abs = Math.abs(offset);
 
-    return Math.max(1, 80 - Math.round(distance * 28) + activeTextureBoost);
+    if (abs < 0.45) return 30;
+    if (abs < 1.25) return 20;
+
+    return Math.max(1, 12 - Math.round(abs * 3));
   }
 
   private getCameraZ(height: number) {
@@ -781,7 +763,7 @@ export class SliderScene {
       const offset = centeredOffset(index, this.slidePosition, this.slides.length);
 
       plane.applyLayout(this.getLayoutForOffset(offset));
-      plane.mesh.renderOrder = this.getRenderOrder(offset, index);
+      plane.mesh.renderOrder = this.getRenderOrder(offset);
     });
   }
 }
