@@ -594,15 +594,14 @@ export class SliderScene {
     const absoluteOffset = Math.abs(offset);
     const distance = clamp(absoluteOffset, 0, 1);
     const distanceEase = smoothstep(distance);
-    const activeWidth = isMobile ? Math.min(width * 0.82, 560) : Math.min(width * 0.7, 900);
-    const activeHeight = activeWidth / SLIDER_ASPECT;
-    const sideWidth = activeWidth * (isMobile ? 0.66 : 0.58);
-    const sideHeight = activeHeight * 0.94;
-    const sideGap = isMobile ? 8 : 10;
-    const sideX = activeWidth * 0.5 + sideWidth * 0.38 + sideGap;
-    const hiddenX = sideX + sideWidth * 0.72;
-    const sideZ = isMobile ? -72 : -105;
-    const farZ = isMobile ? -132 : -220;
+    const activeWidth = isMobile ? Math.min(width * 0.84, 560) : Math.min(width * 0.66, 900);
+    const frameHeight = activeWidth / SLIDER_ASPECT;
+    const sideWidth = activeWidth * (isMobile ? 0.64 : 0.58);
+    const sideGap = isMobile ? 8 : 12;
+    const sideX = activeWidth * 0.5 + sideWidth * 0.48 + sideGap;
+    const hiddenX = sideX + sideWidth * 0.82;
+    const sideZ = isMobile ? -82 : -122;
+    const farZ = isMobile ? -150 : -238;
     const sign = offset < 0 ? -1 : 1;
     const hiddenProgress = clamp(absoluteOffset - 1, 0, 1);
     const hiddenEase = easeOut(hiddenProgress);
@@ -615,17 +614,17 @@ export class SliderScene {
         y: bandY,
         z: lerp(0, sideZ, distanceEase),
         width: lerp(activeWidth, sideWidth, distanceEase),
-        height: lerp(activeHeight, sideHeight, distanceEase),
+        height: frameHeight,
         scaleX: 1,
         scaleY: 1,
-        rotationY: -sign * lerp(0, isMobile ? 0.28 : 0.36, distanceEase),
-        bend: lerp(isMobile ? 7 : 9, isMobile ? 9 : 11, distanceEase),
-        opacity: lerp(1, isMobile ? 0.82 : 0.78, distanceEase),
-        darkness: lerp(0.03, isMobile ? 0.28 : 0.34, distanceEase),
+        rotationY: -sign * lerp(0, isMobile ? 0.3 : 0.4, distanceEase),
+        bend: lerp(isMobile ? 5 : 7, isMobile ? 9 : 11, distanceEase),
+        opacity: lerp(1, isMobile ? 0.84 : 0.8, distanceEase),
+        darkness: lerp(0.03, isMobile ? 0.26 : 0.32, distanceEase),
         velocity: velocity * (1 - absoluteOffset * 0.25),
-        blur: lerp(0, 0.06, distanceEase),
-        cornerRadius: lerp(isMobile ? 12 : 14, isMobile ? 10 : 11, distanceEase),
-        edgeCurve: lerp(isMobile ? 5 : 7, isMobile ? 7 : 9, distanceEase),
+        blur: lerp(0, 0.045, distanceEase),
+        cornerRadius: lerp(isMobile ? 10 : 12, isMobile ? 9 : 10, distanceEase),
+        edgeCurve: lerp(isMobile ? 4 : 6, isMobile ? 7 : 9, distanceEase),
       };
     }
 
@@ -634,13 +633,13 @@ export class SliderScene {
       y: bandY,
       z: lerp(sideZ, farZ, hiddenEase),
       width: lerp(sideWidth, sideWidth * 0.72, hiddenEase),
-      height: lerp(sideHeight, sideHeight * 0.86, hiddenEase),
+      height: frameHeight,
       scaleX: 1,
       scaleY: 1,
-      rotationY: -sign * lerp(isMobile ? 0.28 : 0.36, isMobile ? 0.48 : 0.62, hiddenEase),
-      bend: lerp(isMobile ? 8 : 9, isMobile ? 3 : 4, hiddenEase),
-      opacity: lerp(isMobile ? 0.28 : 0.34, isMobile ? 0.06 : 0.1, hiddenEase),
-      darkness: lerp(isMobile ? 0.44 : 0.5, 0.68, hiddenEase),
+      rotationY: -sign * lerp(isMobile ? 0.3 : 0.4, isMobile ? 0.52 : 0.68, hiddenEase),
+      bend: lerp(isMobile ? 8 : 9, isMobile ? 4 : 5, hiddenEase),
+      opacity: lerp(isMobile ? 0.3 : 0.36, isMobile ? 0.08 : 0.12, hiddenEase),
+      darkness: lerp(isMobile ? 0.42 : 0.48, 0.66, hiddenEase),
       velocity: velocity * 0.35,
       blur: lerp(0.08, 0.16, hiddenEase),
       cornerRadius: lerp(isMobile ? 9 : 10, isMobile ? 6 : 8, hiddenEase),
