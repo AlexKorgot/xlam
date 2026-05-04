@@ -171,11 +171,11 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
       gsap.fromTo(
         labelRef.current.querySelectorAll('[data-slide-label]'),
-        { autoAlpha: 0, y: reducedMotion ? 0 : 10 },
+        { autoAlpha: 0, y: reducedMotion ? 0 : 8 },
         {
           autoAlpha: 1,
           y: 0,
-          duration: reducedMotion ? 0.01 : 0.36,
+          duration: reducedMotion ? 0.01 : 0.34,
           stagger: 0.035,
           ease: 'power2.out',
         },
@@ -188,11 +188,12 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
     <section
       ref={rootRef}
       data-fullpage-scroll-ignore
-      className={`font-normalidad relative isolate h-[100svh] min-h-[620px] w-full overflow-hidden bg-black text-white ${className}`}
+      className={`font-normalidad relative isolate h-[100svh] min-h-[620px] w-full overflow-hidden bg-[#458294] text-white ${className}`}
       aria-label="Cinematic project slider"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(102,255,102,0.18)_0%,rgba(14,48,52,0.42)_27%,rgba(0,0,0,0)_62%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.18)_17%,rgba(0,0,0,0)_50%,rgba(0,0,0,0.2)_83%,rgba(0,0,0,0.8)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(102,255,102,0.09)_0%,rgba(21,62,61,0.34)_28%,rgba(0,0,0,0)_63%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.2)_0%,rgba(0,0,0,0)_34%,rgba(0,0,0,0.24)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.82)_0%,rgba(0,0,0,0.18)_18%,rgba(0,0,0,0)_50%,rgba(0,0,0,0.2)_82%,rgba(0,0,0,0.84)_100%)]" />
 
       <div ref={canvasHostRef} className="absolute inset-0 z-0 cursor-pointer touch-manipulation" />
 
@@ -201,31 +202,31 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
         className="pointer-events-none absolute inset-0 z-10"
         style={{ '--cinematic-chrome-opacity': 1 } as CinematicChromeStyle}
       >
-        <div className="absolute left-1/2 top-[12svh] z-10 w-full -translate-x-1/2 px-5 text-center opacity-[var(--cinematic-chrome-opacity)] sm:top-[13svh]">
-          <h2 className="text-[clamp(2rem,5vw,3.75rem)] font-black uppercase leading-none">
+        <div className="absolute left-1/2 top-[16.5svh] z-10 w-full -translate-x-1/2 px-5 text-center opacity-[var(--cinematic-chrome-opacity)]">
+          <h2 className="text-[2rem] font-black uppercase leading-none md:text-[2.75rem] xl:text-[3.75rem]">
             {headingLead} <span className="text-[#66ff66]">{headingAccent}</span>
           </h2>
         </div>
 
         <div
           ref={labelRef}
-          className="absolute inset-x-0 bottom-[18svh] z-10 px-6 text-center opacity-[var(--cinematic-chrome-opacity)] sm:bottom-[19svh]"
+          className="absolute inset-x-0 top-[calc(50%+16svh)] z-10 px-6 text-center opacity-[var(--cinematic-chrome-opacity)] md:top-[calc(50%+17svh)]"
         >
-          <p data-slide-label className="mx-auto mb-2 max-w-[28rem] text-[9px] font-black uppercase leading-none text-white sm:text-[10px]">
+          <p data-slide-label className="mx-auto mb-2 max-w-[28rem] text-[9px] font-black uppercase leading-none text-white md:text-[10px]">
             {activeSlide.eyebrow}
           </p>
           <h3
             data-slide-label
-            className="mx-auto max-w-[34rem] text-[clamp(1.15rem,2.6vw,1.9rem)] font-black uppercase leading-none text-[#66ff66]"
+            className="mx-auto max-w-[34rem] text-[1rem] font-black uppercase leading-none text-[#66ff66] md:text-[1.35rem] xl:text-[1.875rem]"
           >
             {activeSlide.title}
           </h3>
         </div>
 
-        <div className="pointer-events-auto absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 opacity-[var(--cinematic-chrome-opacity)]">
+        <div className="pointer-events-auto absolute bottom-[5.5svh] left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 opacity-[var(--cinematic-chrome-opacity)]">
           <button
             type="button"
-            className="grid h-11 w-11 place-items-center border border-white/24 bg-black/28 text-xl font-black text-white/86 backdrop-blur-sm transition-colors hover:border-[#66ff66] hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66]"
+            className="grid h-10 w-10 place-items-center border border-white/20 bg-black/24 text-xl font-black text-white/80 backdrop-blur-sm transition-colors hover:border-[#66ff66] hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-11 md:w-11"
             onClick={handlePrevious}
             aria-label="Previous project"
           >
@@ -233,14 +234,14 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
           </button>
           <button
             type="button"
-            className="h-11 border border-[#66ff66] bg-[#66ff66] px-6 text-[11px] font-black uppercase text-black transition-colors hover:bg-transparent hover:text-[#66ff66] focus-visible:bg-transparent focus-visible:text-[#66ff66]"
+            className="h-10 border border-[#66ff66] bg-[#66ff66] px-5 text-[10px] font-black uppercase text-black transition-colors hover:bg-transparent hover:text-[#66ff66] focus-visible:bg-transparent focus-visible:text-[#66ff66] md:h-11 md:px-6 md:text-[11px]"
             onClick={handleOpen}
           >
             {openLabel}
           </button>
           <button
             type="button"
-            className="grid h-11 w-11 place-items-center border border-white/24 bg-black/28 text-xl font-black text-white/86 backdrop-blur-sm transition-colors hover:border-[#66ff66] hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66]"
+            className="grid h-10 w-10 place-items-center border border-white/20 bg-black/24 text-xl font-black text-white/80 backdrop-blur-sm transition-colors hover:border-[#66ff66] hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-11 md:w-11"
             onClick={handleNext}
             aria-label="Next project"
           >
@@ -263,7 +264,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             </p>
             <h3
               data-case-detail
-              className="max-w-[13ch] text-[clamp(3rem,8vw,8rem)] font-black uppercase leading-[0.88] opacity-0"
+              className="max-w-[13ch] text-[3rem] font-black uppercase leading-[0.88] opacity-0 md:text-[5.5rem] xl:text-[8rem]"
             >
               {activeSlide.title}
             </h3>
@@ -290,11 +291,11 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             <div className="grid grid-cols-2 gap-3 text-[10px] font-black uppercase text-white/58">
               <div className="border border-white/16 p-4">
                 <span className="mb-2 block text-white/34">Format</span>
-                WebGL case
+                Case film
               </div>
               <div className="border border-white/16 p-4">
                 <span className="mb-2 block text-white/34">Motion</span>
-                VideoTexture
+                Live cut
               </div>
             </div>
 

@@ -14,7 +14,7 @@ type PosterTexture = {
   texture: THREE.Texture;
 };
 
-const SLIDER_ASPECT = 16 / 9;
+const SLIDER_ASPECT = 2.22;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
 const easeOut = (value: number) => 1 - Math.pow(1 - value, 3);
@@ -48,7 +48,7 @@ function drawFallbackPoster(
 
   context.fillStyle = gradient;
   context.fillRect(0, 0, canvas.width, canvas.height);
-  context.globalAlpha = 0.2;
+  context.globalAlpha = 0.18;
   context.fillStyle = '#f3f6e9';
 
   for (let i = 0; i < 14; i += 1) {
@@ -59,7 +59,7 @@ function drawFallbackPoster(
     context.fillRect(x, y, width, height);
   }
 
-  context.globalAlpha = 0.52;
+  context.globalAlpha = 0.55;
   context.fillStyle = '#000000';
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.globalAlpha = 1;
@@ -122,6 +122,7 @@ export class SliderScene {
   private slideVelocity = 0;
   private isVisible = true;
   private isDestroyed = false;
+  private hasSeededPosterTextures = false;
   private mode: 'slider' | 'sliding' | 'opening' | 'opened' | 'closing' = 'slider';
   private readonly reducedMotion: boolean;
 
@@ -247,6 +248,7 @@ export class SliderScene {
         this.timeline?.to(plane.uniforms.uEdgeCurve, { value: 0, duration: duration * 0.68 }, 0);
         this.timeline?.to(plane.uniforms.uDarkness, { value: 0.24, duration }, 0);
         this.timeline?.to(plane.uniforms.uVelocity, { value: 0, duration: duration * 0.7 }, 0);
+        this.timeline?.to(plane.uniforms.uBlur, { value: 0, duration: duration * 0.7 }, 0);
         return;
       }
 
@@ -294,6 +296,7 @@ export class SliderScene {
       this.timeline?.to(plane.uniforms.uOpacity, { value: layout.opacity, duration: duration * 0.68, ease: 'power2.out' }, 0.16);
       this.timeline?.to(plane.uniforms.uDarkness, { value: layout.darkness, duration }, 0.06);
       this.timeline?.to(plane.uniforms.uVelocity, { value: 0, duration }, 0.06);
+      this.timeline?.to(plane.uniforms.uBlur, { value: layout.blur, duration }, 0.06);
     });
   }
 
@@ -366,43 +369,54 @@ export class SliderScene {
     const from = this.slidePosition;
     const to = from + direction;
     const targetIndex = wrapIndex(Math.round(to), this.slides.length);
-    const duration = this.reducedMotion ? 0.01 : 0.96;
-    const motion = { position: from, velocity: direction * 1.1 };
+    const duration = this.reducedMotion ? 0.01 : 1.04;
+    const motion = { position: from, velocity: direction * 1.15 };
+    let hasCommittedTarget = false;
+
+    const commitTarget = () => {
+      if (hasCommittedTarget) {
+        return;
+      }
+
+      hasCommittedTarget = true;
+      this.capturePosterForIndex(this.activeIndex);
+      this.activeIndex = targetIndex;
+      this.assignActiveTexture(targetIndex);
+      this.callbacks.onActiveSlideChange?.(targetIndex);
+    };
 
     this.mode = 'sliding';
     this.callbacks.onOverlayStateChange?.('sliding');
     this.timeline?.kill();
     this.capturePosterForIndex(this.activeIndex);
-    this.assignActiveTexture(targetIndex);
-
-    const labelDelay = this.reducedMotion ? 0 : duration * 0.42;
 
     this.timeline = gsap.timeline({
       defaults: { ease: 'power3.inOut', overwrite: 'auto' },
       onComplete: () => {
-        this.slidePosition = to;
+        commitTarget();
+        this.slidePosition = targetIndex;
         this.slideVelocity = 0;
-        this.activeIndex = targetIndex;
         this.mode = 'slider';
         this.callbacks.onOverlayStateChange?.('slider');
-        this.callbacks.onActiveSlideChange?.(targetIndex);
         this.applySliderLayout();
       },
     });
 
-    this.timeline.call(() => {
-      this.callbacks.onActiveSlideChange?.(targetIndex);
-    }, undefined, labelDelay);
-    this.timeline.to(motion, {
-      position: to,
-      velocity: 0,
-      duration,
-      onUpdate: () => {
-        this.slidePosition = motion.position;
-        this.slideVelocity = motion.velocity;
-        this.applySliderLayout();
+    this.timeline.call(commitTarget, undefined, duration * 0.58);
+    this.timeline.to(
+      motion,
+      {
+        position: to,
+        velocity: 0,
+        duration,
+        onUpdate: () => {
+          this.slidePosition = motion.position;
+          this.slideVelocity = motion.velocity;
+          this.applySliderLayout();
+        },
       },
-    }, 0);
+      0,
+    );
   }
 
   private createActiveVideo(src: string) {
@@ -526,6 +540,7 @@ export class SliderScene {
       }
 
       const elapsed = (performance.now() - this.startTime) * 0.001;
+      this.seedPosterTexturesFromActiveVideo();
       this.planes.forEach((plane) => {
         plane.uniforms.uTime.value = elapsed;
       });
@@ -536,19 +551,41 @@ export class SliderScene {
     this.rafId = window.requestAnimationFrame(render);
   }
 
+  private seedPosterTexturesFromActiveVideo() {
+    if (this.hasSeededPosterTextures || this.activeVideo.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+      return;
+    }
+
+    this.posterTextures.forEach(({ canvas, context, texture }) => {
+      if (!context) {
+        return;
+      }
+
+      try {
+        drawVideoPoster(context, canvas, this.activeVideo);
+        texture.needsUpdate = true;
+      } catch {
+        // Cross-origin failures are non-fatal; the generated poster remains in place.
+      }
+    });
+
+    this.hasSeededPosterTextures = true;
+  }
+
   private getLayoutForOffset(offset: number): VideoPlaneLayout {
     const width = this.viewport.x;
     const height = this.viewport.y;
     const isMobile = width < 760;
     const absoluteOffset = Math.abs(offset);
     const direction = Math.sign(offset) || 1;
-    const activeWidth = isMobile ? width * 0.8 : Math.min(width * 0.68, 1080);
+    const activeWidth = width * (isMobile ? 0.72 : 0.7);
     const activeHeight = activeWidth / SLIDER_ASPECT;
-    const sideWidth = activeWidth * (isMobile ? 0.64 : 0.68);
-    const sideHeight = sideWidth / SLIDER_ASPECT;
-    const sideX = activeWidth * 0.5 + sideWidth * (isMobile ? 0.12 : 0.32);
-    const hiddenX = width * 0.68 + sideWidth;
-    const bandY = isMobile ? -height * 0.02 : -height * 0.035;
+    const sideWidth = width * (isMobile ? 0.14 : 0.15);
+    const sideHeight = activeHeight;
+    const sideGap = width * (isMobile ? 0.012 : 0.016);
+    const sideX = activeWidth * 0.5 + sideWidth * 0.5 + sideGap;
+    const hiddenX = width * 0.72 + sideWidth;
+    const bandY = isMobile ? -height * 0.015 : -height * 0.04;
     const velocity = Math.abs(this.slideVelocity);
 
     if (absoluteOffset <= 1) {
@@ -556,17 +593,18 @@ export class SliderScene {
 
       return {
         x: direction * lerp(0, sideX, progress),
-        y: lerp(bandY, bandY - (isMobile ? 2 : 10), progress),
-        z: lerp(0, isMobile ? -36 : -72, progress),
+        y: bandY,
+        z: lerp(0, isMobile ? -24 : -46, progress),
         width: lerp(activeWidth, sideWidth, progress),
         height: lerp(activeHeight, sideHeight, progress),
-        rotationY: direction * lerp(0, -0.16, progress),
-        bend: lerp(isMobile ? 9 : 15, isMobile ? 8 : 12, progress),
-        opacity: lerp(1, isMobile ? 0.58 : 0.76, progress),
-        darkness: lerp(0.02, isMobile ? 0.38 : 0.32, progress),
+        rotationY: direction * lerp(0, -0.07, progress),
+        bend: lerp(isMobile ? 8 : 14, isMobile ? 7 : 12, progress),
+        opacity: lerp(1, isMobile ? 0.72 : 0.82, progress),
+        darkness: 0.04,
         velocity: velocity * (1 - absoluteOffset * 0.25),
-        cornerRadius: lerp(isMobile ? 16 : 26, isMobile ? 14 : 22, progress),
-        edgeCurve: lerp(isMobile ? 8 : 16, isMobile ? 7 : 12, progress),
+        blur: lerp(0, 0.15, progress),
+        cornerRadius: lerp(isMobile ? 12 : 14, isMobile ? 10 : 12, progress),
+        edgeCurve: lerp(isMobile ? 7 : 14, isMobile ? 6 : 10, progress),
       };
     }
 
@@ -574,17 +612,18 @@ export class SliderScene {
 
     return {
       x: direction * lerp(sideX, hiddenX, progress),
-      y: bandY - (isMobile ? 2 : 8),
-      z: lerp(isMobile ? -80 : -120, -260, progress),
+      y: bandY,
+      z: lerp(isMobile ? -64 : -92, -240, progress),
       width: sideWidth,
       height: sideHeight,
-      rotationY: direction * lerp(-0.14, -0.04, progress),
-      bend: lerp(isMobile ? 7 : 10, 0, progress),
+      rotationY: direction * lerp(-0.07, -0.02, progress),
+      bend: lerp(isMobile ? 6 : 9, 0, progress),
       opacity: lerp(isMobile ? 0.2 : 0.28, 0, progress),
-      darkness: lerp(0.46, 0.66, progress),
+      darkness: 0.04,
       velocity: velocity * 0.35,
-      cornerRadius: lerp(isMobile ? 12 : 18, isMobile ? 8 : 12, progress),
-      edgeCurve: lerp(isMobile ? 6 : 10, 0, progress),
+      blur: lerp(0.15, 0.24, progress),
+      cornerRadius: lerp(isMobile ? 9 : 10, isMobile ? 6 : 8, progress),
+      edgeCurve: lerp(isMobile ? 5 : 8, 0, progress),
     };
   }
 

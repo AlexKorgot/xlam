@@ -20,9 +20,10 @@ export const videoPlaneVertexShader = `
     transformed.x *= uPlaneSize.x;
     transformed.y *= uPlaneSize.y;
     transformed.z += localX * localX * bend;
-    float edgeMask = smoothstep(0.34, 0.5, abs(position.y));
+
+    float edgeMask = smoothstep(0.32, 0.5, abs(position.y));
     transformed.y += sign(position.y) * localX * localX * uEdgeCurve * edgeMask * unbend;
-    transformed.y += sin((localX + uTime * 0.22) * 1.5707963) * uVelocity * 12.0 * unbend;
+    transformed.y += sin((localX + uTime * 0.2) * 1.5707963) * uVelocity * 10.0 * unbend;
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
   }
@@ -37,6 +38,7 @@ export const videoPlaneFragmentShader = `
   uniform float uOpacity;
   uniform float uDarkness;
   uniform float uVelocity;
+  uniform float uBlur;
   uniform float uCornerRadius;
   uniform vec2 uMediaSize;
   uniform vec2 uPlaneSize;
@@ -67,17 +69,23 @@ export const videoPlaneFragmentShader = `
 
   void main() {
     vec2 uv = coverUv(vUv, uPlaneSize, uMediaSize);
-    uv.x += sin(vUv.y * 3.14159) * uVelocity * 0.006;
+    uv.x += sin(vUv.y * 3.14159) * uVelocity * 0.005;
 
-    vec4 color = texture2D(uTexture, uv);
-    float horizontalEdge = smoothstep(0.0, 0.16, vUv.x) * smoothstep(1.0, 0.84, vUv.x);
-    float verticalEdge = smoothstep(0.0, 0.14, vUv.y) * smoothstep(1.0, 0.86, vUv.y);
-    float vignette = mix(0.68, 1.0, horizontalEdge * verticalEdge);
+    float blurRadius = uBlur * 0.012;
+    vec4 color = texture2D(uTexture, uv) * 0.52;
+    color += texture2D(uTexture, uv + vec2(blurRadius, 0.0)) * 0.12;
+    color += texture2D(uTexture, uv - vec2(blurRadius, 0.0)) * 0.12;
+    color += texture2D(uTexture, uv + vec2(0.0, blurRadius)) * 0.12;
+    color += texture2D(uTexture, uv - vec2(0.0, blurRadius)) * 0.12;
+
+    float horizontalEdge = smoothstep(0.0, 0.18, vUv.x) * smoothstep(1.0, 0.82, vUv.x);
+    float verticalEdge = smoothstep(0.0, 0.12, vUv.y) * smoothstep(1.0, 0.88, vUv.y);
+    float vignette = mix(0.62, 1.0, horizontalEdge * verticalEdge);
 
     color.rgb *= vignette;
     color.rgb *= 1.0 - uDarkness;
-    float roundedMask = roundedBoxMask(vUv, uPlaneSize, uCornerRadius);
 
+    float roundedMask = roundedBoxMask(vUv, uPlaneSize, uCornerRadius);
     gl_FragColor = vec4(color.rgb, color.a * uOpacity * roundedMask);
   }
 `;
