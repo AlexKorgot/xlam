@@ -14,7 +14,7 @@ type PosterTexture = {
   texture: THREE.Texture;
 };
 
-const SLIDER_ASPECT = 2.22;
+const SLIDER_ASPECT = 2.4;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
 const easeOut = (value: number) => 1 - Math.pow(1 - value, 3);
@@ -241,7 +241,11 @@ export class SliderScene {
       if (index === this.activeIndex) {
         this.timeline?.to(plane.mesh.position, { x: 0, y: 0, z: 0, duration }, 0);
         this.timeline?.to(plane.mesh.rotation, { x: 0, y: 0, z: 0, duration }, 0);
-        this.timeline?.to(plane.scaleState, { value: 1, duration, onUpdate: () => plane.setScale(plane.scaleState.value) }, 0);
+        this.timeline?.to(
+          plane.scaleState,
+          { x: 1, y: 1, duration, onUpdate: () => plane.setScale(plane.scaleState.x, plane.scaleState.y) },
+          0,
+        );
         this.timeline?.to(plane.uniforms.uPlaneSize.value, { x: this.viewport.x, y: this.viewport.y, duration }, 0);
         this.timeline?.to(plane.uniforms.uTransitionProgress, { value: 1, duration: duration * 0.86 }, 0);
         this.timeline?.to(plane.uniforms.uBend, { value: 0, duration: duration * 0.7 }, 0);
@@ -291,7 +295,12 @@ export class SliderScene {
       this.timeline?.to(plane.mesh.rotation, { x: 0, y: layout.rotationY, z: 0, duration }, 0.06);
       this.timeline?.to(
         plane.scaleState,
-        { value: layout.scale, duration, onUpdate: () => plane.setScale(plane.scaleState.value) },
+        {
+          x: layout.scaleX,
+          y: layout.scaleY,
+          duration,
+          onUpdate: () => plane.setScale(plane.scaleState.x, plane.scaleState.y),
+        },
         0.06,
       );
       this.timeline?.to(plane.uniforms.uPlaneSize.value, { x: layout.width, y: layout.height, duration }, 0.06);
@@ -585,18 +594,19 @@ export class SliderScene {
     const absoluteOffset = Math.abs(offset);
     const distance = clamp(absoluteOffset, 0, 1);
     const distanceEase = easeOut(distance);
-    const activeWidth = width * (isMobile ? 0.72 : 0.62);
+    const activeWidth = width * (isMobile ? 0.7 : 0.66);
     const activeHeight = activeWidth / SLIDER_ASPECT;
-    const angleStep = isMobile ? 0.3 : 0.32;
-    const sideCenterX = width * (isMobile ? 0.5 : 0.48);
+    const angleStep = isMobile ? 0.32 : 0.36;
+    const sideCenterX = width * (isMobile ? 0.78 : 0.79);
     const radius = sideCenterX / Math.sin(angleStep);
     const maxAngle = angleStep * 1.95;
     const angle = clamp(offset * angleStep, -maxAngle, maxAngle);
     const arcX = Math.sin(angle) * radius;
     const arcZ = -(1 - Math.cos(angle)) * radius;
     const hiddenProgress = clamp(absoluteOffset - 1, 0, 1);
-    const scale = lerp(1, isMobile ? 0.9 : 0.86, distanceEase);
-    const bandY = isMobile ? -height * 0.015 : -height * 0.04;
+    const scaleX = lerp(1, isMobile ? 0.62 : 0.58, distanceEase);
+    const scaleY = 1;
+    const bandY = isMobile ? -height * 0.04 : -height * 0.07;
     const velocity = Math.abs(this.slideVelocity);
 
     if (absoluteOffset <= 1) {
@@ -606,11 +616,12 @@ export class SliderScene {
         z: arcZ,
         width: activeWidth,
         height: activeHeight,
-        scale,
+        scaleX,
+        scaleY,
         rotationY: -angle * 0.85,
         bend: lerp(isMobile ? 8 : 12, isMobile ? 10 : 16, distanceEase),
-        opacity: lerp(1, isMobile ? 0.78 : 0.84, distanceEase),
-        darkness: lerp(0.02, 0.32, distanceEase),
+        opacity: lerp(1, isMobile ? 0.74 : 0.78, distanceEase),
+        darkness: lerp(0.02, 0.36, distanceEase),
         velocity: velocity * (1 - absoluteOffset * 0.25),
         blur: lerp(0, 0.08, distanceEase),
         cornerRadius: lerp(isMobile ? 12 : 14, isMobile ? 10 : 12, distanceEase),
@@ -624,7 +635,8 @@ export class SliderScene {
       z: arcZ - hiddenProgress * (isMobile ? 90 : 140),
       width: activeWidth,
       height: activeHeight,
-      scale: lerp(scale, isMobile ? 0.74 : 0.7, hiddenProgress),
+      scaleX: lerp(scaleX, isMobile ? 0.42 : 0.38, hiddenProgress),
+      scaleY,
       rotationY: -angle * 0.85,
       bend: lerp(isMobile ? 6 : 9, 0, hiddenProgress),
       opacity: lerp(isMobile ? 0.2 : 0.28, 0, hiddenProgress),

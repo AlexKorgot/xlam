@@ -7,7 +7,8 @@ export type VideoPlaneLayout = {
   z: number;
   width: number;
   height: number;
-  scale: number;
+  scaleX: number;
+  scaleY: number;
   rotationY: number;
   bend: number;
   opacity: number;
@@ -20,7 +21,7 @@ export type VideoPlaneLayout = {
 
 export class VideoPlane {
   readonly mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>;
-  readonly scaleState = { value: 1 };
+  readonly scaleState = { x: 1, y: 1 };
   readonly uniforms: {
     uTexture: { value: THREE.Texture };
     uTime: { value: number };
@@ -79,19 +80,20 @@ export class VideoPlane {
     this.uniforms.uActive.value = isActive ? 1 : 0;
   }
 
-  setScale(scale: number) {
-    this.scaleState.value = scale;
+  setScale(scaleX: number, scaleY: number) {
+    this.scaleState.x = scaleX;
+    this.scaleState.y = scaleY;
     (this.mesh as THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial> & { scale: THREE.Vector3 }).scale.set(
-      scale,
-      scale,
-      scale,
+      scaleX,
+      scaleY,
+      1,
     );
   }
 
   applyLayout(layout: VideoPlaneLayout) {
     this.mesh.position.set(layout.x, layout.y, layout.z);
     this.mesh.rotation.set(0, layout.rotationY, 0);
-    this.setScale(layout.scale);
+    this.setScale(layout.scaleX, layout.scaleY);
     this.uniforms.uPlaneSize.value.set(layout.width, layout.height);
     this.uniforms.uBend.value = layout.bend;
     this.uniforms.uOpacity.value = layout.opacity;
