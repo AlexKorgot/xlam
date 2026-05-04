@@ -141,7 +141,7 @@ export class SliderScene {
 
     this.renderer = new THREE.WebGLRenderer({
       alpha: true,
-      antialias: false,
+      antialias: true,
       powerPreference: 'high-performance',
       preserveDrawingBuffer: false,
     });
@@ -736,8 +736,8 @@ export class SliderScene {
       scaleY: 1,
       rotationY: -direction * lerp(isMobile ? 0.1 : 0.14, isMobile ? 0.2 : 0.26, t),
       bend: lerp(isMobile ? 5 : 7, isMobile ? 2 : 3, t),
-      opacity: lerp(isMobile ? 0.26 : 0.32, 0.02, t),
-      darkness: lerp(isMobile ? 0.46 : 0.52, 0.82, t),
+      opacity: lerp(isMobile ? 0.68 : 0.76, isMobile ? 0.3 : 0.36, t),
+      darkness: lerp(isMobile ? 0.24 : 0.3, isMobile ? 0.46 : 0.52, t),
       cornerRadius: lerp(isMobile ? 7 : 9, isMobile ? 5 : 6, t),
       edgeCurve: lerp(isMobile ? 4 : 6, 0, t),
     };
