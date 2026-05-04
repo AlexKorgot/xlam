@@ -454,10 +454,10 @@ export class SliderScene {
     this.capturePosterForIndex(this.activeIndex);
     this.prepareIncomingVideo(targetIndex);
 
-    const incoming = this.transitionVideo;
-    if (incoming && incoming.index === targetIndex && this.isVideoDrawable(incoming.video)) {
-      this.planes[targetIndex]?.setTexture(incoming.texture, incoming.mediaSize);
-    }
+    // const incoming = this.transitionVideo;
+    // if (incoming && incoming.index === targetIndex && this.isVideoDrawable(incoming.video)) {
+    //   this.planes[targetIndex]?.setTexture(incoming.texture, incoming.mediaSize);
+    // }
 
     this.timeline = gsap.timeline({
       defaults: { ease: 'power4.inOut', overwrite: 'auto' },
@@ -584,7 +584,11 @@ export class SliderScene {
       }
 
       mediaSize.set(video.videoWidth || 16, video.videoHeight || 9);
-      this.planes[index]?.setTexture(texture, mediaSize);
+
+      // IMPORTANT:
+      // Do NOT assign this texture to the plane during slider motion.
+      // Side slides must not switch poster -> video while moving,
+      // otherwise they visibly brighten/darken.
     };
 
     video.addEventListener('loadedmetadata', assignWhenReady);
@@ -826,7 +830,6 @@ export class SliderScene {
     const sideHeight = frameHeight;
 
     const sideGap = isMobile ? 8 : 12;
-
     const sideX = activeWidth * 0.5 + sideWidth * 0.46 + sideGap;
     const hiddenX = sideX + sideWidth * 0.78;
 
@@ -835,9 +838,27 @@ export class SliderScene {
     const sideZ = isMobile ? -42 : -58;
     const farZ = isMobile ? -120 : -170;
 
+    /**
+     * IMPORTANT:
+     * Brightness should NOT breathe during slider motion.
+     *
+     * Center/side difference should come mostly from:
+     * - width
+     * - x position
+     * - z depth
+     * - rotationY
+     *
+     * Not from animated opacity/darkness.
+     */
+    const stableVisibleOpacity = 1.0;
+    const stableVisibleDarkness = isMobile ? 0.08 : 0.1;
+
+    const farOpacity = isMobile ? 0.24 : 0.3;
+    const farDarkness = isMobile ? 0.34 : 0.4;
+
     if (absOffset <= 1) {
       const t = smoothstep01(absOffset);
-      const localVelocity = this.slideVelocity * 0.45 * (1 - absOffset * 0.35);
+      const localVelocity = this.slideVelocity * 0.35 * (1 - absOffset * 0.35);
 
       return {
         x: direction * lerp(0, sideX, t),
@@ -854,8 +875,12 @@ export class SliderScene {
 
         bend: lerp(isMobile ? 4 : 5, isMobile ? 5 : 7, t),
 
-        opacity: lerp(1, isMobile ? 0.68 : 0.76, t),
-        darkness: lerp(0.02, isMobile ? 0.24 : 0.3, t),
+        /**
+         * No brightness pulsing for center/side transition.
+         * Keep visible slides stable.
+         */
+        opacity: stableVisibleOpacity,
+        darkness: stableVisibleDarkness,
 
         cornerRadius: lerp(isMobile ? 8 : 10, isMobile ? 7 : 9, t),
         edgeCurve: lerp(isMobile ? 3 : 4, isMobile ? 4 : 6, t),
@@ -865,7 +890,7 @@ export class SliderScene {
     }
 
     const t = smoothstep01(absOffset - 1);
-    const localVelocity = this.slideVelocity * 0.22;
+    const localVelocity = this.slideVelocity * 0.16;
 
     return {
       x: direction * lerp(sideX, hiddenX, t),
@@ -886,8 +911,12 @@ export class SliderScene {
 
       bend: lerp(isMobile ? 5 : 7, isMobile ? 2 : 3, t),
 
-      opacity: lerp(isMobile ? 0.68 : 0.76, isMobile ? 0.3 : 0.36, t),
-      darkness: lerp(isMobile ? 0.24 : 0.3, isMobile ? 0.46 : 0.52, t),
+      /**
+       * Only far slides fade slightly.
+       * Main side slides do not breathe.
+       */
+      opacity: lerp(stableVisibleOpacity, farOpacity, t),
+      darkness: lerp(stableVisibleDarkness, farDarkness, t),
 
       cornerRadius: lerp(isMobile ? 7 : 9, isMobile ? 5 : 6, t),
       edgeCurve: lerp(isMobile ? 4 : 6, 0, t),
