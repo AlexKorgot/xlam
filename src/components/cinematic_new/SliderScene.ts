@@ -23,6 +23,7 @@ type TransitionVideo = {
 };
 
 const SLIDER_ASPECT = 16 / 6.6;
+
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
 
@@ -40,11 +41,16 @@ function centeredOffset(index: number, position: number, total: number) {
   return offset;
 }
 
+function smoothstep01(value: number) {
+  const t = clamp(value, 0, 1);
+  return t * t * (3 - 2 * t);
+}
+
 function drawFallbackPoster(
-  context: CanvasRenderingContext2D,
-  canvas: HTMLCanvasElement,
-  color: string,
-  index: number,
+    context: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement,
+    color: string,
+    index: number,
 ) {
   const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
   gradient.addColorStop(0, '#080b0f');
@@ -117,6 +123,7 @@ export class SliderScene {
   private readonly startTime = performance.now();
   private readonly planes: VideoPlane[] = [];
   private readonly posterTextures: PosterTexture[] = [];
+
   private activeVideo: HTMLVideoElement;
   private activeTexture: THREE.VideoTexture;
   private transitionVideo: TransitionVideo | null = null;
@@ -124,9 +131,22 @@ export class SliderScene {
   private intersectionObserver: IntersectionObserver | null = null;
   private timeline: gsap.core.Timeline | null = null;
   private rafId: number | null = null;
+
   private activeIndex = 0;
   private activeTextureIndex = 0;
+
+  /**
+   * Continuous carousel position.
+   * This must NOT be wrapped to 0..slides.length.
+   * It can grow like 0 -> 1 -> 2 -> 3 -> 4 -> 5.
+   */
   private slidePosition = 0;
+
+  /**
+   * Small motion value used by the shader so the strip feels like one moving ribbon.
+   */
+  private slideVelocity = 0;
+
   private isVisible = true;
   private isDestroyed = false;
   private hasSeededPosterTextures = false;
@@ -160,8 +180,9 @@ export class SliderScene {
       const posterTexture = createPosterTexture(slide.accent, index);
       const plane = new VideoPlane(index === 0 ? this.activeTexture : posterTexture.texture, this.viewport);
 
-      plane.mesh.renderOrder = index === 0 ? 20 : 5;
+      plane.mesh.renderOrder = index === 0 ? 30 : 5;
       plane.setActive(index === 0);
+
       this.posterTextures.push(posterTexture);
       this.planes.push(plane);
       this.scene.add(plane.mesh);
@@ -189,12 +210,14 @@ export class SliderScene {
     const rect = this.container.getBoundingClientRect();
     const x = clientX - rect.left;
     const y = clientY - rect.top;
+
     const layout = this.getLayoutForOffset(0);
     const centerX = rect.width / 2 + layout.x;
     const centerY = rect.height / 2 - layout.y;
+
     const insideActive =
-      Math.abs(x - centerX) <= layout.width / 2 &&
-      Math.abs(y - centerY) <= layout.height / 2;
+        Math.abs(x - centerX) <= layout.width / 2 &&
+        Math.abs(y - centerY) <= layout.height / 2;
 
     if (insideActive) {
       this.open();
@@ -225,6 +248,7 @@ export class SliderScene {
     this.mode = 'opening';
     this.callbacks.onOverlayStateChange?.('opening');
     this.timeline?.kill();
+
     this.capturePosterForIndex(this.activeIndex);
     this.disposeTransitionVideo();
     this.assignActiveTexture(this.activeIndex);
@@ -246,27 +270,37 @@ export class SliderScene {
       if (index === this.activeIndex) {
         this.timeline?.to(plane.mesh.position, { x: 0, y: 0, z: 0, duration }, 0);
         this.timeline?.to(plane.mesh.rotation, { x: 0, y: 0, z: 0, duration }, 0);
+
         this.timeline?.to(
-          plane.scaleState,
-          { x: 1, y: 1, duration, onUpdate: () => plane.setScale(plane.scaleState.x, plane.scaleState.y) },
-          0,
+            plane.scaleState,
+            {
+              x: 1,
+              y: 1,
+              duration,
+              onUpdate: () => plane.setScale(plane.scaleState.x, plane.scaleState.y),
+            },
+            0,
         );
+
         this.timeline?.to(plane.uniforms.uPlaneSize.value, { x: this.viewport.x, y: this.viewport.y, duration }, 0);
         this.timeline?.to(plane.uniforms.uTransitionProgress, { value: 1, duration: duration * 0.86 }, 0);
         this.timeline?.to(plane.uniforms.uBend, { value: 0, duration: duration * 0.7 }, 0);
         this.timeline?.to(plane.uniforms.uCornerRadius, { value: 0, duration: duration * 0.78 }, 0);
         this.timeline?.to(plane.uniforms.uEdgeCurve, { value: 0, duration: duration * 0.68 }, 0);
         this.timeline?.to(plane.uniforms.uDarkness, { value: 0.24, duration }, 0);
+        this.timeline?.to(plane.uniforms.uVelocity, { value: 0, duration: duration * 0.7 }, 0);
+
         return;
       }
 
       this.timeline?.to(plane.uniforms.uOpacity, { value: 0, duration: duration * 0.48, ease: 'power2.out' }, 0.08);
       this.timeline?.to(
-        plane.mesh.position,
-        { x: plane.mesh.position.x * 1.12, y: plane.mesh.position.y, z: -180, duration: duration * 0.74 },
-        0,
+          plane.mesh.position,
+          { x: plane.mesh.position.x * 1.12, y: plane.mesh.position.y, z: -180, duration: duration * 0.74 },
+          0,
       );
       this.timeline?.to(plane.uniforms.uDarkness, { value: 0.58, duration: duration * 0.5 }, 0);
+      this.timeline?.to(plane.uniforms.uVelocity, { value: 0, duration: duration * 0.5 }, 0);
     });
   }
 
@@ -280,11 +314,13 @@ export class SliderScene {
     this.timeline?.kill();
 
     const duration = this.reducedMotion ? 0.01 : 1.08;
+
     this.timeline = gsap.timeline({
       defaults: { ease: 'power3.inOut', overwrite: 'auto' },
       onComplete: () => {
         this.mode = 'slider';
         this.callbacks.onOverlayStateChange?.('slider');
+        this.slideVelocity = 0;
         this.applySliderLayout();
       },
     });
@@ -294,18 +330,21 @@ export class SliderScene {
       const layout = this.getLayoutForOffset(offset);
 
       plane.mesh.renderOrder = this.getRenderOrder(offset);
+
       this.timeline?.to(plane.mesh.position, { x: layout.x, y: layout.y, z: layout.z, duration }, 0.06);
       this.timeline?.to(plane.mesh.rotation, { x: 0, y: layout.rotationY, z: 0, duration }, 0.06);
+
       this.timeline?.to(
-        plane.scaleState,
-        {
-          x: layout.scaleX,
-          y: layout.scaleY,
-          duration,
-          onUpdate: () => plane.setScale(plane.scaleState.x, plane.scaleState.y),
-        },
-        0.06,
+          plane.scaleState,
+          {
+            x: layout.scaleX,
+            y: layout.scaleY,
+            duration,
+            onUpdate: () => plane.setScale(plane.scaleState.x, plane.scaleState.y),
+          },
+          0.06,
       );
+
       this.timeline?.to(plane.uniforms.uPlaneSize.value, { x: layout.width, y: layout.height, duration }, 0.06);
       this.timeline?.to(plane.uniforms.uTransitionProgress, { value: 0, duration: duration * 0.72 }, 0.06);
       this.timeline?.to(plane.uniforms.uBend, { value: layout.bend, duration: duration * 0.72 }, 0.12);
@@ -313,6 +352,7 @@ export class SliderScene {
       this.timeline?.to(plane.uniforms.uEdgeCurve, { value: layout.edgeCurve, duration: duration * 0.72 }, 0.12);
       this.timeline?.to(plane.uniforms.uOpacity, { value: layout.opacity, duration: duration * 0.68, ease: 'power2.out' }, 0.16);
       this.timeline?.to(plane.uniforms.uDarkness, { value: layout.darkness, duration }, 0.06);
+      this.timeline?.to(plane.uniforms.uVelocity, { value: layout.velocity, duration }, 0.06);
     });
   }
 
@@ -321,13 +361,15 @@ export class SliderScene {
     const width = Math.max(1, rect.width);
     const height = Math.max(1, rect.height);
     const isMobile = width < 760;
-    const maxDpr = isMobile || this.reducedMotion ? 1.25 : 1.75;
+
+    const maxDpr = isMobile || this.reducedMotion ? 1.5 : 2;
     const dpr = clamp(window.devicePixelRatio || 1, 1, maxDpr);
 
     this.viewport.set(width, height);
     this.camera.aspect = width / height;
     this.camera.position.set(0, 0, this.getCameraZ(height));
     this.camera.updateProjectionMatrix();
+
     this.renderer.setPixelRatio(dpr);
     this.renderer.setSize(width, height, false);
 
@@ -340,6 +382,7 @@ export class SliderScene {
       activePlane.uniforms.uPlaneSize.value.copy(this.viewport);
       activePlane.uniforms.uCornerRadius.value = 0;
       activePlane.uniforms.uEdgeCurve.value = 0;
+      activePlane.uniforms.uVelocity.value = 0;
       activePlane.mesh.position.set(0, 0, 0);
       activePlane.mesh.rotation.set(0, 0, 0);
       return;
@@ -364,13 +407,17 @@ export class SliderScene {
       this.scene.remove(plane.mesh);
       plane.dispose(false);
     });
+
     this.disposeTransitionVideo();
+
     this.posterTextures.forEach(({ texture }) => texture.dispose());
+
     this.activeTexture.dispose();
     this.activeVideo.removeEventListener('loadedmetadata', this.handleActiveVideoMetadata);
     this.activeVideo.pause();
     this.activeVideo.removeAttribute('src');
     this.activeVideo.load();
+
     this.renderer.dispose();
     this.renderer.forceContextLoss();
 
@@ -379,6 +426,15 @@ export class SliderScene {
     }
   }
 
+  /**
+   * Main filmstrip motion.
+   *
+   * The important part:
+   * - slidePosition is continuous and never wrapped.
+   * - activeIndex is only committed after the motion settles.
+   * - incoming video can be assigned to the incoming plane during motion,
+   *   but without setting it active early.
+   */
   private slideTo(direction: -1 | 1) {
     if (this.mode !== 'slider') {
       return;
@@ -387,8 +443,13 @@ export class SliderScene {
     const from = this.slidePosition;
     const to = from + direction;
     const targetIndex = wrapIndex(Math.round(to), this.slides.length);
-    const duration = this.reducedMotion ? 0.01 : 1.35;
-    const motion = { position: from };
+    const duration = this.reducedMotion ? 0.01 : 1.45;
+
+    const motion = {
+      position: from,
+      velocity: direction * 1,
+    };
+
     let hasCommittedTarget = false;
 
     const commitTarget = () => {
@@ -403,14 +464,34 @@ export class SliderScene {
     this.mode = 'sliding';
     this.callbacks.onOverlayStateChange?.('sliding');
     this.timeline?.kill();
+
     this.capturePosterForIndex(this.activeIndex);
     this.prepareIncomingVideo(targetIndex);
+
+    /**
+     * Give the incoming plane its real video texture during the movement.
+     * Do NOT set it active here.
+     * The visual focus must still be distance/layout-based until the end.
+     */
+    const incoming = this.transitionVideo;
+    if (incoming && incoming.index === targetIndex) {
+      const targetPlane = this.planes[targetIndex];
+      targetPlane.setTexture(incoming.texture, incoming.mediaSize);
+    }
 
     this.timeline = gsap.timeline({
       defaults: { ease: 'power4.inOut', overwrite: 'auto' },
       onComplete: () => {
         commitTarget();
-        this.slidePosition = targetIndex;
+
+        /**
+         * Very important:
+         * Keep the continuous position.
+         * Do NOT assign targetIndex here.
+         */
+        this.slidePosition = to;
+        this.slideVelocity = 0;
+
         this.mode = 'slider';
         this.callbacks.onOverlayStateChange?.('slider');
         this.applySliderLayout();
@@ -418,16 +499,18 @@ export class SliderScene {
     });
 
     this.timeline.to(
-      motion,
-      {
-        position: to,
-        duration,
-        onUpdate: () => {
-          this.slidePosition = motion.position;
-          this.applySliderLayout();
+        motion,
+        {
+          position: to,
+          velocity: 0,
+          duration,
+          onUpdate: () => {
+            this.slidePosition = motion.position;
+            this.slideVelocity = motion.velocity;
+            this.applySliderLayout();
+          },
         },
-      },
-      0,
+        0,
     );
   }
 
@@ -485,11 +568,12 @@ export class SliderScene {
 
     this.planes.forEach((plane, planeIndex) => {
       const isActive = planeIndex === index;
+
       plane.setActive(isActive);
-      plane.mesh.renderOrder = isActive ? 20 : 5;
+      plane.mesh.renderOrder = isActive ? 30 : 5;
       plane.setTexture(
-        isActive ? this.activeTexture : this.posterTextures[planeIndex].texture,
-        isActive ? this.mediaSize : new THREE.Vector2(16, 9),
+          isActive ? this.activeTexture : this.posterTextures[planeIndex].texture,
+          isActive ? this.mediaSize : new THREE.Vector2(16, 9),
       );
     });
 
@@ -502,13 +586,25 @@ export class SliderScene {
     const video = this.createVideoElement(this.slides[index].videoSrc);
     const texture = this.createVideoTexture(video);
     const mediaSize = new THREE.Vector2(16, 9);
+
     const handleMetadata = () => {
       mediaSize.set(video.videoWidth || 16, video.videoHeight || 9);
 
+      if (this.transitionVideo?.index === index) {
+        this.planes[index]?.setTexture(texture, mediaSize);
+      }
     };
 
     video.addEventListener('loadedmetadata', handleMetadata);
-    this.transitionVideo = { index, video, texture, mediaSize, handleMetadata };
+
+    this.transitionVideo = {
+      index,
+      video,
+      texture,
+      mediaSize,
+      handleMetadata,
+    };
+
     void this.playVideo(video);
   }
 
@@ -522,10 +618,12 @@ export class SliderScene {
       return;
     }
 
+    const previousIndex = this.activeIndex;
     const previousVideo = this.activeVideo;
     const previousTexture = this.activeTexture;
 
-    this.capturePosterForIndex(this.activeIndex);
+    this.capturePosterForIndex(previousIndex);
+
     incoming.video.removeEventListener('loadedmetadata', incoming.handleMetadata);
     previousVideo.removeEventListener('loadedmetadata', this.handleActiveVideoMetadata);
 
@@ -545,11 +643,12 @@ export class SliderScene {
 
     this.planes.forEach((plane, planeIndex) => {
       const isActive = planeIndex === index;
+
       plane.setActive(isActive);
-      plane.mesh.renderOrder = isActive ? 20 : 5;
+      plane.mesh.renderOrder = isActive ? 30 : 5;
       plane.setTexture(
-        isActive ? this.activeTexture : this.posterTextures[planeIndex].texture,
-        isActive ? this.mediaSize : new THREE.Vector2(16, 9),
+          isActive ? this.activeTexture : this.posterTextures[planeIndex].texture,
+          isActive ? this.mediaSize : new THREE.Vector2(16, 9),
       );
     });
 
@@ -557,6 +656,7 @@ export class SliderScene {
     previousVideo.removeAttribute('src');
     previousVideo.load();
     previousTexture.dispose();
+
     void this.playActiveVideo();
     this.callbacks.onActiveSlideChange?.(index);
   }
@@ -573,6 +673,7 @@ export class SliderScene {
     video.removeAttribute('src');
     video.load();
     texture.dispose();
+
     this.transitionVideo = null;
   }
 
@@ -602,23 +703,26 @@ export class SliderScene {
     this.resizeObserver.observe(this.container);
 
     this.intersectionObserver = new IntersectionObserver(
-      ([entry]) => {
-        this.isVisible = entry?.isIntersecting ?? true;
+        ([entry]) => {
+          this.isVisible = entry?.isIntersecting ?? true;
 
-        if (this.isVisible) {
-          this.start();
-          void this.playActiveVideo();
-          if (this.transitionVideo) {
-            void this.playVideo(this.transitionVideo.video);
+          if (this.isVisible) {
+            this.start();
+            void this.playActiveVideo();
+
+            if (this.transitionVideo) {
+              void this.playVideo(this.transitionVideo.video);
+            }
+
+            return;
           }
-          return;
-        }
 
-        this.activeVideo.pause();
-        this.transitionVideo?.video.pause();
-      },
-      { threshold: 0.08 },
+          this.activeVideo.pause();
+          this.transitionVideo?.video.pause();
+        },
+        { threshold: 0.08 },
     );
+
     this.intersectionObserver.observe(this.container);
 
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
@@ -633,9 +737,11 @@ export class SliderScene {
 
     if (this.isVisible) {
       void this.playActiveVideo();
+
       if (this.transitionVideo) {
         void this.playVideo(this.transitionVideo.video);
       }
+
       this.start();
     }
   };
@@ -656,10 +762,13 @@ export class SliderScene {
       }
 
       const elapsed = (performance.now() - this.startTime) * 0.001;
+
       this.seedPosterTexturesFromActiveVideo();
+
       this.planes.forEach((plane) => {
         plane.uniforms.uTime.value = elapsed;
       });
+
       this.renderer.render(this.scene, this.camera);
       this.rafId = window.requestAnimationFrame(render);
     };
@@ -691,55 +800,101 @@ export class SliderScene {
   private getLayoutForOffset(offset: number): VideoPlaneLayout {
     const width = this.viewport.x;
     const isMobile = width < 760;
+
     const absOffset = Math.abs(offset);
     const direction = Math.sign(offset) || 1;
-    const activeWidth = isMobile ? width * 0.84 : Math.min(width * 0.64, 980);
+
+    const activeWidth = isMobile
+        ? width * 0.84
+        : Math.min(width * 0.64, 980);
+
     const frameHeight = activeWidth / SLIDER_ASPECT;
+
+    /**
+     * Center differs mainly by width, not by height.
+     * Side slides stay in the same filmstrip band.
+     */
     const sideWidth = activeWidth * (isMobile ? 0.58 : 0.54);
     const sideHeight = frameHeight;
+
     const sideGap = isMobile ? 8 : 12;
+
+    /**
+     * Small connected-filmstrip relationship.
+     * Not deep coverflow overlap, not huge separated cards.
+     */
     const sideX = activeWidth * 0.5 + sideWidth * 0.46 + sideGap;
     const hiddenX = sideX + sideWidth * 0.78;
+
     const bandY = isMobile ? 0 : 24;
+
+    /**
+     * Softer depth. Side slides should not feel like folded wings.
+     */
     const sideZ = isMobile ? -42 : -58;
     const farZ = isMobile ? -120 : -170;
 
     if (absOffset <= 1) {
-      const t = 1 - Math.pow(1 - absOffset, 3);
+      /**
+       * Smoothstep feels more like a continuous strip than aggressive ease-out.
+       */
+      const t = smoothstep01(absOffset);
+      const localVelocity = this.slideVelocity * 0.45 * (1 - absOffset * 0.35);
 
       return {
         x: direction * lerp(0, sideX, t),
         y: bandY,
         z: lerp(0, sideZ, t),
+
         width: lerp(activeWidth, sideWidth, t),
         height: sideHeight,
+
         scaleX: 1,
         scaleY: 1,
+
         rotationY: -direction * lerp(0, isMobile ? 0.1 : 0.14, t),
+
         bend: lerp(isMobile ? 4 : 5, isMobile ? 5 : 7, t),
+
         opacity: lerp(1, isMobile ? 0.68 : 0.76, t),
         darkness: lerp(0.02, isMobile ? 0.24 : 0.3, t),
+
         cornerRadius: lerp(isMobile ? 8 : 10, isMobile ? 7 : 9, t),
         edgeCurve: lerp(isMobile ? 3 : 4, isMobile ? 4 : 6, t),
+
+        velocity: localVelocity,
       };
     }
 
-    const t = Math.min(absOffset - 1, 1);
+    const t = smoothstep01(absOffset - 1);
+    const localVelocity = this.slideVelocity * 0.22;
 
     return {
       x: direction * lerp(sideX, hiddenX, t),
       y: bandY,
       z: lerp(sideZ, farZ, t),
+
       width: lerp(sideWidth, sideWidth * 0.9, t),
       height: sideHeight,
+
       scaleX: 1,
       scaleY: 1,
-      rotationY: -direction * lerp(isMobile ? 0.1 : 0.14, isMobile ? 0.2 : 0.26, t),
+
+      rotationY: -direction * lerp(
+          isMobile ? 0.1 : 0.14,
+          isMobile ? 0.2 : 0.26,
+          t,
+      ),
+
       bend: lerp(isMobile ? 5 : 7, isMobile ? 2 : 3, t),
+
       opacity: lerp(isMobile ? 0.68 : 0.76, isMobile ? 0.3 : 0.36, t),
       darkness: lerp(isMobile ? 0.24 : 0.3, isMobile ? 0.46 : 0.52, t),
+
       cornerRadius: lerp(isMobile ? 7 : 9, isMobile ? 5 : 6, t),
       edgeCurve: lerp(isMobile ? 4 : 6, 0, t),
+
+      velocity: localVelocity,
     };
   }
 
@@ -761,8 +916,9 @@ export class SliderScene {
   private applySliderLayout() {
     this.planes.forEach((plane, index) => {
       const offset = centeredOffset(index, this.slidePosition, this.slides.length);
+      const layout = this.getLayoutForOffset(offset);
 
-      plane.applyLayout(this.getLayoutForOffset(offset));
+      plane.applyLayout(layout);
       plane.mesh.renderOrder = this.getRenderOrder(offset);
     });
   }
