@@ -585,7 +585,10 @@ export class SliderScene {
 
       mediaSize.set(video.videoWidth || 16, video.videoHeight || 9);
 
-      this.planes[index]?.setTexture(texture, mediaSize);
+      // IMPORTANT:
+      // Do NOT assign this texture to the plane during slider motion.
+      // Side slides must not switch poster -> video while moving,
+      // otherwise they visibly brighten/darken.
     };
 
     video.addEventListener('loadedmetadata', assignWhenReady);
@@ -600,7 +603,6 @@ export class SliderScene {
       handleMetadata: assignWhenReady,
     };
 
-    assignWhenReady();
     void this.playVideo(video);
   }
 
@@ -827,7 +829,7 @@ export class SliderScene {
     const sideWidth = activeWidth * (isMobile ? 0.58 : 0.54);
     const sideHeight = frameHeight;
 
-    const sideGap = isMobile ? 8 : 12;
+    const sideGap = isMobile ? 28 : 58;
     const sideX = activeWidth * 0.5 + sideWidth * 0.46 + sideGap;
     const hiddenX = sideX + sideWidth * 0.78;
 
