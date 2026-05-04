@@ -829,7 +829,7 @@ export class SliderScene {
     const sideWidth = activeWidth * (isMobile ? 0.58 : 0.54);
     const sideHeight = frameHeight;
 
-    const sideGap = isMobile ? 28 : 58;
+    const sideGap = isMobile ? 28 : 80;
     const sideX = activeWidth * 0.5 + sideWidth * 0.46 + sideGap;
     const hiddenX = sideX + sideWidth * 0.78;
 
@@ -837,6 +837,7 @@ export class SliderScene {
 
     const sideZ = isMobile ? -42 : -58;
     const farZ = isMobile ? -120 : -170;
+    const centerScaleY = isMobile ? 0.96 : 0.95;
 
     /**
      * IMPORTANT:
@@ -869,7 +870,7 @@ export class SliderScene {
         height: sideHeight,
 
         scaleX: 1,
-        scaleY: 1,
+        scaleY: lerp(centerScaleY, 1, t),
 
         rotationY: -direction * lerp(0, isMobile ? 0.1 : 0.14, t),
 
