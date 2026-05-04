@@ -120,6 +120,7 @@ export class SliderScene {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly viewport = new THREE.Vector2(1, 1);
   private readonly mediaSize = new THREE.Vector2(16, 9);
+  private readonly posterMediaSize = new THREE.Vector2(16, 9);
   private readonly startTime = performance.now();
   private readonly planes: VideoPlane[] = [];
   private readonly posterTextures: PosterTexture[] = [];
@@ -134,17 +135,7 @@ export class SliderScene {
 
   private activeIndex = 0;
   private activeTextureIndex = 0;
-
-  /**
-   * Continuous carousel position.
-   * This must NOT be wrapped to 0..slides.length.
-   * It can grow like 0 -> 1 -> 2 -> 3 -> 4 -> 5.
-   */
   private slidePosition = 0;
-
-  /**
-   * Small motion value used by the shader so the strip feels like one moving ribbon.
-   */
   private slideVelocity = 0;
 
   private isVisible = true;
@@ -174,6 +165,8 @@ export class SliderScene {
 
     this.activeVideo = this.createVideoElement(this.slides[0].videoSrc);
     this.activeVideo.addEventListener('loadedmetadata', this.handleActiveVideoMetadata);
+    this.activeVideo.addEventListener('loadeddata', this.handleActiveVideoMetadata);
+    this.activeVideo.addEventListener('canplay', this.handleActiveVideoMetadata);
     this.activeTexture = this.createVideoTexture(this.activeVideo);
 
     this.slides.forEach((slide, index) => {
@@ -414,6 +407,8 @@ export class SliderScene {
 
     this.activeTexture.dispose();
     this.activeVideo.removeEventListener('loadedmetadata', this.handleActiveVideoMetadata);
+    this.activeVideo.removeEventListener('loadeddata', this.handleActiveVideoMetadata);
+    this.activeVideo.removeEventListener('canplay', this.handleActiveVideoMetadata);
     this.activeVideo.pause();
     this.activeVideo.removeAttribute('src');
     this.activeVideo.load();
@@ -426,15 +421,6 @@ export class SliderScene {
     }
   }
 
-  /**
-   * Main filmstrip motion.
-   *
-   * The important part:
-   * - slidePosition is continuous and never wrapped.
-   * - activeIndex is only committed after the motion settles.
-   * - incoming video can be assigned to the incoming plane during motion,
-   *   but without setting it active early.
-   */
   private slideTo(direction: -1 | 1) {
     if (this.mode !== 'slider') {
       return;
@@ -468,15 +454,9 @@ export class SliderScene {
     this.capturePosterForIndex(this.activeIndex);
     this.prepareIncomingVideo(targetIndex);
 
-    /**
-     * Give the incoming plane its real video texture during the movement.
-     * Do NOT set it active here.
-     * The visual focus must still be distance/layout-based until the end.
-     */
     const incoming = this.transitionVideo;
-    if (incoming && incoming.index === targetIndex) {
-      const targetPlane = this.planes[targetIndex];
-      targetPlane.setTexture(incoming.texture, incoming.mediaSize);
+    if (incoming && incoming.index === targetIndex && this.isVideoDrawable(incoming.video)) {
+      this.planes[targetIndex]?.setTexture(incoming.texture, incoming.mediaSize);
     }
 
     this.timeline = gsap.timeline({
@@ -484,11 +464,6 @@ export class SliderScene {
       onComplete: () => {
         commitTarget();
 
-        /**
-         * Very important:
-         * Keep the continuous position.
-         * Do NOT assign targetIndex here.
-         */
         this.slidePosition = to;
         this.slideVelocity = 0;
 
@@ -536,7 +511,19 @@ export class SliderScene {
     return texture;
   }
 
+  private isVideoDrawable(video: HTMLVideoElement) {
+    return (
+        video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+        video.videoWidth > 0 &&
+        video.videoHeight > 0
+    );
+  }
+
   private handleActiveVideoMetadata = () => {
+    if (!this.isVideoDrawable(this.activeVideo) && this.activeVideo.readyState < HTMLMediaElement.HAVE_METADATA) {
+      return;
+    }
+
     this.mediaSize.set(this.activeVideo.videoWidth || 16, this.activeVideo.videoHeight || 9);
     this.planes[this.activeTextureIndex]?.setTexture(this.activeTexture, this.mediaSize);
   };
@@ -570,13 +557,13 @@ export class SliderScene {
       const isActive = planeIndex === index;
 
       plane.setActive(isActive);
-      plane.mesh.renderOrder = isActive ? 30 : 5;
       plane.setTexture(
           isActive ? this.activeTexture : this.posterTextures[planeIndex].texture,
-          isActive ? this.mediaSize : new THREE.Vector2(16, 9),
+          isActive ? this.mediaSize : this.posterMediaSize,
       );
     });
 
+    this.applySliderLayout();
     void this.playActiveVideo();
   }
 
@@ -587,22 +574,29 @@ export class SliderScene {
     const texture = this.createVideoTexture(video);
     const mediaSize = new THREE.Vector2(16, 9);
 
-    const handleMetadata = () => {
-      mediaSize.set(video.videoWidth || 16, video.videoHeight || 9);
-
-      if (this.transitionVideo?.index === index) {
-        this.planes[index]?.setTexture(texture, mediaSize);
+    const assignWhenReady = () => {
+      if (!this.transitionVideo || this.transitionVideo.index !== index) {
+        return;
       }
+
+      if (!this.isVideoDrawable(video)) {
+        return;
+      }
+
+      mediaSize.set(video.videoWidth || 16, video.videoHeight || 9);
+      this.planes[index]?.setTexture(texture, mediaSize);
     };
 
-    video.addEventListener('loadedmetadata', handleMetadata);
+    video.addEventListener('loadedmetadata', assignWhenReady);
+    video.addEventListener('loadeddata', assignWhenReady);
+    video.addEventListener('canplay', assignWhenReady);
 
     this.transitionVideo = {
       index,
       video,
       texture,
       mediaSize,
-      handleMetadata,
+      handleMetadata: assignWhenReady,
     };
 
     void this.playVideo(video);
@@ -625,7 +619,12 @@ export class SliderScene {
     this.capturePosterForIndex(previousIndex);
 
     incoming.video.removeEventListener('loadedmetadata', incoming.handleMetadata);
+    incoming.video.removeEventListener('loadeddata', incoming.handleMetadata);
+    incoming.video.removeEventListener('canplay', incoming.handleMetadata);
+
     previousVideo.removeEventListener('loadedmetadata', this.handleActiveVideoMetadata);
+    previousVideo.removeEventListener('loadeddata', this.handleActiveVideoMetadata);
+    previousVideo.removeEventListener('canplay', this.handleActiveVideoMetadata);
 
     this.activeIndex = index;
     this.activeTextureIndex = index;
@@ -633,30 +632,40 @@ export class SliderScene {
     this.activeTexture = incoming.texture;
     this.transitionVideo = null;
 
-    if (this.activeVideo.readyState >= HTMLMediaElement.HAVE_METADATA) {
+    if (this.isVideoDrawable(this.activeVideo) || this.activeVideo.readyState >= HTMLMediaElement.HAVE_METADATA) {
       this.mediaSize.set(this.activeVideo.videoWidth || 16, this.activeVideo.videoHeight || 9);
     } else {
       this.mediaSize.copy(incoming.mediaSize);
     }
 
     this.activeVideo.addEventListener('loadedmetadata', this.handleActiveVideoMetadata);
+    this.activeVideo.addEventListener('loadeddata', this.handleActiveVideoMetadata);
+    this.activeVideo.addEventListener('canplay', this.handleActiveVideoMetadata);
 
-    this.planes.forEach((plane, planeIndex) => {
-      const isActive = planeIndex === index;
-
-      plane.setActive(isActive);
-      plane.mesh.renderOrder = isActive ? 30 : 5;
-      plane.setTexture(
-          isActive ? this.activeTexture : this.posterTextures[planeIndex].texture,
-          isActive ? this.mediaSize : new THREE.Vector2(16, 9),
-      );
+    /**
+     * Flicker fix:
+     * Do NOT reset textures for every plane here.
+     * Only old active and new active need texture changes.
+     * Other side planes keep their existing poster textures untouched.
+     */
+    this.planes.forEach((plane) => {
+      plane.setActive(false);
     });
+
+    this.planes[previousIndex]?.setTexture(
+        this.posterTextures[previousIndex].texture,
+        this.posterMediaSize,
+    );
+
+    this.planes[index]?.setActive(true);
+    this.planes[index]?.setTexture(this.activeTexture, this.mediaSize);
 
     previousVideo.pause();
     previousVideo.removeAttribute('src');
     previousVideo.load();
     previousTexture.dispose();
 
+    this.applySliderLayout();
     void this.playActiveVideo();
     this.callbacks.onActiveSlideChange?.(index);
   }
@@ -669,6 +678,9 @@ export class SliderScene {
     const { video, texture, handleMetadata } = this.transitionVideo;
 
     video.removeEventListener('loadedmetadata', handleMetadata);
+    video.removeEventListener('loadeddata', handleMetadata);
+    video.removeEventListener('canplay', handleMetadata);
+
     video.pause();
     video.removeAttribute('src');
     video.load();
@@ -810,34 +822,20 @@ export class SliderScene {
 
     const frameHeight = activeWidth / SLIDER_ASPECT;
 
-    /**
-     * Center differs mainly by width, not by height.
-     * Side slides stay in the same filmstrip band.
-     */
     const sideWidth = activeWidth * (isMobile ? 0.58 : 0.54);
     const sideHeight = frameHeight;
 
     const sideGap = isMobile ? 8 : 12;
 
-    /**
-     * Small connected-filmstrip relationship.
-     * Not deep coverflow overlap, not huge separated cards.
-     */
     const sideX = activeWidth * 0.5 + sideWidth * 0.46 + sideGap;
     const hiddenX = sideX + sideWidth * 0.78;
 
     const bandY = isMobile ? 0 : 24;
 
-    /**
-     * Softer depth. Side slides should not feel like folded wings.
-     */
     const sideZ = isMobile ? -42 : -58;
     const farZ = isMobile ? -120 : -170;
 
     if (absOffset <= 1) {
-      /**
-       * Smoothstep feels more like a continuous strip than aggressive ease-out.
-       */
       const t = smoothstep01(absOffset);
       const localVelocity = this.slideVelocity * 0.45 * (1 - absOffset * 0.35);
 
