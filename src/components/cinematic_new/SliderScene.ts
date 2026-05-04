@@ -14,6 +14,14 @@ type PosterTexture = {
   texture: THREE.Texture;
 };
 
+type TransitionVideo = {
+  index: number;
+  video: HTMLVideoElement;
+  texture: THREE.VideoTexture;
+  mediaSize: THREE.Vector2;
+  handleMetadata: () => void;
+};
+
 const SLIDER_ASPECT = 16 / 6.6;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
@@ -111,8 +119,9 @@ export class SliderScene {
   private readonly startTime = performance.now();
   private readonly planes: VideoPlane[] = [];
   private readonly posterTextures: PosterTexture[] = [];
-  private readonly activeVideo: HTMLVideoElement;
-  private readonly activeTexture: THREE.VideoTexture;
+  private activeVideo: HTMLVideoElement;
+  private activeTexture: THREE.VideoTexture;
+  private transitionVideo: TransitionVideo | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private intersectionObserver: IntersectionObserver | null = null;
   private timeline: gsap.core.Timeline | null = null;
@@ -146,12 +155,9 @@ export class SliderScene {
     this.renderer.domElement.style.width = '100%';
     this.container.appendChild(this.renderer.domElement);
 
-    this.activeVideo = this.createActiveVideo(this.slides[0].videoSrc);
-    this.activeTexture = new THREE.VideoTexture(this.activeVideo);
-    this.activeTexture.colorSpace = THREE.SRGBColorSpace;
-    this.activeTexture.minFilter = THREE.LinearFilter;
-    this.activeTexture.magFilter = THREE.LinearFilter;
-    this.activeTexture.generateMipmaps = false;
+    this.activeVideo = this.createVideoElement(this.slides[0].videoSrc);
+    this.activeVideo.addEventListener('loadedmetadata', this.handleActiveVideoMetadata);
+    this.activeTexture = this.createVideoTexture(this.activeVideo);
 
     this.slides.forEach((slide, index) => {
       const posterTexture = createPosterTexture(slide.accent, index);
@@ -223,6 +229,7 @@ export class SliderScene {
     this.callbacks.onOverlayStateChange?.('opening');
     this.timeline?.kill();
     this.capturePosterForIndex(this.activeIndex);
+    this.disposeTransitionVideo();
     this.assignActiveTexture(this.activeIndex);
     void this.playActiveVideo();
 
@@ -364,8 +371,10 @@ export class SliderScene {
       this.scene.remove(plane.mesh);
       plane.dispose(false);
     });
+    this.disposeTransitionVideo();
     this.posterTextures.forEach(({ texture }) => texture.dispose());
     this.activeTexture.dispose();
+    this.activeVideo.removeEventListener('loadedmetadata', this.handleActiveVideoMetadata);
     this.activeVideo.pause();
     this.activeVideo.removeAttribute('src');
     this.activeVideo.load();
@@ -395,16 +404,14 @@ export class SliderScene {
       }
 
       hasCommittedTarget = true;
-      this.capturePosterForIndex(this.activeIndex);
-      this.activeIndex = targetIndex;
-      this.assignActiveTexture(targetIndex);
-      this.callbacks.onActiveSlideChange?.(targetIndex);
+      this.commitIncomingVideo(targetIndex);
     };
 
     this.mode = 'sliding';
     this.callbacks.onOverlayStateChange?.('sliding');
     this.timeline?.kill();
     this.capturePosterForIndex(this.activeIndex);
+    this.prepareIncomingVideo(targetIndex);
 
     this.timeline = gsap.timeline({
       defaults: { ease: 'power2.inOut', overwrite: 'auto' },
@@ -434,7 +441,7 @@ export class SliderScene {
     );
   }
 
-  private createActiveVideo(src: string) {
+  private createVideoElement(src: string) {
     const video = document.createElement('video');
     video.src = src;
     video.muted = true;
@@ -443,23 +450,39 @@ export class SliderScene {
     video.preload = 'auto';
     video.crossOrigin = 'anonymous';
 
-    video.addEventListener('loadedmetadata', () => {
-      this.mediaSize.set(video.videoWidth || 16, video.videoHeight || 9);
-      this.planes[this.activeTextureIndex]?.setTexture(this.activeTexture, this.mediaSize);
-    });
-
     return video;
   }
 
+  private createVideoTexture(video: HTMLVideoElement) {
+    const texture = new THREE.VideoTexture(video);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+
+    return texture;
+  }
+
+  private handleActiveVideoMetadata = () => {
+    this.mediaSize.set(this.activeVideo.videoWidth || 16, this.activeVideo.videoHeight || 9);
+    this.planes[this.activeTextureIndex]?.setTexture(this.activeTexture, this.mediaSize);
+  };
+
   private async playActiveVideo() {
+    await this.playVideo(this.activeVideo);
+  }
+
+  private async playVideo(video: HTMLVideoElement) {
     try {
-      await this.activeVideo.play();
+      await video.play();
     } catch {
       this.callbacks.onAutoplayBlocked?.();
     }
   }
 
   private assignActiveTexture(index: number) {
+    this.disposeTransitionVideo();
+
     const nextSlide = this.slides[index];
     const nextVideoSrc = new URL(nextSlide.videoSrc, window.location.href).href;
 
@@ -481,6 +504,91 @@ export class SliderScene {
     });
 
     void this.playActiveVideo();
+  }
+
+  private prepareIncomingVideo(index: number) {
+    this.disposeTransitionVideo();
+
+    const video = this.createVideoElement(this.slides[index].videoSrc);
+    const texture = this.createVideoTexture(video);
+    const mediaSize = new THREE.Vector2(16, 9);
+    const handleMetadata = () => {
+      mediaSize.set(video.videoWidth || 16, video.videoHeight || 9);
+
+      if (this.transitionVideo?.video === video) {
+        this.planes[index]?.setTexture(texture, mediaSize);
+      }
+    };
+
+    video.addEventListener('loadedmetadata', handleMetadata);
+    this.transitionVideo = { index, video, texture, mediaSize, handleMetadata };
+    this.planes[index]?.setActive(true);
+    this.planes[index]?.setTexture(texture, mediaSize);
+    void this.playVideo(video);
+  }
+
+  private commitIncomingVideo(index: number) {
+    const incoming = this.transitionVideo;
+
+    if (!incoming || incoming.index !== index) {
+      this.activeIndex = index;
+      this.assignActiveTexture(index);
+      this.callbacks.onActiveSlideChange?.(index);
+      return;
+    }
+
+    const previousVideo = this.activeVideo;
+    const previousTexture = this.activeTexture;
+
+    this.capturePosterForIndex(this.activeIndex);
+    incoming.video.removeEventListener('loadedmetadata', incoming.handleMetadata);
+    previousVideo.removeEventListener('loadedmetadata', this.handleActiveVideoMetadata);
+
+    this.activeIndex = index;
+    this.activeTextureIndex = index;
+    this.activeVideo = incoming.video;
+    this.activeTexture = incoming.texture;
+    this.transitionVideo = null;
+
+    if (this.activeVideo.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      this.mediaSize.set(this.activeVideo.videoWidth || 16, this.activeVideo.videoHeight || 9);
+    } else {
+      this.mediaSize.copy(incoming.mediaSize);
+    }
+
+    this.activeVideo.addEventListener('loadedmetadata', this.handleActiveVideoMetadata);
+
+    this.planes.forEach((plane, planeIndex) => {
+      const isActive = planeIndex === index;
+      plane.setActive(isActive);
+      plane.mesh.renderOrder = isActive ? 20 : 5;
+      plane.setTexture(
+        isActive ? this.activeTexture : this.posterTextures[planeIndex].texture,
+        isActive ? this.mediaSize : new THREE.Vector2(16, 9),
+      );
+    });
+
+    previousVideo.pause();
+    previousVideo.removeAttribute('src');
+    previousVideo.load();
+    previousTexture.dispose();
+    void this.playActiveVideo();
+    this.callbacks.onActiveSlideChange?.(index);
+  }
+
+  private disposeTransitionVideo() {
+    if (!this.transitionVideo) {
+      return;
+    }
+
+    const { video, texture, handleMetadata } = this.transitionVideo;
+
+    video.removeEventListener('loadedmetadata', handleMetadata);
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+    texture.dispose();
+    this.transitionVideo = null;
   }
 
   private capturePosterForIndex(index: number) {
@@ -515,10 +623,14 @@ export class SliderScene {
         if (this.isVisible) {
           this.start();
           void this.playActiveVideo();
+          if (this.transitionVideo) {
+            void this.playVideo(this.transitionVideo.video);
+          }
           return;
         }
 
         this.activeVideo.pause();
+        this.transitionVideo?.video.pause();
       },
       { threshold: 0.08 },
     );
@@ -530,11 +642,15 @@ export class SliderScene {
   private handleVisibilityChange = () => {
     if (document.hidden) {
       this.activeVideo.pause();
+      this.transitionVideo?.video.pause();
       return;
     }
 
     if (this.isVisible) {
       void this.playActiveVideo();
+      if (this.transitionVideo) {
+        void this.playVideo(this.transitionVideo.video);
+      }
       this.start();
     }
   };
