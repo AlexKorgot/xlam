@@ -188,12 +188,12 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
     <section
       ref={rootRef}
       data-fullpage-scroll-ignore
-      className={`font-normalidad relative isolate h-[100svh] min-h-[620px] w-full overflow-hidden bg-[#458294] text-white ${className}`}
+      className={`font-normalidad group relative isolate h-[100svh] min-h-[620px] w-full overflow-hidden bg-[#458294] text-white ${className}`}
       aria-label="Cinematic project slider"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(102,255,102,0.055)_0%,rgba(23,58,58,0.24)_28%,rgba(0,0,0,0)_62%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.7)_0%,rgba(0,0,0,0.2)_38%,rgba(0,0,0,0.72)_100%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.94)_0%,rgba(0,0,0,0.46)_17%,rgba(0,0,0,0.04)_50%,rgba(0,0,0,0.5)_83%,rgba(0,0,0,0.96)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(102,255,102,0.045)_0%,rgba(24,64,65,0.3)_30%,rgba(0,0,0,0)_64%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.62)_0%,rgba(0,0,0,0.12)_42%,rgba(0,0,0,0.62)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.28)_18%,rgba(0,0,0,0)_50%,rgba(0,0,0,0.32)_82%,rgba(0,0,0,0.9)_100%)]" />
 
       <div ref={canvasHostRef} className="absolute inset-0 z-0 cursor-pointer touch-manipulation" />
 
@@ -223,7 +223,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
           </h3>
         </div>
 
-        <div className="pointer-events-auto absolute bottom-[5.5svh] left-1/2 z-20 flex -translate-x-1/2 items-center gap-5 opacity-[var(--cinematic-chrome-opacity)]">
+        <div className="pointer-events-auto absolute bottom-[4.5svh] left-1/2 z-20 flex -translate-x-1/2 items-center gap-5 opacity-0 transition-opacity duration-300 group-hover:opacity-[calc(var(--cinematic-chrome-opacity)*0.72)] focus-within:opacity-[var(--cinematic-chrome-opacity)]">
           <button
             type="button"
             className="grid h-9 w-9 place-items-center rounded-full border border-white/12 bg-white/[0.04] text-lg font-black text-white/48 backdrop-blur-md transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"
