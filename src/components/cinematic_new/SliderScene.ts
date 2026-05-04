@@ -577,14 +577,16 @@ export class SliderScene {
     const height = this.viewport.y;
     const isMobile = width < 760;
     const absoluteOffset = Math.abs(offset);
-    const direction = Math.sign(offset) || 1;
-    const activeWidth = width * (isMobile ? 0.72 : 0.7);
+    const activeWidth = width * (isMobile ? 0.72 : 0.64);
     const activeHeight = activeWidth / SLIDER_ASPECT;
-    const sideWidth = width * (isMobile ? 0.14 : 0.15);
-    const sideHeight = activeHeight;
-    const sideGap = width * (isMobile ? 0.012 : 0.016);
-    const sideX = activeWidth * 0.5 + sideWidth * 0.5 + sideGap;
-    const hiddenX = width * 0.72 + sideWidth;
+    const angleStep = isMobile ? 0.34 : 0.36;
+    const sideCenterX = width * (isMobile ? 0.58 : 0.56);
+    const radius = sideCenterX / Math.sin(angleStep);
+    const maxAngle = angleStep * 1.95;
+    const angle = clamp(offset * angleStep, -maxAngle, maxAngle);
+    const arcX = Math.sin(angle) * radius;
+    const arcZ = -(1 - Math.cos(angle)) * radius;
+    const hiddenProgress = clamp(absoluteOffset - 1, 0, 1);
     const bandY = isMobile ? -height * 0.015 : -height * 0.04;
     const velocity = Math.abs(this.slideVelocity);
 
@@ -592,14 +594,14 @@ export class SliderScene {
       const progress = easeOut(absoluteOffset);
 
       return {
-        x: direction * lerp(0, sideX, progress),
+        x: arcX,
         y: bandY,
-        z: lerp(0, isMobile ? -24 : -46, progress),
-        width: lerp(activeWidth, sideWidth, progress),
-        height: lerp(activeHeight, sideHeight, progress),
-        rotationY: direction * lerp(0, -0.07, progress),
+        z: arcZ,
+        width: activeWidth,
+        height: activeHeight,
+        rotationY: -angle * 0.85,
         bend: lerp(isMobile ? 8 : 14, isMobile ? 7 : 12, progress),
-        opacity: lerp(1, isMobile ? 0.72 : 0.82, progress),
+        opacity: lerp(1, isMobile ? 0.9 : 0.94, progress),
         darkness: 0.04,
         velocity: velocity * (1 - absoluteOffset * 0.25),
         blur: lerp(0, 0.15, progress),
@@ -608,22 +610,20 @@ export class SliderScene {
       };
     }
 
-    const progress = clamp(absoluteOffset - 1, 0, 1);
-
     return {
-      x: direction * lerp(sideX, hiddenX, progress),
+      x: arcX,
       y: bandY,
-      z: lerp(isMobile ? -64 : -92, -240, progress),
-      width: sideWidth,
-      height: sideHeight,
-      rotationY: direction * lerp(-0.07, -0.02, progress),
-      bend: lerp(isMobile ? 6 : 9, 0, progress),
-      opacity: lerp(isMobile ? 0.2 : 0.28, 0, progress),
+      z: arcZ - hiddenProgress * (isMobile ? 90 : 140),
+      width: activeWidth,
+      height: activeHeight,
+      rotationY: -angle * 0.85,
+      bend: lerp(isMobile ? 6 : 9, 0, hiddenProgress),
+      opacity: lerp(isMobile ? 0.2 : 0.28, 0, hiddenProgress),
       darkness: 0.04,
       velocity: velocity * 0.35,
-      blur: lerp(0.15, 0.24, progress),
-      cornerRadius: lerp(isMobile ? 9 : 10, isMobile ? 6 : 8, progress),
-      edgeCurve: lerp(isMobile ? 5 : 8, 0, progress),
+      blur: lerp(0.15, 0.24, hiddenProgress),
+      cornerRadius: lerp(isMobile ? 9 : 10, isMobile ? 6 : 8, hiddenProgress),
+      edgeCurve: lerp(isMobile ? 5 : 8, 0, hiddenProgress),
     };
   }
 
