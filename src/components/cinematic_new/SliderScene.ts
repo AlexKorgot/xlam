@@ -14,10 +14,11 @@ type PosterTexture = {
   texture: THREE.Texture;
 };
 
-const SLIDER_ASPECT = 2.4;
+const SLIDER_ASPECT = 16 / 6.6;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
 const easeOut = (value: number) => 1 - Math.pow(1 - value, 3);
+const smoothstep = (value: number) => value * value * (3 - 2 * value);
 
 function wrapIndex(index: number, total: number) {
   return ((index % total) + total) % total;
@@ -384,8 +385,8 @@ export class SliderScene {
     const from = this.slidePosition;
     const to = from + direction;
     const targetIndex = wrapIndex(Math.round(to), this.slides.length);
-    const duration = this.reducedMotion ? 0.01 : 1.04;
-    const motion = { position: from, velocity: direction * 1.15 };
+    const duration = this.reducedMotion ? 0.01 : 1.24;
+    const motion = { position: from, velocity: direction };
     let hasCommittedTarget = false;
 
     const commitTarget = () => {
@@ -406,7 +407,7 @@ export class SliderScene {
     this.capturePosterForIndex(this.activeIndex);
 
     this.timeline = gsap.timeline({
-      defaults: { ease: 'power3.inOut', overwrite: 'auto' },
+      defaults: { ease: 'power2.inOut', overwrite: 'auto' },
       onComplete: () => {
         commitTarget();
         this.slidePosition = targetIndex;
@@ -417,7 +418,6 @@ export class SliderScene {
       },
     });
 
-    this.timeline.call(commitTarget, undefined, duration * 0.58);
     this.timeline.to(
       motion,
       {
@@ -593,70 +593,66 @@ export class SliderScene {
     const isMobile = width < 760;
     const absoluteOffset = Math.abs(offset);
     const distance = clamp(absoluteOffset, 0, 1);
-    const distanceEase = easeOut(distance);
-    const activeWidth = width * (isMobile ? 0.7 : 0.66);
+    const distanceEase = smoothstep(distance);
+    const activeWidth = isMobile ? Math.min(width * 0.76, 540) : Math.min(width * 0.62, 900);
     const activeHeight = activeWidth / SLIDER_ASPECT;
-    const sideScaleX = isMobile ? 0.62 : 0.58;
-    const sideVisualWidth = activeWidth * sideScaleX;
-    const slideGap = isMobile ? 12 : 25;
-    const angleStep = isMobile ? 0.32 : 0.36;
-    const sideCenterX = activeWidth * 0.5 + slideGap + sideVisualWidth * 0.5;
-    const radius = sideCenterX / Math.sin(angleStep);
-    const maxAngle = angleStep * 1.95;
-    const angle = clamp(offset * angleStep, -maxAngle, maxAngle);
-    const arcX = Math.sin(angle) * radius;
-    const arcZ = -(1 - Math.cos(angle)) * radius;
+    const sideWidth = activeWidth * (isMobile ? 0.52 : 0.46);
+    const sideHeight = activeHeight * 0.92;
+    const sideGap = isMobile ? 8 : 14;
+    const sideX = activeWidth * 0.5 + sideWidth * 0.38 + sideGap;
+    const hiddenX = sideX + sideWidth * 0.72;
+    const sideZ = isMobile ? -86 : -135;
+    const farZ = isMobile ? -150 : -255;
+    const sign = offset < 0 ? -1 : 1;
     const hiddenProgress = clamp(absoluteOffset - 1, 0, 1);
-    const scaleX = lerp(1, sideScaleX, distanceEase);
-    const scaleY = 1;
-    const bandY = isMobile ? -height * 0.04 : -height * 0.07;
+    const hiddenEase = easeOut(hiddenProgress);
+    const bandY = isMobile ? -height * 0.015 : -height * 0.025;
     const velocity = Math.abs(this.slideVelocity);
 
     if (absoluteOffset <= 1) {
       return {
-        x: arcX,
+        x: sign * lerp(0, sideX, distanceEase),
         y: bandY,
-        z: arcZ,
-        width: activeWidth,
-        height: activeHeight,
-        scaleX,
-        scaleY,
-        rotationY: -angle * 0.85,
-        bend: lerp(isMobile ? 8 : 12, isMobile ? 10 : 16, distanceEase),
-        opacity: lerp(1, isMobile ? 0.74 : 0.78, distanceEase),
-        darkness: lerp(0.02, 0.36, distanceEase),
+        z: lerp(0, sideZ, distanceEase),
+        width: lerp(activeWidth, sideWidth, distanceEase),
+        height: lerp(activeHeight, sideHeight, distanceEase),
+        scaleX: 1,
+        scaleY: 1,
+        rotationY: -sign * lerp(0, isMobile ? 0.34 : 0.5, distanceEase),
+        bend: lerp(isMobile ? 7 : 9, isMobile ? 10 : 13, distanceEase),
+        opacity: lerp(1, isMobile ? 0.72 : 0.68, distanceEase),
+        darkness: lerp(0.04, isMobile ? 0.4 : 0.48, distanceEase),
         velocity: velocity * (1 - absoluteOffset * 0.25),
-        blur: lerp(0, 0.08, distanceEase),
-        cornerRadius: lerp(isMobile ? 12 : 14, isMobile ? 10 : 12, distanceEase),
-        edgeCurve: lerp(isMobile ? 7 : 12, isMobile ? 9 : 15, distanceEase),
+        blur: lerp(0, 0.06, distanceEase),
+        cornerRadius: lerp(isMobile ? 12 : 14, isMobile ? 10 : 11, distanceEase),
+        edgeCurve: lerp(isMobile ? 5 : 7, isMobile ? 7 : 9, distanceEase),
       };
     }
 
     return {
-      x: arcX,
+      x: sign * lerp(sideX, hiddenX, hiddenEase),
       y: bandY,
-      z: arcZ - hiddenProgress * (isMobile ? 90 : 140),
-      width: activeWidth,
-      height: activeHeight,
-      scaleX: lerp(scaleX, isMobile ? 0.42 : 0.38, hiddenProgress),
-      scaleY,
-      rotationY: -angle * 0.85,
-      bend: lerp(isMobile ? 6 : 9, 0, hiddenProgress),
-      opacity: lerp(isMobile ? 0.2 : 0.28, 0, hiddenProgress),
-      darkness: lerp(0.42, 0.62, hiddenProgress),
+      z: lerp(sideZ, farZ, hiddenEase),
+      width: lerp(sideWidth, sideWidth * 0.72, hiddenEase),
+      height: lerp(sideHeight, sideHeight * 0.86, hiddenEase),
+      scaleX: 1,
+      scaleY: 1,
+      rotationY: -sign * lerp(isMobile ? 0.34 : 0.5, isMobile ? 0.52 : 0.72, hiddenEase),
+      bend: lerp(isMobile ? 8 : 10, isMobile ? 3 : 4, hiddenEase),
+      opacity: lerp(isMobile ? 0.24 : 0.28, isMobile ? 0.05 : 0.08, hiddenEase),
+      darkness: lerp(isMobile ? 0.5 : 0.58, 0.72, hiddenEase),
       velocity: velocity * 0.35,
-      blur: lerp(0.1, 0.2, hiddenProgress),
-      cornerRadius: lerp(isMobile ? 9 : 10, isMobile ? 6 : 8, hiddenProgress),
-      edgeCurve: lerp(isMobile ? 5 : 8, 0, hiddenProgress),
+      blur: lerp(0.08, 0.16, hiddenEase),
+      cornerRadius: lerp(isMobile ? 9 : 10, isMobile ? 6 : 8, hiddenEase),
+      edgeCurve: lerp(isMobile ? 5 : 6, 0, hiddenEase),
     };
   }
 
   private getRenderOrder(offset: number, index: number) {
-    if (index === this.activeTextureIndex) {
-      return 20 + Math.round((1 - Math.min(Math.abs(offset), 1)) * 40);
-    }
+    const distance = Math.min(Math.abs(offset), 2);
+    const activeTextureBoost = index === this.activeTextureIndex ? 2 : 0;
 
-    return Math.max(1, 50 - Math.round(Math.abs(offset) * 20));
+    return Math.max(1, 80 - Math.round(distance * 28) + activeTextureBoost);
   }
 
   private getCameraZ(height: number) {
