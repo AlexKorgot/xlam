@@ -915,8 +915,8 @@ export class SliderScene {
 
       bend: lerp(isMobile ? 5 : 7, isMobile ? 2 : 3, t),
 
-      opacity: 0,
-      darkness: farDarkness,
+      opacity: isMobile ? 0 : lerp(stableVisibleOpacity, 0, t),
+      darkness: isMobile ? farDarkness : lerp(stableVisibleDarkness, farDarkness, t),
 
       cornerRadius: lerp(isMobile ? 7 : 9, isMobile ? 5 : 6, t),
       edgeCurve: lerp(isMobile ? 4 : 6, 0, t),
