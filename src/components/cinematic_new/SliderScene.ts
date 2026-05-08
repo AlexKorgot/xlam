@@ -23,6 +23,15 @@ type TransitionVideo = {
 };
 
 const SLIDER_ASPECT = 16 / 6.6;
+const TEXTURE_CROSSFADE_DURATION = 0.34;
+
+type OutgoingVideoFade = {
+  index: number;
+  video: HTMLVideoElement;
+  texture: THREE.VideoTexture;
+  start: () => void;
+  hasStarted: () => boolean;
+};
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
@@ -430,6 +439,9 @@ export class SliderScene {
     const to = from + direction;
     const targetIndex = wrapIndex(Math.round(to), this.slides.length);
     const duration = this.reducedMotion ? 0.01 : 1.45;
+    const outgoingIndex = this.activeIndex;
+    const outgoingVideo = this.activeVideo;
+    const outgoingTexture = this.activeTexture;
 
     const motion = {
       position: from,
@@ -437,6 +449,43 @@ export class SliderScene {
     };
 
     let hasCommittedTarget = false;
+    let hasStartedOutgoingFade = false;
+    let hasCleanedOutgoingVideo = false;
+
+    const cleanupOutgoingVideo = () => {
+      if (hasCleanedOutgoingVideo) {
+        return;
+      }
+
+      hasCleanedOutgoingVideo = true;
+      outgoingVideo.pause();
+      outgoingVideo.removeAttribute('src');
+      outgoingVideo.load();
+      outgoingTexture.dispose();
+    };
+
+    const startOutgoingFade = () => {
+      if (hasStartedOutgoingFade) {
+        return;
+      }
+
+      hasStartedOutgoingFade = true;
+      this.capturePosterForIndex(outgoingIndex);
+      this.fadePlaneToTexture(
+          outgoingIndex,
+          this.posterTextures[outgoingIndex].texture,
+          this.posterMediaSize,
+          cleanupOutgoingVideo,
+      );
+    };
+
+    const outgoingFade: OutgoingVideoFade = {
+      index: outgoingIndex,
+      video: outgoingVideo,
+      texture: outgoingTexture,
+      start: startOutgoingFade,
+      hasStarted: () => hasStartedOutgoingFade,
+    };
 
     const commitTarget = () => {
       if (hasCommittedTarget) {
@@ -444,7 +493,7 @@ export class SliderScene {
       }
 
       hasCommittedTarget = true;
-      this.commitIncomingVideo(targetIndex);
+      this.commitIncomingVideo(targetIndex, outgoingFade);
     };
 
     this.mode = 'sliding';
@@ -481,6 +530,12 @@ export class SliderScene {
           },
         },
         0,
+    );
+
+    this.timeline.call(
+        startOutgoingFade,
+        undefined,
+        Math.max(0, duration - (this.reducedMotion ? 0.01 : TEXTURE_CROSSFADE_DURATION)),
     );
   }
 
@@ -609,7 +664,7 @@ export class SliderScene {
     void this.playVideo(video);
   }
 
-  private commitIncomingVideo(index: number) {
+  private commitIncomingVideo(index: number, outgoingFade?: OutgoingVideoFade) {
     const incoming = this.transitionVideo;
 
     if (!incoming || incoming.index !== index) {
@@ -661,19 +716,30 @@ export class SliderScene {
       plane.setActive(false);
     });
 
-    const cleanupPreviousVideo = () => {
-      previousVideo.pause();
-      previousVideo.removeAttribute('src');
-      previousVideo.load();
-      previousTexture.dispose();
-    };
+    if (
+        outgoingFade &&
+        outgoingFade.index === previousIndex &&
+        outgoingFade.video === previousVideo &&
+        outgoingFade.texture === previousTexture
+    ) {
+      if (!outgoingFade.hasStarted()) {
+        outgoingFade.start();
+      }
+    } else {
+      const cleanupPreviousVideo = () => {
+        previousVideo.pause();
+        previousVideo.removeAttribute('src');
+        previousVideo.load();
+        previousTexture.dispose();
+      };
 
-    this.fadePlaneToTexture(
-        previousIndex,
-        this.posterTextures[previousIndex].texture,
-        this.posterMediaSize,
-        cleanupPreviousVideo,
-    );
+      this.fadePlaneToTexture(
+          previousIndex,
+          this.posterTextures[previousIndex].texture,
+          this.posterMediaSize,
+          cleanupPreviousVideo,
+      );
+    }
 
     this.planes[index]?.setActive(true);
     this.planes[index]?.setTexture(this.activeTexture, this.mediaSize);
@@ -737,7 +803,7 @@ export class SliderScene {
 
     gsap.to(plane.uniforms.uTextureMix, {
       value: 1,
-      duration: 0.34,
+      duration: TEXTURE_CROSSFADE_DURATION,
       ease: 'power2.out',
       overwrite: 'auto',
       onComplete: () => {
