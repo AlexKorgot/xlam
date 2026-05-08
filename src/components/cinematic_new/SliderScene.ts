@@ -822,7 +822,7 @@ export class SliderScene {
 
     const activeWidth = isMobile
         ? width * 0.84
-        : Math.min(width * 0.64, 980);
+        : width * 0.64;
 
     const frameHeight = activeWidth / SLIDER_ASPECT;
 
@@ -830,8 +830,11 @@ export class SliderScene {
     const sideHeight = frameHeight;
 
     const sideGap = isMobile ? 28 : 80;
-    const sideX = activeWidth * 0.5 + sideWidth * 0.46 + sideGap;
-    const hiddenX = sideX + sideWidth * 0.78;
+    const baseSideX = activeWidth * 0.5 + sideWidth * 0.46 + sideGap;
+    const desktopCrop = 117;
+    const croppedSideX = width * 0.5 - sideWidth * 0.5 + desktopCrop;
+    const sideX = isMobile ? baseSideX : croppedSideX;
+    const hiddenX = isMobile ? width * 0.5 + sideWidth : sideX + sideWidth * 0.78;
 
     const bandY = isMobile ? 0 : 24;
 
@@ -854,12 +857,12 @@ export class SliderScene {
     const stableVisibleOpacity = 1.0;
     const stableVisibleDarkness = isMobile ? 0.08 : 0.1;
 
-    const farOpacity = isMobile ? 0.24 : 0.3;
     const farDarkness = isMobile ? 0.34 : 0.4;
 
     if (absOffset <= 1) {
       const t = smoothstep01(absOffset);
       const localVelocity = this.slideVelocity * 0.35 * (1 - absOffset * 0.35);
+      const visibleOpacity = isMobile ? 1 - t : stableVisibleOpacity;
 
       return {
         x: direction * lerp(0, sideX, t),
@@ -880,7 +883,7 @@ export class SliderScene {
          * No brightness pulsing for center/side transition.
          * Keep visible slides stable.
          */
-        opacity: stableVisibleOpacity,
+        opacity: visibleOpacity,
         darkness: stableVisibleDarkness,
 
         cornerRadius: lerp(isMobile ? 8 : 10, isMobile ? 7 : 9, t),
@@ -912,12 +915,8 @@ export class SliderScene {
 
       bend: lerp(isMobile ? 5 : 7, isMobile ? 2 : 3, t),
 
-      /**
-       * Only far slides fade slightly.
-       * Main side slides do not breathe.
-       */
-      opacity: lerp(stableVisibleOpacity, farOpacity, t),
-      darkness: lerp(stableVisibleDarkness, farDarkness, t),
+      opacity: 0,
+      darkness: farDarkness,
 
       cornerRadius: lerp(isMobile ? 7 : 9, isMobile ? 5 : 6, t),
       edgeCurve: lerp(isMobile ? 4 : 6, 0, t),
