@@ -454,11 +454,6 @@ export class SliderScene {
     this.capturePosterForIndex(this.activeIndex);
     this.prepareIncomingVideo(targetIndex);
 
-    // const incoming = this.transitionVideo;
-    // if (incoming && incoming.index === targetIndex && this.isVideoDrawable(incoming.video)) {
-    //   this.planes[targetIndex]?.setTexture(incoming.texture, incoming.mediaSize);
-    // }
-
     this.timeline = gsap.timeline({
       defaults: { ease: 'power4.inOut', overwrite: 'auto' },
       onComplete: () => {
@@ -574,6 +569,10 @@ export class SliderScene {
     const texture = this.createVideoTexture(video);
     const mediaSize = new THREE.Vector2(16, 9);
 
+    const assignIncomingTexture = () => {
+      this.planes[index]?.setTexture(texture, mediaSize);
+    };
+
     const assignWhenReady = () => {
       if (!this.transitionVideo || this.transitionVideo.index !== index) {
         return;
@@ -584,11 +583,7 @@ export class SliderScene {
       }
 
       mediaSize.set(video.videoWidth || 16, video.videoHeight || 9);
-
-      // IMPORTANT:
-      // Do NOT assign this texture to the plane during slider motion.
-      // Side slides must not switch poster -> video while moving,
-      // otherwise they visibly brighten/darken.
+      assignIncomingTexture();
     };
 
     video.addEventListener('loadedmetadata', assignWhenReady);
@@ -603,6 +598,7 @@ export class SliderScene {
       handleMetadata: assignWhenReady,
     };
 
+    assignIncomingTexture();
     void this.playVideo(video);
   }
 
