@@ -335,6 +335,7 @@ export class SliderScene {
 
       this.timeline?.to(plane.mesh.position, { x: layout.x, y: layout.y, z: layout.z, duration }, 0.06);
       this.timeline?.to(plane.mesh.rotation, { x: 0, y: layout.rotationY, z: 0, duration }, 0.06);
+      this.timeline?.to(plane.uniforms.uStripOffset, { value: layout.stripX, duration }, 0.06);
 
       this.timeline?.to(
           plane.scaleState,
@@ -451,6 +452,7 @@ export class SliderScene {
     let hasCommittedTarget = false;
     let hasStartedOutgoingFade = false;
     let hasCleanedOutgoingVideo = false;
+    let hasNotifiedTarget = false;
 
     const cleanupOutgoingVideo = () => {
       if (hasCleanedOutgoingVideo) {
@@ -504,7 +506,7 @@ export class SliderScene {
     this.prepareIncomingVideo(targetIndex);
 
     this.timeline = gsap.timeline({
-      defaults: { ease: 'power4.inOut', overwrite: 'auto' },
+      defaults: { ease: 'power3.inOut', overwrite: 'auto' },
       onComplete: () => {
         commitTarget();
 
@@ -527,6 +529,11 @@ export class SliderScene {
             this.slidePosition = motion.position;
             this.slideVelocity = motion.velocity;
             this.applySliderLayout();
+
+            if (!hasNotifiedTarget && wrapIndex(Math.round(motion.position), this.slides.length) === targetIndex) {
+              hasNotifiedTarget = true;
+              this.callbacks.onActiveSlideChange?.(targetIndex);
+            }
           },
         },
         0,
@@ -940,88 +947,42 @@ export class SliderScene {
     const absOffset = Math.abs(offset);
     const direction = Math.sign(offset) || 1;
 
-    const activeWidth = isMobile
-        ? width * 0.84
-        : width * 0.64;
+    const centerWidth = isMobile
+        ? width * 0.88
+        : Math.min(width * 0.69, 1328);
+    const centerHeight = centerWidth / SLIDER_ASPECT;
+    const frameStep = centerWidth * (isMobile ? 0.88 : 0.94);
+    const sideProgress = smoothstep01(absOffset);
+    const farProgress = smoothstep01((absOffset - 1.35) / 0.9);
+    const stripX = offset * frameStep;
+    const visibleBand = smoothstep01((2.25 - absOffset) / 0.55);
+    const localVelocity = this.slideVelocity * (isMobile ? 0.22 : 0.28) * (1 - Math.min(absOffset, 2.1) * 0.16);
 
-    const frameHeight = activeWidth / SLIDER_ASPECT;
-
-    const sideWidth = activeWidth * (isMobile ? 0.58 : 0.54);
-    const sideHeight = frameHeight;
-
-    const sideGap = isMobile ? 28 : 80;
-    const baseSideX = activeWidth * 0.5 + sideWidth * 0.46 + sideGap;
-    const desktopCrop = 117;
-    const croppedSideX = width * 0.5 - sideWidth * 0.5 + desktopCrop;
-    const sideX = isMobile ? baseSideX : croppedSideX;
-    const hiddenX = isMobile ? width * 0.5 + sideWidth : sideX + sideWidth * 0.78;
-
-    const bandY = isMobile ? 0 : 24;
-
-    const sideZ = isMobile ? -42 : -58;
-    const farZ = isMobile ? -120 : -170;
-    const centerScaleY = isMobile ? 0.96 : 0.95;
-
-    const stableVisibleOpacity = 1.0;
-    const visibleDarkness = isMobile ? 0.08 : 0.1;
-
-    if (absOffset <= 1) {
-      const t = smoothstep01(absOffset);
-      const localVelocity = this.slideVelocity * 0.35 * (1 - absOffset * 0.35);
-      const visibleOpacity = isMobile ? 1 - t : stableVisibleOpacity;
-
-      return {
-        x: direction * lerp(0, sideX, t),
-        y: bandY,
-        z: lerp(0, sideZ, t),
-
-        width: lerp(activeWidth, sideWidth, t),
-        height: sideHeight,
-
-        scaleX: 1,
-        scaleY: lerp(centerScaleY, 1, t),
-
-        rotationY: -direction * lerp(0, isMobile ? 0.1 : 0.14, t),
-
-        bend: lerp(isMobile ? 4 : 5, isMobile ? 5 : 7, t),
-
-        opacity: visibleOpacity,
-        darkness: visibleDarkness,
-
-        cornerRadius: lerp(isMobile ? 8 : 10, isMobile ? 7 : 9, t),
-        edgeCurve: lerp(isMobile ? 3 : 4, isMobile ? 4 : 6, t),
-
-        velocity: localVelocity,
-      };
-    }
-
-    const t = smoothstep01(absOffset - 1);
-    const localVelocity = this.slideVelocity * 0.16;
+    const frameWidth = lerp(centerWidth, centerWidth * (isMobile ? 0.9 : 0.86), sideProgress);
+    const frameHeight = lerp(centerHeight, centerHeight * (isMobile ? 0.98 : 1.02), sideProgress);
+    const bandY = isMobile ? -6 : 10;
 
     return {
-      x: direction * lerp(sideX, hiddenX, t),
-      y: bandY,
-      z: lerp(sideZ, farZ, t),
+      x: stripX,
+      y: bandY - lerp(0, isMobile ? 8 : 24, farProgress),
+      z: -lerp(0, isMobile ? 92 : 150, farProgress),
+      stripX,
 
-      width: lerp(sideWidth, sideWidth * 0.9, t),
-      height: sideHeight,
+      width: frameWidth,
+      height: frameHeight,
 
       scaleX: 1,
-      scaleY: 1,
+      scaleY: lerp(isMobile ? 0.98 : 0.96, 1, sideProgress),
 
-      rotationY: -direction * lerp(
-          isMobile ? 0.1 : 0.14,
-          isMobile ? 0.2 : 0.26,
-          t,
-      ),
+      rotationY: -direction * lerp(0, isMobile ? 0.08 : 0.13, sideProgress),
 
-      bend: lerp(isMobile ? 5 : 7, isMobile ? 2 : 3, t),
+      bend: lerp(isMobile ? 34 : 46, isMobile ? 52 : 68, sideProgress),
 
-      opacity: isMobile ? 0 : lerp(stableVisibleOpacity, 0, t),
-      darkness: visibleDarkness,
+      opacity: isMobile ? visibleBand * (1 - sideProgress * 0.14) : visibleBand,
+      darkness: lerp(isMobile ? 0.08 : 0.1, isMobile ? 0.16 : 0.18, sideProgress),
 
-      cornerRadius: lerp(isMobile ? 7 : 9, isMobile ? 5 : 6, t),
-      edgeCurve: lerp(isMobile ? 4 : 6, 0, t),
+      cornerRadius: lerp(isMobile ? 3 : 4, isMobile ? 2 : 3, sideProgress),
+      edgeCurve: lerp(isMobile ? 8 : 10, isMobile ? 18 : 24, sideProgress),
 
       velocity: localVelocity,
     };

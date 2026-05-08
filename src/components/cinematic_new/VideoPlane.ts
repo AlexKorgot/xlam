@@ -5,6 +5,7 @@ export type VideoPlaneLayout = {
   x: number;
   y: number;
   z: number;
+  stripX: number;
   width: number;
   height: number;
   scaleX: number;
@@ -38,6 +39,7 @@ export class VideoPlane {
     uMediaSize: { value: THREE.Vector2 };
     uNextMediaSize: { value: THREE.Vector2 };
     uPlaneSize: { value: THREE.Vector2 };
+    uStripOffset: { value: number };
   };
 
   constructor(texture: THREE.Texture, viewportSize: THREE.Vector2) {
@@ -60,6 +62,7 @@ export class VideoPlane {
       uMediaSize: { value: new THREE.Vector2(16, 9) },
       uNextMediaSize: { value: new THREE.Vector2(16, 9) },
       uPlaneSize: { value: new THREE.Vector2(720, 324) },
+      uStripOffset: { value: 0 },
     };
 
     const material = new THREE.ShaderMaterial({
@@ -107,6 +110,7 @@ export class VideoPlane {
     this.mesh.rotation.set(0, layout.rotationY, 0);
     this.setScale(layout.scaleX, layout.scaleY);
     this.uniforms.uPlaneSize.value.set(layout.width, layout.height);
+    this.uniforms.uStripOffset.value = layout.stripX;
     this.uniforms.uBend.value = layout.bend;
     this.uniforms.uOpacity.value = layout.opacity;
     this.uniforms.uDarkness.value = layout.darkness;
