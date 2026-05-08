@@ -661,18 +661,22 @@ export class SliderScene {
       plane.setActive(false);
     });
 
-    this.planes[previousIndex]?.setTexture(
+    const cleanupPreviousVideo = () => {
+      previousVideo.pause();
+      previousVideo.removeAttribute('src');
+      previousVideo.load();
+      previousTexture.dispose();
+    };
+
+    this.fadePlaneToTexture(
+        previousIndex,
         this.posterTextures[previousIndex].texture,
         this.posterMediaSize,
+        cleanupPreviousVideo,
     );
 
     this.planes[index]?.setActive(true);
     this.planes[index]?.setTexture(this.activeTexture, this.mediaSize);
-
-    previousVideo.pause();
-    previousVideo.removeAttribute('src');
-    previousVideo.load();
-    previousTexture.dispose();
 
     this.applySliderLayout();
     void this.playActiveVideo();
@@ -709,10 +713,16 @@ export class SliderScene {
     this.transitionVideo = null;
   }
 
-  private fadePlaneToTexture(index: number, texture: THREE.Texture, mediaSize: THREE.Vector2) {
+  private fadePlaneToTexture(
+      index: number,
+      texture: THREE.Texture,
+      mediaSize: THREE.Vector2,
+      onComplete?: () => void,
+  ) {
     const plane = this.planes[index];
 
     if (!plane) {
+      onComplete?.();
       return;
     }
 
@@ -721,6 +731,7 @@ export class SliderScene {
 
     if (this.reducedMotion) {
       plane.setTexture(texture, mediaSize);
+      onComplete?.();
       return;
     }
 
@@ -730,9 +741,8 @@ export class SliderScene {
       ease: 'power2.out',
       overwrite: 'auto',
       onComplete: () => {
-        if (this.transitionVideo?.index === index || this.activeTextureIndex === index) {
-          plane.setTexture(texture, mediaSize);
-        }
+        plane.setTexture(texture, mediaSize);
+        onComplete?.();
       },
     });
   }
