@@ -568,8 +568,14 @@ export class SliderScene {
     const video = this.createVideoElement(this.slides[index].videoSrc);
     const texture = this.createVideoTexture(video);
     const mediaSize = new THREE.Vector2(16, 9);
+    let hasAssignedIncomingTexture = false;
 
     const assignIncomingTexture = () => {
+      if (hasAssignedIncomingTexture) {
+        return;
+      }
+
+      hasAssignedIncomingTexture = true;
       this.planes[index]?.setTexture(texture, mediaSize);
     };
 
@@ -589,6 +595,8 @@ export class SliderScene {
     video.addEventListener('loadedmetadata', assignWhenReady);
     video.addEventListener('loadeddata', assignWhenReady);
     video.addEventListener('canplay', assignWhenReady);
+    video.addEventListener('playing', assignWhenReady);
+    video.addEventListener('timeupdate', assignWhenReady);
 
     this.transitionVideo = {
       index,
@@ -598,7 +606,6 @@ export class SliderScene {
       handleMetadata: assignWhenReady,
     };
 
-    assignIncomingTexture();
     void this.playVideo(video);
   }
 
@@ -621,6 +628,8 @@ export class SliderScene {
     incoming.video.removeEventListener('loadedmetadata', incoming.handleMetadata);
     incoming.video.removeEventListener('loadeddata', incoming.handleMetadata);
     incoming.video.removeEventListener('canplay', incoming.handleMetadata);
+    incoming.video.removeEventListener('playing', incoming.handleMetadata);
+    incoming.video.removeEventListener('timeupdate', incoming.handleMetadata);
 
     previousVideo.removeEventListener('loadedmetadata', this.handleActiveVideoMetadata);
     previousVideo.removeEventListener('loadeddata', this.handleActiveVideoMetadata);
@@ -680,6 +689,8 @@ export class SliderScene {
     video.removeEventListener('loadedmetadata', handleMetadata);
     video.removeEventListener('loadeddata', handleMetadata);
     video.removeEventListener('canplay', handleMetadata);
+    video.removeEventListener('playing', handleMetadata);
+    video.removeEventListener('timeupdate', handleMetadata);
 
     video.pause();
     video.removeAttribute('src');
@@ -838,20 +849,9 @@ export class SliderScene {
     const farZ = isMobile ? -120 : -170;
     const centerScaleY = isMobile ? 0.96 : 0.95;
 
-    /**
-     * IMPORTANT:
-     * Brightness should NOT breathe during slider motion.
-     *
-     * Center/side difference should come mostly from:
-     * - width
-     * - x position
-     * - z depth
-     * - rotationY
-     *
-     * Not from animated opacity/darkness.
-     */
     const stableVisibleOpacity = 1.0;
-    const stableVisibleDarkness = isMobile ? 0.08 : 0.1;
+    const centerDarkness = isMobile ? 0.08 : 0.04;
+    const sideDarkness = isMobile ? 0.18 : 0.18;
 
     const farDarkness = isMobile ? 0.34 : 0.4;
 
@@ -875,12 +875,8 @@ export class SliderScene {
 
         bend: lerp(isMobile ? 4 : 5, isMobile ? 5 : 7, t),
 
-        /**
-         * No brightness pulsing for center/side transition.
-         * Keep visible slides stable.
-         */
         opacity: visibleOpacity,
-        darkness: stableVisibleDarkness,
+        darkness: lerp(centerDarkness, sideDarkness, t),
 
         cornerRadius: lerp(isMobile ? 8 : 10, isMobile ? 7 : 9, t),
         edgeCurve: lerp(isMobile ? 3 : 4, isMobile ? 4 : 6, t),
@@ -912,7 +908,7 @@ export class SliderScene {
       bend: lerp(isMobile ? 5 : 7, isMobile ? 2 : 3, t),
 
       opacity: isMobile ? 0 : lerp(stableVisibleOpacity, 0, t),
-      darkness: isMobile ? farDarkness : lerp(stableVisibleDarkness, farDarkness, t),
+      darkness: isMobile ? farDarkness : lerp(sideDarkness, farDarkness, t),
 
       cornerRadius: lerp(isMobile ? 7 : 9, isMobile ? 5 : 6, t),
       edgeCurve: lerp(isMobile ? 4 : 6, 0, t),
