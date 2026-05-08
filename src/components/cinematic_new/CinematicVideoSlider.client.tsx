@@ -72,14 +72,14 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
     sceneRef.current = scene;
 
     const canvas = scene.getCanvasElement();
-    const handlePointerUp = (event: PointerEvent) => {
+    const handlePointerDown = (event: PointerEvent) => {
       scene.handlePointer(event.clientX, event.clientY);
     };
 
-    canvas.addEventListener('pointerup', handlePointerUp);
+    canvas.addEventListener('pointerdown', handlePointerDown);
 
     return () => {
-      canvas.removeEventListener('pointerup', handlePointerUp);
+      canvas.removeEventListener('pointerdown', handlePointerDown);
       scene.dispose();
       sceneRef.current = null;
     };

@@ -23,6 +23,8 @@ export class VideoPlane {
   readonly scaleState = { x: 1, y: 1 };
   readonly uniforms: {
     uTexture: { value: THREE.Texture };
+    uNextTexture: { value: THREE.Texture };
+    uTextureMix: { value: number };
     uTime: { value: number };
     uBend: { value: number };
     uTransitionProgress: { value: number };
@@ -34,6 +36,7 @@ export class VideoPlane {
     uVelocity: { value: number };
     uViewportSize: { value: THREE.Vector2 };
     uMediaSize: { value: THREE.Vector2 };
+    uNextMediaSize: { value: THREE.Vector2 };
     uPlaneSize: { value: THREE.Vector2 };
   };
 
@@ -42,6 +45,8 @@ export class VideoPlane {
 
     this.uniforms = {
       uTexture: { value: texture },
+      uNextTexture: { value: texture },
+      uTextureMix: { value: 0 },
       uTime: { value: 0 },
       uBend: { value: 14 },
       uTransitionProgress: { value: 0 },
@@ -53,6 +58,7 @@ export class VideoPlane {
       uVelocity: { value: 0 },
       uViewportSize: { value: viewportSize.clone() },
       uMediaSize: { value: new THREE.Vector2(16, 9) },
+      uNextMediaSize: { value: new THREE.Vector2(16, 9) },
       uPlaneSize: { value: new THREE.Vector2(720, 324) },
     };
 
@@ -70,7 +76,16 @@ export class VideoPlane {
 
   setTexture(texture: THREE.Texture, mediaSize = new THREE.Vector2(16, 9)) {
     this.uniforms.uTexture.value = texture;
+    this.uniforms.uNextTexture.value = texture;
+    this.uniforms.uTextureMix.value = 0;
     this.uniforms.uMediaSize.value.copy(mediaSize);
+    this.uniforms.uNextMediaSize.value.copy(mediaSize);
+  }
+
+  setNextTexture(texture: THREE.Texture, mediaSize = new THREE.Vector2(16, 9)) {
+    this.uniforms.uNextTexture.value = texture;
+    this.uniforms.uNextMediaSize.value.copy(mediaSize);
+    this.uniforms.uTextureMix.value = 0;
   }
 
   setActive(isActive: boolean) {

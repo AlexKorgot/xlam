@@ -576,7 +576,7 @@ export class SliderScene {
       }
 
       hasAssignedIncomingTexture = true;
-      this.planes[index]?.setTexture(texture, mediaSize);
+      this.fadePlaneToTexture(index, texture, mediaSize);
     };
 
     const assignWhenReady = () => {
@@ -684,7 +684,16 @@ export class SliderScene {
       return;
     }
 
-    const { video, texture, handleMetadata } = this.transitionVideo;
+    const { index, video, texture, handleMetadata } = this.transitionVideo;
+    const plane = this.planes[index];
+
+    if (plane) {
+      gsap.killTweensOf(plane.uniforms.uTextureMix);
+
+      if (plane.uniforms.uTexture.value === texture || plane.uniforms.uNextTexture.value === texture) {
+        plane.setTexture(this.posterTextures[index].texture, this.posterMediaSize);
+      }
+    }
 
     video.removeEventListener('loadedmetadata', handleMetadata);
     video.removeEventListener('loadeddata', handleMetadata);
@@ -698,6 +707,34 @@ export class SliderScene {
     texture.dispose();
 
     this.transitionVideo = null;
+  }
+
+  private fadePlaneToTexture(index: number, texture: THREE.Texture, mediaSize: THREE.Vector2) {
+    const plane = this.planes[index];
+
+    if (!plane) {
+      return;
+    }
+
+    gsap.killTweensOf(plane.uniforms.uTextureMix);
+    plane.setNextTexture(texture, mediaSize);
+
+    if (this.reducedMotion) {
+      plane.setTexture(texture, mediaSize);
+      return;
+    }
+
+    gsap.to(plane.uniforms.uTextureMix, {
+      value: 1,
+      duration: 0.34,
+      ease: 'power2.out',
+      overwrite: 'auto',
+      onComplete: () => {
+        if (this.transitionVideo?.index === index || this.activeTextureIndex === index) {
+          plane.setTexture(texture, mediaSize);
+        }
+      },
+    });
   }
 
   private capturePosterForIndex(index: number) {
@@ -850,10 +887,7 @@ export class SliderScene {
     const centerScaleY = isMobile ? 0.96 : 0.95;
 
     const stableVisibleOpacity = 1.0;
-    const centerDarkness = isMobile ? 0.08 : 0.04;
-    const sideDarkness = isMobile ? 0.18 : 0.18;
-
-    const farDarkness = isMobile ? 0.34 : 0.4;
+    const visibleDarkness = isMobile ? 0.08 : 0.1;
 
     if (absOffset <= 1) {
       const t = smoothstep01(absOffset);
@@ -876,7 +910,7 @@ export class SliderScene {
         bend: lerp(isMobile ? 4 : 5, isMobile ? 5 : 7, t),
 
         opacity: visibleOpacity,
-        darkness: lerp(centerDarkness, sideDarkness, t),
+        darkness: visibleDarkness,
 
         cornerRadius: lerp(isMobile ? 8 : 10, isMobile ? 7 : 9, t),
         edgeCurve: lerp(isMobile ? 3 : 4, isMobile ? 4 : 6, t),
@@ -908,7 +942,7 @@ export class SliderScene {
       bend: lerp(isMobile ? 5 : 7, isMobile ? 2 : 3, t),
 
       opacity: isMobile ? 0 : lerp(stableVisibleOpacity, 0, t),
-      darkness: isMobile ? farDarkness : lerp(sideDarkness, farDarkness, t),
+      darkness: visibleDarkness,
 
       cornerRadius: lerp(isMobile ? 7 : 9, isMobile ? 5 : 6, t),
       edgeCurve: lerp(isMobile ? 4 : 6, 0, t),

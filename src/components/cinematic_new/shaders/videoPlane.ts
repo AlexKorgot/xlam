@@ -32,10 +32,13 @@ export const videoPlaneFragmentShader = `
   varying vec2 vUv;
 
   uniform sampler2D uTexture;
+  uniform sampler2D uNextTexture;
+  uniform float uTextureMix;
   uniform float uOpacity;
   uniform float uDarkness;
   uniform float uCornerRadius;
   uniform vec2 uMediaSize;
+  uniform vec2 uNextMediaSize;
   uniform vec2 uPlaneSize;
 
   vec2 coverUv(vec2 uv, vec2 planeSize, vec2 mediaSize) {
@@ -64,8 +67,11 @@ export const videoPlaneFragmentShader = `
 
   void main() {
     vec2 uv = coverUv(vUv, uPlaneSize, uMediaSize);
+    vec2 nextUv = coverUv(vUv, uPlaneSize, uNextMediaSize);
 
-    vec4 color = texture2D(uTexture, uv);
+    vec4 currentColor = texture2D(uTexture, uv);
+    vec4 nextColor = texture2D(uNextTexture, nextUv);
+    vec4 color = mix(currentColor, nextColor, uTextureMix);
 
     float horizontalEdge = smoothstep(0.0, 0.18, vUv.x) * smoothstep(1.0, 0.82, vUv.x);
     float verticalEdge = smoothstep(0.0, 0.12, vUv.y) * smoothstep(1.0, 0.88, vUv.y);
