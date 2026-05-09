@@ -38,6 +38,7 @@ export class VideoPlane {
     uViewportSize: { value: THREE.Vector2 };
     uMediaSize: { value: THREE.Vector2 };
     uNextMediaSize: { value: THREE.Vector2 };
+    uObjectPosition: { value: THREE.Vector2 };
     uPlaneSize: { value: THREE.Vector2 };
     uStripOffset: { value: number };
   };
@@ -61,6 +62,7 @@ export class VideoPlane {
       uViewportSize: { value: viewportSize.clone() },
       uMediaSize: { value: new THREE.Vector2(16, 9) },
       uNextMediaSize: { value: new THREE.Vector2(16, 9) },
+      uObjectPosition: { value: new THREE.Vector2(0.5, 0.5) },
       uPlaneSize: { value: new THREE.Vector2(720, 324) },
       uStripOffset: { value: 0 },
     };
@@ -75,6 +77,7 @@ export class VideoPlane {
     });
 
     this.mesh = new THREE.Mesh(geometry, material);
+    this.mesh.frustumCulled = false;
   }
 
   setTexture(texture: THREE.Texture, mediaSize = new THREE.Vector2(16, 9)) {

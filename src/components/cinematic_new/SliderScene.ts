@@ -8,15 +8,112 @@ type SliderSceneOptions = SliderSceneCallbacks & {
   reducedMotion: boolean;
 };
 
+type FilmStripSlideRole = 'center' | 'side' | 'buffer' | 'sleeping';
+
 type SlideVideo = {
   index: number;
   video: HTMLVideoElement;
   texture: THREE.VideoTexture;
   handleMetadata: () => void;
-  wasOutsideViewport: boolean;
+  lastRole: FilmStripSlideRole;
 };
 
-const SLIDER_ASPECT = 16 / 6.6;
+type FilmStripLayoutConfig = {
+  centerWidthRatio: number;
+  centerMaxWidthRatio: number;
+  centerAspect: number;
+  maxHeightRatio: number;
+  tallDesktopMinHeight?: {
+    minViewportHeight: number;
+    height: number;
+    maxHeightRatio: number;
+  };
+  gap: {
+    min: number;
+    max: number;
+    ratio: number;
+  };
+  sideVisibleRatio: number;
+  sideScale: number;
+  sideRotationY: number;
+  bend: {
+    center: number;
+    side: number;
+    buffer: number;
+  };
+  edgeCurve: {
+    center: number;
+    side: number;
+    buffer: number;
+  };
+  hiddenOffset: number;
+};
+
+type FilmStripFrameMetrics = {
+  config: FilmStripLayoutConfig;
+  centerWidth: number;
+  centerHeight: number;
+  gap: number;
+  sideVisibleWidth: number;
+  sideWidth: number;
+  sideHeight: number;
+};
+
+const DESKTOP_FILM_STRIP_LAYOUT: FilmStripLayoutConfig = {
+  centerWidthRatio: 0.71,
+  centerMaxWidthRatio: 0.74,
+  centerAspect: 16 / 4.15,
+  maxHeightRatio: 0.38,
+  tallDesktopMinHeight: {
+    minViewportHeight: 960,
+    height: 550,
+    maxHeightRatio: 0.52,
+  },
+  gap: {
+    min: 20,
+    max: 70,
+    ratio: 0.026,
+  },
+  sideVisibleRatio: 0.46,
+  sideScale: 0.96,
+  sideRotationY: 0.1,
+  bend: {
+    center: 46,
+    side: 58,
+    buffer: 64,
+  },
+  edgeCurve: {
+    center: 10,
+    side: 24,
+    buffer: 28,
+  },
+  hiddenOffset: 2.5,
+};
+const MOBILE_FILM_STRIP_LAYOUT: FilmStripLayoutConfig = {
+  centerWidthRatio: 0.82,
+  centerMaxWidthRatio: 0.88,
+  centerAspect: 16 / 4,
+  maxHeightRatio: 0.42,
+  gap: {
+    min: 14,
+    max: 28,
+    ratio: 0.04,
+  },
+  sideVisibleRatio: 0.34,
+  sideScale: 0.94,
+  sideRotationY: 0.07,
+  bend: {
+    center: 34,
+    side: 50,
+    buffer: 54,
+  },
+  edgeCurve: {
+    center: 8,
+    side: 18,
+    buffer: 20,
+  },
+  hiddenOffset: 2.5,
+};
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
@@ -38,6 +135,20 @@ function centeredOffset(index: number, position: number, total: number) {
 function smoothstep01(value: number) {
   const t = clamp(value, 0, 1);
   return t * t * (3 - 2 * t);
+}
+
+function velocityPulse(progress: number) {
+  const t = clamp(progress, 0, 1);
+
+  return Math.sin(t * Math.PI);
+}
+
+function lerpByStripRole(center: number, side: number, buffer: number, absOffset: number) {
+  if (absOffset <= 1) {
+    return lerp(center, side, smoothstep01(absOffset));
+  }
+
+  return lerp(side, buffer, smoothstep01(absOffset - 1));
 }
 
 export class SliderScene {
@@ -124,7 +235,7 @@ export class SliderScene {
         video,
         texture,
         handleMetadata,
-        wasOutsideViewport: false,
+        lastRole: index === 0 ? 'center' : this.getSlideRole(centeredOffset(index, this.slidePosition, this.slides.length)),
       });
       this.planes.push(plane);
       this.scene.add(plane.mesh);
@@ -377,11 +488,11 @@ export class SliderScene {
     const from = this.slidePosition;
     const to = from + direction;
     const targetIndex = wrapIndex(Math.round(to), this.slides.length);
-    const duration = this.reducedMotion ? 0.01 : 1.45;
+    const duration = this.reducedMotion ? 0.01 : 1.28;
 
     const motion = {
       position: from,
-      velocity: direction * 1,
+      progress: 0,
     };
 
     let hasNotifiedTarget = false;
@@ -392,7 +503,7 @@ export class SliderScene {
     this.pauseVideo(this.activeIndex);
 
     this.timeline = gsap.timeline({
-      defaults: { ease: 'power3.inOut', overwrite: 'auto' },
+      defaults: { overwrite: 'auto' },
       onComplete: () => {
         if (!hasNotifiedTarget) {
           hasNotifiedTarget = true;
@@ -412,11 +523,12 @@ export class SliderScene {
         motion,
         {
           position: to,
-          velocity: 0,
+          progress: 1,
           duration,
+          ease: 'power2.inOut',
           onUpdate: () => {
             this.slidePosition = motion.position;
-            this.slideVelocity = motion.velocity;
+            this.slideVelocity = direction * (0.18 + velocityPulse(motion.progress) * 1.18);
             this.applySliderLayout();
 
             if (!hasNotifiedTarget && wrapIndex(Math.round(motion.position), this.slides.length) === targetIndex) {
@@ -526,8 +638,90 @@ export class SliderScene {
     }
   }
 
-  private isLayoutFullyOutsideViewport(layout: VideoPlaneLayout) {
-    return Math.abs(layout.x) - layout.width / 2 >= this.viewport.x / 2;
+  private getFilmStripLayoutConfig() {
+    return this.viewport.x < 760 ? MOBILE_FILM_STRIP_LAYOUT : DESKTOP_FILM_STRIP_LAYOUT;
+  }
+
+  private getSlideRole(offset: number): FilmStripSlideRole {
+    const absOffset = Math.abs(offset);
+    const { hiddenOffset } = this.getFilmStripLayoutConfig();
+
+    if (absOffset < 0.5) {
+      return 'center';
+    }
+
+    if (absOffset < 1.5) {
+      return 'side';
+    }
+
+    if (absOffset <= hiddenOffset) {
+      return 'buffer';
+    }
+
+    return 'sleeping';
+  }
+
+  private getFilmStripFrameMetrics(): FilmStripFrameMetrics {
+    const width = this.viewport.x;
+    const height = this.viewport.y;
+    const config = this.getFilmStripLayoutConfig();
+    const desiredCenterWidth = width * config.centerWidthRatio;
+    const maxCenterWidth = width * config.centerMaxWidthRatio;
+    const maxCenterHeight = height * config.maxHeightRatio;
+    const centerWidthByRatio = Math.min(desiredCenterWidth, maxCenterWidth);
+    const centerHeightByRatio = centerWidthByRatio / config.centerAspect;
+    let centerHeight = Math.min(centerHeightByRatio, maxCenterHeight);
+
+    if (config.tallDesktopMinHeight && height >= config.tallDesktopMinHeight.minViewportHeight) {
+      const tallHeight = Math.min(
+        config.tallDesktopMinHeight.height,
+        height * config.tallDesktopMinHeight.maxHeightRatio,
+        centerHeightByRatio,
+      );
+
+      centerHeight = Math.max(centerHeight, tallHeight);
+    }
+
+    const centerWidth = centerHeight < centerHeightByRatio ? centerHeight * config.centerAspect : centerWidthByRatio;
+    const gap = clamp(width * config.gap.ratio, config.gap.min, config.gap.max);
+    const visibleSpaceBesideCenter = Math.max(width / 2 - centerWidth / 2 - gap, 1);
+    const maxSideWidth = centerWidth * config.sideScale;
+    const sideVisibleWidth = visibleSpaceBesideCenter;
+    const sideWidth = Math.min(sideVisibleWidth / config.sideVisibleRatio, maxSideWidth);
+    const sideHeight = centerHeight;
+
+    return {
+      config,
+      centerWidth,
+      centerHeight,
+      gap,
+      sideVisibleWidth,
+      sideWidth,
+      sideHeight,
+    };
+  }
+
+  private getRoleOpacity(role: FilmStripSlideRole, absOffset: number) {
+    if (role === 'center' || role === 'side') {
+      return 1;
+    }
+
+    if (role === 'buffer') {
+      return 1 - smoothstep01((absOffset - 1.5) / 0.42);
+    }
+
+    return 0;
+  }
+
+  private getViewportFadeOpacity(layoutX: number, frameWidth: number) {
+    const fadeMargin = Math.max(this.viewport.x * 0.08, 48);
+    const outsideDistance = Math.abs(layoutX) - (this.viewport.x / 2 + frameWidth / 2);
+
+    if (outsideDistance <= 0) {
+      return 1;
+    }
+
+    return 1 - smoothstep01(outsideDistance / fadeMargin);
   }
 
   private bindObservers() {
@@ -601,22 +795,28 @@ export class SliderScene {
   private getLayoutForOffset(offset: number): VideoPlaneLayout {
     const width = this.viewport.x;
     const isMobile = width < 760;
+    const metrics = this.getFilmStripFrameMetrics();
 
     const absOffset = Math.abs(offset);
     const direction = Math.sign(offset) || 1;
+    const role = this.getSlideRole(offset);
 
-    const centerWidth = width * (isMobile ? 0.82 : 0.58);
-    const centerHeight = centerWidth / SLIDER_ASPECT;
-    const frameStep = centerWidth * (isMobile ? 0.62 : 0.68);
+    const centerWidth = metrics.centerWidth;
+    const centerHeight = metrics.centerHeight;
+    const { config } = metrics;
+    const sideX = centerWidth / 2 + metrics.gap + metrics.sideWidth / 2;
+    const bufferStep = metrics.sideWidth + metrics.gap;
+    const distanceFromCenter = absOffset <= 1 ? absOffset * sideX : sideX + (absOffset - 1) * bufferStep;
     const sideProgress = smoothstep01(absOffset);
-    const stripX = offset * frameStep;
-    const localVelocity = this.slideVelocity * (isMobile ? 0.22 : 0.28) * (1 - Math.min(absOffset, 2.1) * 0.16);
+    const stripX = direction * distanceFromCenter;
+    const localVelocity = this.slideVelocity * (isMobile ? 0.26 : 0.36) * (1 - Math.min(absOffset, 2.1) * 0.12);
 
-    const frameWidth = lerp(centerWidth, centerWidth * (isMobile ? 0.94 : 0.96), sideProgress);
-    const frameHeight = lerp(centerHeight, centerHeight * (isMobile ? 0.99 : 1.01), sideProgress);
+    const frameWidth = lerp(centerWidth, metrics.sideWidth, sideProgress);
+    const frameHeight = lerp(centerHeight, metrics.sideHeight, sideProgress);
     const outsideDistance = Math.abs(stripX) - (width / 2 + frameWidth / 2);
     const outsideProgress = smoothstep01(outsideDistance / Math.max(frameWidth * 0.35, 1));
-    const isFullyOutside = outsideDistance >= 0;
+    const viewportOpacity = this.getViewportFadeOpacity(stripX, frameWidth);
+    const roleOpacity = this.getRoleOpacity(role, absOffset);
     const bandY = isMobile ? -6 : 10;
 
     return {
@@ -629,29 +829,30 @@ export class SliderScene {
       height: frameHeight,
 
       scaleX: 1,
-      scaleY: lerp(isMobile ? 0.98 : 0.96, 1, sideProgress),
+      scaleY: 1,
 
-      rotationY: -direction * lerp(0, isMobile ? 0.07 : 0.1, sideProgress),
+      rotationY: -direction * lerpByStripRole(0, config.sideRotationY, config.sideRotationY * 1.24, absOffset),
 
-      bend: lerp(isMobile ? 34 : 46, isMobile ? 50 : 60, sideProgress),
+      bend: lerpByStripRole(config.bend.center, config.bend.side, config.bend.buffer, absOffset),
 
-      opacity: isFullyOutside ? 0 : 1,
-      darkness: lerp(isMobile ? 0.06 : 0.08, isMobile ? 0.11 : 0.13, sideProgress),
+      opacity: roleOpacity * viewportOpacity,
+      darkness: lerpByStripRole(isMobile ? 0.05 : 0.07, isMobile ? 0.1 : 0.12, isMobile ? 0.14 : 0.18, absOffset),
 
       cornerRadius: lerp(isMobile ? 3 : 4, isMobile ? 2 : 3, sideProgress),
-      edgeCurve: lerp(isMobile ? 8 : 10, isMobile ? 18 : 24, sideProgress),
+      edgeCurve: lerpByStripRole(config.edgeCurve.center, config.edgeCurve.side, config.edgeCurve.buffer, absOffset),
 
       velocity: localVelocity,
     };
   }
 
   private getRenderOrder(offset: number) {
-    const abs = Math.abs(offset);
+    const role = this.getSlideRole(offset);
 
-    if (abs < 0.45) return 30;
-    if (abs < 1.25) return 20;
+    if (role === 'center') return 30;
+    if (role === 'side') return 18;
+    if (role === 'buffer') return 8;
 
-    return Math.max(1, 12 - Math.round(abs * 3));
+    return 1;
   }
 
   private getCameraZ(height: number) {
@@ -663,9 +864,9 @@ export class SliderScene {
   private applySliderLayout() {
     this.planes.forEach((plane, index) => {
       const offset = centeredOffset(index, this.slidePosition, this.slides.length);
+      const role = this.getSlideRole(offset);
       const layout = this.getLayoutForOffset(offset);
       const slideVideo = this.slideVideos[index];
-      const isFullyOutside = this.isLayoutFullyOutsideViewport(layout);
 
       plane.applyLayout(layout);
       plane.mesh.renderOrder = this.getRenderOrder(offset);
@@ -674,15 +875,11 @@ export class SliderScene {
         return;
       }
 
-      if (!isFullyOutside) {
-        slideVideo.wasOutsideViewport = false;
-        return;
-      }
-
-      if (!slideVideo.wasOutsideViewport) {
-        slideVideo.wasOutsideViewport = true;
+      if (role === 'sleeping' && slideVideo.lastRole !== 'sleeping') {
         this.resetInactiveVideo(index);
       }
+
+      slideVideo.lastRole = role;
     });
   }
 }

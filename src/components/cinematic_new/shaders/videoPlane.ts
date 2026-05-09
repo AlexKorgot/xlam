@@ -44,9 +44,10 @@ export const videoPlaneFragmentShader = `
   uniform float uVelocity;
   uniform vec2 uMediaSize;
   uniform vec2 uNextMediaSize;
+  uniform vec2 uObjectPosition;
   uniform vec2 uPlaneSize;
 
-  vec2 coverUv(vec2 uv, vec2 planeSize, vec2 mediaSize) {
+  vec2 coverUv(vec2 uv, vec2 planeSize, vec2 mediaSize, vec2 objectPosition) {
     float planeAspect = max(planeSize.x / max(planeSize.y, 0.001), 0.001);
     float mediaAspect = max(mediaSize.x / max(mediaSize.y, 0.001), 0.001);
     vec2 scale = vec2(1.0);
@@ -57,7 +58,10 @@ export const videoPlaneFragmentShader = `
       scale.y = mediaAspect / planeAspect;
     }
 
-    return (uv - 0.5) * scale + 0.5;
+    vec2 safePosition = clamp(objectPosition, vec2(0.0), vec2(1.0));
+    vec2 minUv = safePosition * (1.0 - scale);
+
+    return uv * scale + minUv;
   }
 
   float roundedBoxMask(vec2 uv, vec2 size, float radius) {
@@ -74,8 +78,8 @@ export const videoPlaneFragmentShader = `
     vec2 motionUv = vUv;
     motionUv.x += (vUv.y - 0.5) * uVelocity * 0.016;
 
-    vec2 uv = coverUv(motionUv, uPlaneSize, uMediaSize);
-    vec2 nextUv = coverUv(motionUv, uPlaneSize, uNextMediaSize);
+    vec2 uv = coverUv(motionUv, uPlaneSize, uMediaSize, uObjectPosition);
+    vec2 nextUv = coverUv(motionUv, uPlaneSize, uNextMediaSize, uObjectPosition);
 
     vec4 currentColor = texture2D(uTexture, uv);
     vec4 nextColor = texture2D(uNextTexture, nextUv);
