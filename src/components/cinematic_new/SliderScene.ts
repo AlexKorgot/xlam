@@ -8,30 +8,15 @@ type SliderSceneOptions = SliderSceneCallbacks & {
   reducedMotion: boolean;
 };
 
-type PosterTexture = {
-  canvas: HTMLCanvasElement;
-  context: CanvasRenderingContext2D | null;
-  texture: THREE.Texture;
-};
-
-type TransitionVideo = {
+type SlideVideo = {
   index: number;
   video: HTMLVideoElement;
   texture: THREE.VideoTexture;
-  mediaSize: THREE.Vector2;
   handleMetadata: () => void;
+  wasOutsideViewport: boolean;
 };
 
 const SLIDER_ASPECT = 16 / 6.6;
-const TEXTURE_CROSSFADE_DURATION = 0.34;
-
-type OutgoingVideoFade = {
-  index: number;
-  video: HTMLVideoElement;
-  texture: THREE.VideoTexture;
-  start: () => void;
-  hasStarted: () => boolean;
-};
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
@@ -55,71 +40,6 @@ function smoothstep01(value: number) {
   return t * t * (3 - 2 * t);
 }
 
-function drawFallbackPoster(
-    context: CanvasRenderingContext2D,
-    canvas: HTMLCanvasElement,
-    color: string,
-    index: number,
-) {
-  const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-  gradient.addColorStop(0, '#080b0f');
-  gradient.addColorStop(0.24, '#16282d');
-  gradient.addColorStop(0.52, color);
-  gradient.addColorStop(0.74, '#182028');
-  gradient.addColorStop(1, '#020202');
-
-  context.fillStyle = gradient;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  context.globalAlpha = 0.18;
-  context.fillStyle = '#f3f6e9';
-
-  for (let i = 0; i < 14; i += 1) {
-    const x = ((i * 143 + index * 97) % canvas.width) - 70;
-    const y = 74 + ((i * 53 + index * 41) % 310);
-    const width = 26 + ((i + index) % 4) * 18;
-    const height = 150 + ((i + index) % 6) * 38;
-    context.fillRect(x, y, width, height);
-  }
-
-  context.globalAlpha = 0.55;
-  context.fillStyle = '#000000';
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  context.globalAlpha = 1;
-}
-
-function drawVideoPoster(context: CanvasRenderingContext2D, canvas: HTMLCanvasElement, video: HTMLVideoElement) {
-  const videoWidth = video.videoWidth || 16;
-  const videoHeight = video.videoHeight || 9;
-  const scale = Math.max(canvas.width / videoWidth, canvas.height / videoHeight);
-  const width = videoWidth * scale;
-  const height = videoHeight * scale;
-  const x = (canvas.width - width) / 2;
-  const y = (canvas.height - height) / 2;
-
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  context.drawImage(video, x, y, width, height);
-}
-
-function createPosterTexture(color: string, index: number): PosterTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 576;
-
-  const context = canvas.getContext('2d');
-
-  if (context) {
-    drawFallbackPoster(context, canvas, color, index);
-  }
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-  texture.generateMipmaps = false;
-
-  return { canvas, context, texture };
-}
-
 export class SliderScene {
   private readonly container: HTMLElement;
   private readonly callbacks: SliderSceneOptions;
@@ -128,28 +48,21 @@ export class SliderScene {
   private readonly camera = new THREE.PerspectiveCamera(38, 1, 10, 5000);
   private readonly renderer: THREE.WebGLRenderer;
   private readonly viewport = new THREE.Vector2(1, 1);
-  private readonly mediaSize = new THREE.Vector2(16, 9);
-  private readonly posterMediaSize = new THREE.Vector2(16, 9);
   private readonly startTime = performance.now();
   private readonly planes: VideoPlane[] = [];
-  private readonly posterTextures: PosterTexture[] = [];
+  private readonly slideVideos: SlideVideo[] = [];
 
-  private activeVideo: HTMLVideoElement;
-  private activeTexture: THREE.VideoTexture;
-  private transitionVideo: TransitionVideo | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private intersectionObserver: IntersectionObserver | null = null;
   private timeline: gsap.core.Timeline | null = null;
   private rafId: number | null = null;
 
   private activeIndex = 0;
-  private activeTextureIndex = 0;
   private slidePosition = 0;
   private slideVelocity = 0;
 
   private isVisible = true;
   private isDestroyed = false;
-  private hasSeededPosterTextures = false;
   private mode: 'slider' | 'sliding' | 'opening' | 'opened' | 'closing' = 'slider';
   private readonly reducedMotion: boolean;
 
@@ -172,20 +85,47 @@ export class SliderScene {
     this.renderer.domElement.style.width = '100%';
     this.container.appendChild(this.renderer.domElement);
 
-    this.activeVideo = this.createVideoElement(this.slides[0].videoSrc);
-    this.activeVideo.addEventListener('loadedmetadata', this.handleActiveVideoMetadata);
-    this.activeVideo.addEventListener('loadeddata', this.handleActiveVideoMetadata);
-    this.activeVideo.addEventListener('canplay', this.handleActiveVideoMetadata);
-    this.activeTexture = this.createVideoTexture(this.activeVideo);
-
     this.slides.forEach((slide, index) => {
-      const posterTexture = createPosterTexture(slide.accent, index);
-      const plane = new VideoPlane(index === 0 ? this.activeTexture : posterTexture.texture, this.viewport);
+      const video = this.createVideoElement(slide.videoSrc);
+      const texture = this.createVideoTexture(video);
+      const mediaSize = new THREE.Vector2(16, 9);
+      let hasPrimedPreview = false;
+      const handleMetadata = () => {
+        if (!this.isVideoDrawable(video) && video.readyState < HTMLMediaElement.HAVE_METADATA) {
+          return;
+        }
+
+        mediaSize.set(video.videoWidth || 16, video.videoHeight || 9);
+        this.planes[index]?.setTexture(texture, mediaSize);
+        texture.needsUpdate = true;
+
+        if (index !== this.activeIndex && !hasPrimedPreview && video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+          hasPrimedPreview = true;
+
+          try {
+            video.currentTime = Math.min(0.04, Number.isFinite(video.duration) ? Math.max(video.duration - 0.001, 0) : 0.04);
+          } catch {
+            // Seeking can fail before the browser has enough metadata; the slide will stay paused.
+          }
+        }
+      };
+      const plane = new VideoPlane(texture, this.viewport);
+
+      video.addEventListener('loadedmetadata', handleMetadata);
+      video.addEventListener('loadeddata', handleMetadata);
+      video.addEventListener('canplay', handleMetadata);
+      video.addEventListener('seeked', handleMetadata);
 
       plane.mesh.renderOrder = index === 0 ? 30 : 5;
       plane.setActive(index === 0);
 
-      this.posterTextures.push(posterTexture);
+      this.slideVideos.push({
+        index,
+        video,
+        texture,
+        handleMetadata,
+        wasOutsideViewport: false,
+      });
       this.planes.push(plane);
       this.scene.add(plane.mesh);
     });
@@ -193,6 +133,7 @@ export class SliderScene {
     this.resize();
     this.bindObservers();
     this.start();
+    this.pauseInactiveVideos();
     void this.playActiveVideo();
   }
 
@@ -251,9 +192,7 @@ export class SliderScene {
     this.callbacks.onOverlayStateChange?.('opening');
     this.timeline?.kill();
 
-    this.capturePosterForIndex(this.activeIndex);
-    this.disposeTransitionVideo();
-    this.assignActiveTexture(this.activeIndex);
+    this.activateSlideVideo(this.activeIndex, false);
     void this.playActiveVideo();
 
     const duration = this.reducedMotion ? 0.01 : 1.28;
@@ -411,17 +350,16 @@ export class SliderScene {
       plane.dispose(false);
     });
 
-    this.disposeTransitionVideo();
-
-    this.posterTextures.forEach(({ texture }) => texture.dispose());
-
-    this.activeTexture.dispose();
-    this.activeVideo.removeEventListener('loadedmetadata', this.handleActiveVideoMetadata);
-    this.activeVideo.removeEventListener('loadeddata', this.handleActiveVideoMetadata);
-    this.activeVideo.removeEventListener('canplay', this.handleActiveVideoMetadata);
-    this.activeVideo.pause();
-    this.activeVideo.removeAttribute('src');
-    this.activeVideo.load();
+    this.slideVideos.forEach(({ video, texture, handleMetadata }) => {
+      video.removeEventListener('loadedmetadata', handleMetadata);
+      video.removeEventListener('loadeddata', handleMetadata);
+      video.removeEventListener('canplay', handleMetadata);
+      video.removeEventListener('seeked', handleMetadata);
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+      texture.dispose();
+    });
 
     this.renderer.dispose();
     this.renderer.forceContextLoss();
@@ -440,75 +378,26 @@ export class SliderScene {
     const to = from + direction;
     const targetIndex = wrapIndex(Math.round(to), this.slides.length);
     const duration = this.reducedMotion ? 0.01 : 1.45;
-    const outgoingIndex = this.activeIndex;
-    const outgoingVideo = this.activeVideo;
-    const outgoingTexture = this.activeTexture;
 
     const motion = {
       position: from,
       velocity: direction * 1,
     };
 
-    let hasCommittedTarget = false;
-    let hasStartedOutgoingFade = false;
-    let hasCleanedOutgoingVideo = false;
     let hasNotifiedTarget = false;
-
-    const cleanupOutgoingVideo = () => {
-      if (hasCleanedOutgoingVideo) {
-        return;
-      }
-
-      hasCleanedOutgoingVideo = true;
-      outgoingVideo.pause();
-      outgoingVideo.removeAttribute('src');
-      outgoingVideo.load();
-      outgoingTexture.dispose();
-    };
-
-    const startOutgoingFade = () => {
-      if (hasStartedOutgoingFade) {
-        return;
-      }
-
-      hasStartedOutgoingFade = true;
-      this.capturePosterForIndex(outgoingIndex);
-      this.fadePlaneToTexture(
-          outgoingIndex,
-          this.posterTextures[outgoingIndex].texture,
-          this.posterMediaSize,
-          cleanupOutgoingVideo,
-      );
-    };
-
-    const outgoingFade: OutgoingVideoFade = {
-      index: outgoingIndex,
-      video: outgoingVideo,
-      texture: outgoingTexture,
-      start: startOutgoingFade,
-      hasStarted: () => hasStartedOutgoingFade,
-    };
-
-    const commitTarget = () => {
-      if (hasCommittedTarget) {
-        return;
-      }
-
-      hasCommittedTarget = true;
-      this.commitIncomingVideo(targetIndex, outgoingFade);
-    };
 
     this.mode = 'sliding';
     this.callbacks.onOverlayStateChange?.('sliding');
     this.timeline?.kill();
-
-    this.capturePosterForIndex(this.activeIndex);
-    this.prepareIncomingVideo(targetIndex);
+    this.pauseVideo(this.activeIndex);
 
     this.timeline = gsap.timeline({
       defaults: { ease: 'power3.inOut', overwrite: 'auto' },
       onComplete: () => {
-        commitTarget();
+        if (!hasNotifiedTarget) {
+          hasNotifiedTarget = true;
+          this.activateSlideVideo(targetIndex, true);
+        }
 
         this.slidePosition = to;
         this.slideVelocity = 0;
@@ -532,17 +421,11 @@ export class SliderScene {
 
             if (!hasNotifiedTarget && wrapIndex(Math.round(motion.position), this.slides.length) === targetIndex) {
               hasNotifiedTarget = true;
-              this.callbacks.onActiveSlideChange?.(targetIndex);
+              this.activateSlideVideo(targetIndex, true);
             }
           },
         },
         0,
-    );
-
-    this.timeline.call(
-        startOutgoingFade,
-        undefined,
-        Math.max(0, duration - (this.reducedMotion ? 0.01 : TEXTURE_CROSSFADE_DURATION)),
     );
   }
 
@@ -576,17 +459,12 @@ export class SliderScene {
     );
   }
 
-  private handleActiveVideoMetadata = () => {
-    if (!this.isVideoDrawable(this.activeVideo) && this.activeVideo.readyState < HTMLMediaElement.HAVE_METADATA) {
-      return;
-    }
-
-    this.mediaSize.set(this.activeVideo.videoWidth || 16, this.activeVideo.videoHeight || 9);
-    this.planes[this.activeTextureIndex]?.setTexture(this.activeTexture, this.mediaSize);
-  };
-
   private async playActiveVideo() {
-    await this.playVideo(this.activeVideo);
+    const activeVideo = this.slideVideos[this.activeIndex]?.video;
+
+    if (activeVideo) {
+      await this.playVideo(activeVideo);
+    }
   }
 
   private async playVideo(video: HTMLVideoElement) {
@@ -597,246 +475,59 @@ export class SliderScene {
     }
   }
 
-  private assignActiveTexture(index: number) {
-    this.disposeTransitionVideo();
-
-    const nextSlide = this.slides[index];
-    const nextVideoSrc = new URL(nextSlide.videoSrc, window.location.href).href;
-
-    if (this.activeVideo.currentSrc !== nextVideoSrc && this.activeVideo.src !== nextVideoSrc) {
-      this.activeVideo.src = nextVideoSrc;
-      this.activeVideo.load();
+  private activateSlideVideo(index: number, notify: boolean) {
+    if (this.activeIndex !== index) {
+      this.pauseVideo(this.activeIndex);
     }
-
-    this.activeTextureIndex = index;
-
-    this.planes.forEach((plane, planeIndex) => {
-      const isActive = planeIndex === index;
-
-      plane.setActive(isActive);
-      plane.setTexture(
-          isActive ? this.activeTexture : this.posterTextures[planeIndex].texture,
-          isActive ? this.mediaSize : this.posterMediaSize,
-      );
-    });
-
-    this.applySliderLayout();
-    void this.playActiveVideo();
-  }
-
-  private prepareIncomingVideo(index: number) {
-    this.disposeTransitionVideo();
-
-    const video = this.createVideoElement(this.slides[index].videoSrc);
-    const texture = this.createVideoTexture(video);
-    const mediaSize = new THREE.Vector2(16, 9);
-    let hasAssignedIncomingTexture = false;
-
-    const assignIncomingTexture = () => {
-      if (hasAssignedIncomingTexture) {
-        return;
-      }
-
-      hasAssignedIncomingTexture = true;
-      this.fadePlaneToTexture(index, texture, mediaSize);
-    };
-
-    const assignWhenReady = () => {
-      if (!this.transitionVideo || this.transitionVideo.index !== index) {
-        return;
-      }
-
-      if (!this.isVideoDrawable(video)) {
-        return;
-      }
-
-      mediaSize.set(video.videoWidth || 16, video.videoHeight || 9);
-      assignIncomingTexture();
-    };
-
-    video.addEventListener('loadedmetadata', assignWhenReady);
-    video.addEventListener('loadeddata', assignWhenReady);
-    video.addEventListener('canplay', assignWhenReady);
-    video.addEventListener('playing', assignWhenReady);
-    video.addEventListener('timeupdate', assignWhenReady);
-
-    this.transitionVideo = {
-      index,
-      video,
-      texture,
-      mediaSize,
-      handleMetadata: assignWhenReady,
-    };
-
-    void this.playVideo(video);
-  }
-
-  private commitIncomingVideo(index: number, outgoingFade?: OutgoingVideoFade) {
-    const incoming = this.transitionVideo;
-
-    if (!incoming || incoming.index !== index) {
-      this.activeIndex = index;
-      this.assignActiveTexture(index);
-      this.callbacks.onActiveSlideChange?.(index);
-      return;
-    }
-
-    const previousIndex = this.activeIndex;
-    const previousVideo = this.activeVideo;
-    const previousTexture = this.activeTexture;
-
-    this.capturePosterForIndex(previousIndex);
-
-    incoming.video.removeEventListener('loadedmetadata', incoming.handleMetadata);
-    incoming.video.removeEventListener('loadeddata', incoming.handleMetadata);
-    incoming.video.removeEventListener('canplay', incoming.handleMetadata);
-    incoming.video.removeEventListener('playing', incoming.handleMetadata);
-    incoming.video.removeEventListener('timeupdate', incoming.handleMetadata);
-
-    previousVideo.removeEventListener('loadedmetadata', this.handleActiveVideoMetadata);
-    previousVideo.removeEventListener('loadeddata', this.handleActiveVideoMetadata);
-    previousVideo.removeEventListener('canplay', this.handleActiveVideoMetadata);
 
     this.activeIndex = index;
-    this.activeTextureIndex = index;
-    this.activeVideo = incoming.video;
-    this.activeTexture = incoming.texture;
-    this.transitionVideo = null;
 
-    if (this.isVideoDrawable(this.activeVideo) || this.activeVideo.readyState >= HTMLMediaElement.HAVE_METADATA) {
-      this.mediaSize.set(this.activeVideo.videoWidth || 16, this.activeVideo.videoHeight || 9);
-    } else {
-      this.mediaSize.copy(incoming.mediaSize);
-    }
-
-    this.activeVideo.addEventListener('loadedmetadata', this.handleActiveVideoMetadata);
-    this.activeVideo.addEventListener('loadeddata', this.handleActiveVideoMetadata);
-    this.activeVideo.addEventListener('canplay', this.handleActiveVideoMetadata);
-
-    /**
-     * Flicker fix:
-     * Do NOT reset textures for every plane here.
-     * Only old active and new active need texture changes.
-     * Other side planes keep their existing poster textures untouched.
-     */
-    this.planes.forEach((plane) => {
-      plane.setActive(false);
+    this.planes.forEach((plane, planeIndex) => {
+      plane.setActive(planeIndex === index);
     });
 
-    if (
-        outgoingFade &&
-        outgoingFade.index === previousIndex &&
-        outgoingFade.video === previousVideo &&
-        outgoingFade.texture === previousTexture
-    ) {
-      if (!outgoingFade.hasStarted()) {
-        outgoingFade.start();
-      }
-    } else {
-      const cleanupPreviousVideo = () => {
-        previousVideo.pause();
-        previousVideo.removeAttribute('src');
-        previousVideo.load();
-        previousTexture.dispose();
-      };
-
-      this.fadePlaneToTexture(
-          previousIndex,
-          this.posterTextures[previousIndex].texture,
-          this.posterMediaSize,
-          cleanupPreviousVideo,
-      );
-    }
-
-    this.planes[index]?.setActive(true);
-    this.planes[index]?.setTexture(this.activeTexture, this.mediaSize);
-
-    this.applySliderLayout();
+    this.pauseInactiveVideos();
     void this.playActiveVideo();
-    this.callbacks.onActiveSlideChange?.(index);
+
+    if (notify) {
+      this.callbacks.onActiveSlideChange?.(index);
+    }
   }
 
-  private disposeTransitionVideo() {
-    if (!this.transitionVideo) {
+  private pauseVideo(index: number) {
+    this.slideVideos[index]?.video.pause();
+  }
+
+  private pauseInactiveVideos() {
+    this.slideVideos.forEach(({ video }, index) => {
+      if (index !== this.activeIndex) {
+        video.pause();
+      }
+    });
+  }
+
+  private resetInactiveVideo(index: number) {
+    if (index === this.activeIndex) {
       return;
     }
 
-    const { index, video, texture, handleMetadata } = this.transitionVideo;
-    const plane = this.planes[index];
+    const video = this.slideVideos[index]?.video;
 
-    if (plane) {
-      gsap.killTweensOf(plane.uniforms.uTextureMix);
-
-      if (plane.uniforms.uTexture.value === texture || plane.uniforms.uNextTexture.value === texture) {
-        plane.setTexture(this.posterTextures[index].texture, this.posterMediaSize);
-      }
+    if (!video || video.currentTime === 0) {
+      return;
     }
-
-    video.removeEventListener('loadedmetadata', handleMetadata);
-    video.removeEventListener('loadeddata', handleMetadata);
-    video.removeEventListener('canplay', handleMetadata);
-    video.removeEventListener('playing', handleMetadata);
-    video.removeEventListener('timeupdate', handleMetadata);
 
     video.pause();
-    video.removeAttribute('src');
-    video.load();
-    texture.dispose();
-
-    this.transitionVideo = null;
-  }
-
-  private fadePlaneToTexture(
-      index: number,
-      texture: THREE.Texture,
-      mediaSize: THREE.Vector2,
-      onComplete?: () => void,
-  ) {
-    const plane = this.planes[index];
-
-    if (!plane) {
-      onComplete?.();
-      return;
-    }
-
-    gsap.killTweensOf(plane.uniforms.uTextureMix);
-    plane.setNextTexture(texture, mediaSize);
-
-    if (this.reducedMotion) {
-      plane.setTexture(texture, mediaSize);
-      onComplete?.();
-      return;
-    }
-
-    gsap.to(plane.uniforms.uTextureMix, {
-      value: 1,
-      duration: TEXTURE_CROSSFADE_DURATION,
-      ease: 'power2.out',
-      overwrite: 'auto',
-      onComplete: () => {
-        plane.setTexture(texture, mediaSize);
-        onComplete?.();
-      },
-    });
-  }
-
-  private capturePosterForIndex(index: number) {
-    if (this.activeVideo.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
-      return;
-    }
-
-    const poster = this.posterTextures[index];
-
-    if (!poster.context) {
-      return;
-    }
 
     try {
-      drawVideoPoster(poster.context, poster.canvas, this.activeVideo);
-      poster.texture.needsUpdate = true;
+      video.currentTime = 0;
     } catch {
-      // Cross-origin failures are non-fatal; the generated poster remains in place.
+      // Some browsers can reject seeking before metadata is available.
     }
+  }
+
+  private isLayoutFullyOutsideViewport(layout: VideoPlaneLayout) {
+    return Math.abs(layout.x) - layout.width / 2 >= this.viewport.x / 2;
   }
 
   private bindObservers() {
@@ -853,15 +544,10 @@ export class SliderScene {
             this.start();
             void this.playActiveVideo();
 
-            if (this.transitionVideo) {
-              void this.playVideo(this.transitionVideo.video);
-            }
-
             return;
           }
 
-          this.activeVideo.pause();
-          this.transitionVideo?.video.pause();
+          this.pauseVideo(this.activeIndex);
         },
         { threshold: 0.08 },
     );
@@ -873,17 +559,12 @@ export class SliderScene {
 
   private handleVisibilityChange = () => {
     if (document.hidden) {
-      this.activeVideo.pause();
-      this.transitionVideo?.video.pause();
+      this.pauseVideo(this.activeIndex);
       return;
     }
 
     if (this.isVisible) {
       void this.playActiveVideo();
-
-      if (this.transitionVideo) {
-        void this.playVideo(this.transitionVideo.video);
-      }
 
       this.start();
     }
@@ -906,8 +587,6 @@ export class SliderScene {
 
       const elapsed = (performance.now() - this.startTime) * 0.001;
 
-      this.seedPosterTexturesFromActiveVideo();
-
       this.planes.forEach((plane) => {
         plane.uniforms.uTime.value = elapsed;
       });
@@ -919,27 +598,6 @@ export class SliderScene {
     this.rafId = window.requestAnimationFrame(render);
   }
 
-  private seedPosterTexturesFromActiveVideo() {
-    if (this.hasSeededPosterTextures || this.activeVideo.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
-      return;
-    }
-
-    this.posterTextures.forEach(({ canvas, context, texture }) => {
-      if (!context) {
-        return;
-      }
-
-      try {
-        drawVideoPoster(context, canvas, this.activeVideo);
-        texture.needsUpdate = true;
-      } catch {
-        // Cross-origin failures are non-fatal; the generated poster remains in place.
-      }
-    });
-
-    this.hasSeededPosterTextures = true;
-  }
-
   private getLayoutForOffset(offset: number): VideoPlaneLayout {
     const width = this.viewport.x;
     const isMobile = width < 760;
@@ -947,25 +605,24 @@ export class SliderScene {
     const absOffset = Math.abs(offset);
     const direction = Math.sign(offset) || 1;
 
-    const centerWidth = isMobile
-        ? width * 0.88
-        : Math.min(width * 0.69, 1328);
+    const centerWidth = width * (isMobile ? 0.82 : 0.58);
     const centerHeight = centerWidth / SLIDER_ASPECT;
-    const frameStep = centerWidth * (isMobile ? 0.88 : 0.94);
+    const frameStep = centerWidth * (isMobile ? 0.62 : 0.68);
     const sideProgress = smoothstep01(absOffset);
-    const farProgress = smoothstep01((absOffset - 1.35) / 0.9);
     const stripX = offset * frameStep;
-    const visibleBand = smoothstep01((2.25 - absOffset) / 0.55);
     const localVelocity = this.slideVelocity * (isMobile ? 0.22 : 0.28) * (1 - Math.min(absOffset, 2.1) * 0.16);
 
-    const frameWidth = lerp(centerWidth, centerWidth * (isMobile ? 0.9 : 0.86), sideProgress);
-    const frameHeight = lerp(centerHeight, centerHeight * (isMobile ? 0.98 : 1.02), sideProgress);
+    const frameWidth = lerp(centerWidth, centerWidth * (isMobile ? 0.94 : 0.96), sideProgress);
+    const frameHeight = lerp(centerHeight, centerHeight * (isMobile ? 0.99 : 1.01), sideProgress);
+    const outsideDistance = Math.abs(stripX) - (width / 2 + frameWidth / 2);
+    const outsideProgress = smoothstep01(outsideDistance / Math.max(frameWidth * 0.35, 1));
+    const isFullyOutside = outsideDistance >= 0;
     const bandY = isMobile ? -6 : 10;
 
     return {
       x: stripX,
-      y: bandY - lerp(0, isMobile ? 8 : 24, farProgress),
-      z: -lerp(0, isMobile ? 92 : 150, farProgress),
+      y: bandY - lerp(0, isMobile ? 8 : 24, outsideProgress),
+      z: -lerp(0, isMobile ? 92 : 150, outsideProgress),
       stripX,
 
       width: frameWidth,
@@ -974,12 +631,12 @@ export class SliderScene {
       scaleX: 1,
       scaleY: lerp(isMobile ? 0.98 : 0.96, 1, sideProgress),
 
-      rotationY: -direction * lerp(0, isMobile ? 0.08 : 0.13, sideProgress),
+      rotationY: -direction * lerp(0, isMobile ? 0.07 : 0.1, sideProgress),
 
-      bend: lerp(isMobile ? 34 : 46, isMobile ? 52 : 68, sideProgress),
+      bend: lerp(isMobile ? 34 : 46, isMobile ? 50 : 60, sideProgress),
 
-      opacity: isMobile ? visibleBand * (1 - sideProgress * 0.14) : visibleBand,
-      darkness: lerp(isMobile ? 0.08 : 0.1, isMobile ? 0.16 : 0.18, sideProgress),
+      opacity: isFullyOutside ? 0 : 1,
+      darkness: lerp(isMobile ? 0.06 : 0.08, isMobile ? 0.11 : 0.13, sideProgress),
 
       cornerRadius: lerp(isMobile ? 3 : 4, isMobile ? 2 : 3, sideProgress),
       edgeCurve: lerp(isMobile ? 8 : 10, isMobile ? 18 : 24, sideProgress),
@@ -1007,9 +664,25 @@ export class SliderScene {
     this.planes.forEach((plane, index) => {
       const offset = centeredOffset(index, this.slidePosition, this.slides.length);
       const layout = this.getLayoutForOffset(offset);
+      const slideVideo = this.slideVideos[index];
+      const isFullyOutside = this.isLayoutFullyOutsideViewport(layout);
 
       plane.applyLayout(layout);
       plane.mesh.renderOrder = this.getRenderOrder(offset);
+
+      if (!slideVideo) {
+        return;
+      }
+
+      if (!isFullyOutside) {
+        slideVideo.wasOutsideViewport = false;
+        return;
+      }
+
+      if (!slideVideo.wasOutsideViewport) {
+        slideVideo.wasOutsideViewport = true;
+        this.resetInactiveVideo(index);
+      }
     });
   }
 }
