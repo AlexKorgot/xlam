@@ -847,6 +847,12 @@ export class SliderScene {
 
   private getRenderOrder(offset: number) {
     const role = this.getSlideRole(offset);
+    const direction = Math.sign(offset);
+    const velocityDirection = Math.sign(this.slideVelocity);
+
+    if (this.mode === 'sliding' && role === 'center' && direction !== 0 && velocityDirection !== 0) {
+      return direction === velocityDirection ? 32 : 16;
+    }
 
     if (role === 'center') return 30;
     if (role === 'side') return 18;

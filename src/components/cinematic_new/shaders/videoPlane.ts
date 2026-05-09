@@ -42,6 +42,7 @@ export const videoPlaneFragmentShader = `
   uniform float uDarkness;
   uniform float uCornerRadius;
   uniform float uVelocity;
+  uniform float uActive;
   uniform vec2 uMediaSize;
   uniform vec2 uNextMediaSize;
   uniform vec2 uObjectPosition;
@@ -64,6 +65,39 @@ export const videoPlaneFragmentShader = `
     return uv * scale + minUv;
   }
 
+  vec2 containUv(vec2 uv, vec2 planeSize, vec2 mediaSize) {
+    float planeAspect = max(planeSize.x / max(planeSize.y, 0.001), 0.001);
+    float mediaAspect = max(mediaSize.x / max(mediaSize.y, 0.001), 0.001);
+    vec2 displayScale = vec2(1.0);
+
+    if (mediaAspect > planeAspect) {
+      displayScale.y = planeAspect / mediaAspect;
+    } else {
+      displayScale.x = mediaAspect / planeAspect;
+    }
+
+    return (uv - 0.5) / displayScale + 0.5;
+  }
+
+  float containMask(vec2 uv, vec2 planeSize, vec2 mediaSize) {
+    float planeAspect = max(planeSize.x / max(planeSize.y, 0.001), 0.001);
+    float mediaAspect = max(mediaSize.x / max(mediaSize.y, 0.001), 0.001);
+    vec2 displayScale = vec2(1.0);
+
+    if (mediaAspect > planeAspect) {
+      displayScale.y = planeAspect / mediaAspect;
+    } else {
+      displayScale.x = mediaAspect / planeAspect;
+    }
+
+    vec2 mediaMin = 0.5 - displayScale * 0.5;
+    vec2 mediaMax = 0.5 + displayScale * 0.5;
+    vec2 mask = smoothstep(mediaMin, mediaMin + vec2(0.002), uv) *
+      (1.0 - smoothstep(mediaMax - vec2(0.002), mediaMax, uv));
+
+    return mask.x * mask.y;
+  }
+
   float roundedBoxMask(vec2 uv, vec2 size, float radius) {
     vec2 halfSize = size * 0.5;
     float safeRadius = min(radius, min(halfSize.x, halfSize.y) - 1.0);
@@ -78,11 +112,18 @@ export const videoPlaneFragmentShader = `
     vec2 motionUv = vUv;
     motionUv.x += (vUv.y - 0.5) * uVelocity * 0.016;
 
-    vec2 uv = coverUv(motionUv, uPlaneSize, uMediaSize, uObjectPosition);
-    vec2 nextUv = coverUv(motionUv, uPlaneSize, uNextMediaSize, uObjectPosition);
+    float containMix = 0.0;
+    vec2 coverCurrentUv = coverUv(motionUv, uPlaneSize, uMediaSize, uObjectPosition);
+    vec2 coverNextUv = coverUv(motionUv, uPlaneSize, uNextMediaSize, uObjectPosition);
+    vec2 containCurrentUv = containUv(motionUv, uPlaneSize, uMediaSize);
+    vec2 containNextUv = containUv(motionUv, uPlaneSize, uNextMediaSize);
+    vec2 uv = mix(coverCurrentUv, containCurrentUv, containMix);
+    vec2 nextUv = mix(coverNextUv, containNextUv, containMix);
+    float currentContainMask = mix(1.0, containMask(motionUv, uPlaneSize, uMediaSize), containMix);
+    float nextContainMask = mix(1.0, containMask(motionUv, uPlaneSize, uNextMediaSize), containMix);
 
-    vec4 currentColor = texture2D(uTexture, uv);
-    vec4 nextColor = texture2D(uNextTexture, nextUv);
+    vec4 currentColor = texture2D(uTexture, clamp(uv, vec2(0.0), vec2(1.0))) * currentContainMask;
+    vec4 nextColor = texture2D(uNextTexture, clamp(nextUv, vec2(0.0), vec2(1.0))) * nextContainMask;
     vec4 color = mix(currentColor, nextColor, uTextureMix);
 
     float horizontalEdge = smoothstep(0.0, 0.18, vUv.x) * smoothstep(1.0, 0.82, vUv.x);
