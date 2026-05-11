@@ -136,12 +136,20 @@ const sideProgress = smoothstep01(absOffset * (1 + transitionPulse * (isMobile ?
 В vertex shader используется глобальная X-координата:
 
 ```glsl
-float globalX = (uStripOffset + position.x * uPlaneSize.x) / max(uViewportSize.x * 0.5, 1.0);
+float globalX = (uStripOffset + position.x * uPlaneSize.x) / max(uCurveScale, 1.0);
 float curve = globalX * globalX;
 transformed.z += curve * bend;
 ```
 
 Ключевой момент: bend зависит не только от локальной плоскости, а от положения кадра на общей ленте. Поэтому центральный и боковые кадры могут читаться как части одной дуги.
+
+`uCurveScale` считается от композиции ленты, а не от полной ширины viewport:
+
+```ts
+const curveScale = Math.min(width * 0.5, centerWidth * 0.64);
+```
+
+Это сохраняет поведение на `1920`, где старая нормализация уже выглядела хорошо, и усиливает дугу на wide viewport. До этой правки `3400` выглядел слабее, потому что shader делил `globalX` на `viewport.x * 0.5`, и одинаковый pixel offset давал меньшую кривизну на широком экране.
 
 `uEdgeCurve` дополнительно выгибает верхнюю и нижнюю кромку:
 
@@ -192,8 +200,8 @@ float containMix = 0.0;
 5. Camera Z зависит от height.
    `camera.position.z = getCameraZ(height)`. На разной высоте меняется перспектива и визуальная сила Z-изгиба.
 
-6. Bend нормализуется через `uViewportSize.x`.
-   В shader `globalX` делится на `viewport.x * 0.5`. Одинаковый pixel offset на разных ширинах дает разную кривизну.
+6. Bend нормализуется через `uCurveScale`.
+   `globalX` делится на композиционный scale ленты: `Math.min(width * 0.5, centerWidth * 0.64)`. Wide viewport больше не ослабляет дугу только из-за большой ширины экрана.
 
 7. Transition compensation зависит от gap.
    `transitionGap = metrics.gap * pulse * ratio`. Если gap зажат clamp-ом, сила компенсации меняется относительно размера кадра.

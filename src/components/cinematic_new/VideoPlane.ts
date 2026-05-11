@@ -16,6 +16,7 @@ export type VideoPlaneLayout = {
   darkness: number;
   cornerRadius: number;
   edgeCurve: number;
+  curveScale: number;
   velocity: number;
 };
 
@@ -34,6 +35,7 @@ export class VideoPlane {
     uDarkness: { value: number };
     uCornerRadius: { value: number };
     uEdgeCurve: { value: number };
+    uCurveScale: { value: number };
     uVelocity: { value: number };
     uViewportSize: { value: THREE.Vector2 };
     uMediaSize: { value: THREE.Vector2 };
@@ -58,6 +60,7 @@ export class VideoPlane {
       uDarkness: { value: 0.2 },
       uCornerRadius: { value: 16 },
       uEdgeCurve: { value: 12 },
+      uCurveScale: { value: viewportSize.x * 0.5 },
       uVelocity: { value: 0 },
       uViewportSize: { value: viewportSize.clone() },
       uMediaSize: { value: new THREE.Vector2(16, 9) },
@@ -123,6 +126,7 @@ export class VideoPlane {
     this.uniforms.uDarkness.value = layout.darkness;
     this.uniforms.uCornerRadius.value = layout.cornerRadius;
     this.uniforms.uEdgeCurve.value = layout.edgeCurve;
+    this.uniforms.uCurveScale.value = layout.curveScale;
     this.uniforms.uVelocity.value = layout.velocity;
   }
 

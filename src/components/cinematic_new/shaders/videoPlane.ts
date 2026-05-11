@@ -5,6 +5,7 @@ export const videoPlaneVertexShader = `
   uniform float uTransitionProgress;
   uniform float uActive;
   uniform float uEdgeCurve;
+  uniform float uCurveScale;
   uniform vec2 uPlaneSize;
   uniform vec2 uViewportSize;
   uniform float uStripOffset;
@@ -16,7 +17,7 @@ export const videoPlaneVertexShader = `
     float localX = position.x * 2.0;
     float unbend = 1.0 - (uTransitionProgress * uActive);
     float bend = uBend * unbend;
-    float globalX = (uStripOffset + position.x * uPlaneSize.x) / max(uViewportSize.x * 0.5, 1.0);
+    float globalX = (uStripOffset + position.x * uPlaneSize.x) / max(uCurveScale, 1.0);
     float curve = globalX * globalX;
 
     transformed.x *= uPlaneSize.x;

@@ -76,16 +76,16 @@ const DESKTOP_FILM_STRIP_LAYOUT: FilmStripLayoutConfig = {
   },
   sideVisibleRatio: 0.34,
   sideScale: 1.02,
-  sideRotationY: 0.1,
+  sideRotationY: 0.055,
   bend: {
-    center: 46,
-    side: 58,
-    buffer: 64,
+    center: 56,
+    side: 62,
+    buffer: 68,
   },
   edgeCurve: {
-    center: 10,
-    side: 24,
-    buffer: 28,
+    center: 14,
+    side: 18,
+    buffer: 22,
   },
   hiddenOffset: 2.5,
 };
@@ -101,16 +101,16 @@ const MOBILE_FILM_STRIP_LAYOUT: FilmStripLayoutConfig = {
   },
   sideVisibleRatio: 0.28,
   sideScale: 1,
-  sideRotationY: 0.07,
+  sideRotationY: 0.04,
   bend: {
-    center: 34,
-    side: 50,
-    buffer: 54,
+    center: 42,
+    side: 52,
+    buffer: 58,
   },
   edgeCurve: {
-    center: 8,
-    side: 18,
-    buffer: 20,
+    center: 10,
+    side: 14,
+    buffer: 16,
   },
   hiddenOffset: 2.5,
 };
@@ -405,6 +405,7 @@ export class SliderScene {
       this.timeline?.to(plane.uniforms.uBend, { value: layout.bend, duration: duration * 0.72 }, 0.12);
       this.timeline?.to(plane.uniforms.uCornerRadius, { value: layout.cornerRadius, duration: duration * 0.72 }, 0.08);
       this.timeline?.to(plane.uniforms.uEdgeCurve, { value: layout.edgeCurve, duration: duration * 0.72 }, 0.12);
+      this.timeline?.to(plane.uniforms.uCurveScale, { value: layout.curveScale, duration: duration * 0.72 }, 0.12);
       this.timeline?.to(plane.uniforms.uOpacity, { value: layout.opacity, duration: duration * 0.68, ease: 'power2.out' }, 0.16);
       this.timeline?.to(plane.uniforms.uDarkness, { value: layout.darkness, duration }, 0.06);
       this.timeline?.to(plane.uniforms.uVelocity, { value: layout.velocity, duration }, 0.06);
@@ -819,6 +820,7 @@ export class SliderScene {
 
     const frameWidth = lerp(centerWidth, metrics.sideWidth, sideProgress);
     const frameHeight = lerp(centerHeight, metrics.sideHeight, sideProgress);
+    const curveScale = Math.min(width * 0.5, centerWidth * 0.64);
     const outsideDistance = Math.abs(stripX) - (width / 2 + frameWidth / 2);
     const outsideProgress = smoothstep01(outsideDistance / Math.max(frameWidth * 0.35, 1));
     const viewportOpacity = this.getViewportFadeOpacity(stripX, frameWidth);
@@ -846,6 +848,7 @@ export class SliderScene {
 
       cornerRadius: lerp(isMobile ? 3 : 4, isMobile ? 2 : 3, sideProgress),
       edgeCurve: lerpByStripRole(config.edgeCurve.center, config.edgeCurve.side, config.edgeCurve.buffer, absOffset),
+      curveScale,
 
       velocity: localVelocity,
     };

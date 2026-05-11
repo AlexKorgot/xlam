@@ -466,6 +466,75 @@ Baseline на момент старта протокола:
 | 5 | Не менять размер кадра во время transition | TBD | TBD | TBD | TBD | pending | no |
 | 6 | Подготовить wide video asset под aspect киноленты | TBD | TBD | TBD | TBD | pending | no |
 
+## Проверка формы ленты: гипотеза 1
+
+Гипотеза: ощущение, что центральный слайд выше боковых, дает не физическая высота (`sideHeight = centerHeight`), а визуальная перспектива и слишком разный edge-изгиб между ролями.
+
+Проверочная правка:
+
+- desktop `sideRotationY: 0.1 -> 0.055`;
+- mobile `sideRotationY: 0.07 -> 0.04`;
+- desktop `edgeCurve: 10/24/28 -> 14/18/22`;
+- mobile `edgeCurve: 8/18/20 -> 10/14/16`.
+
+Проверка:
+
+- `npm run lint` - без errors, остались старые warnings вне `cinematic_new`;
+- `npm run build` - успешно;
+- runtime `1280x720` - canvas/WebGL есть, переход `Next project` работает;
+- browser console errors - `0`;
+- Next MCP `get_errors` - `0`;
+- screenshot: `.playwright-mcp/page-2026-05-11T21-53-53-383Z.png`.
+
+Статус: `testing`, нужна визуальная оценка.
+
+## Проверка формы ленты: гипотеза 2
+
+Гипотеза: после смягчения поворота и edge-curve лента стала цельнее, но недостаточно изогнутой относительно Figma. Нужно усилить общий bend без изменения размеров, aspect и `sideWidth = centerWidth`.
+
+Проверочная правка:
+
+- desktop `bend: 46/58/64 -> 56/62/68`;
+- mobile `bend: 34/50/54 -> 42/52/58`.
+
+Проверка:
+
+- `npm run lint` - без errors, остались старые warnings вне `cinematic_new`;
+- `npm run build` - успешно;
+- runtime `1280x720` - canvas/WebGL есть, переход `Next project` работает;
+- browser console errors - `0`;
+- Next MCP `get_errors` - `0`;
+- screenshot: `.playwright-mcp/page-2026-05-11T22-04-06-138Z.png`.
+
+Статус: `testing`, нужна визуальная оценка.
+
+## Проверка формы ленты: гипотеза 3
+
+Гипотеза: на `3400` лента выглядит менее изогнутой не из-за слабого `bend`, а из-за нормализации shader-дуги от ширины viewport. Старая формула делила `globalX` на `viewport.x * 0.5`, поэтому wide viewport ослаблял curvature.
+
+Проверочная правка:
+
+- добавлен uniform `uCurveScale`;
+- shader теперь считает `globalX` через `uCurveScale`, а не через `uViewportSize.x * 0.5`;
+- `curveScale = Math.min(width * 0.5, centerWidth * 0.64)`.
+
+Расчет после правки:
+
+- `1920x1080`: side outer z около `355.9px`;
+- `3400x1080`: side outer z около `360.4px`;
+- до правки `3400x1080` был около `134.9px`.
+
+Проверка:
+
+- `npm run lint` - без errors, остались старые warnings вне `cinematic_new`;
+- `npm run build` - успешно;
+- runtime `1280x720` - canvas/WebGL есть, переход `Next project` работает;
+- browser console errors - `0`;
+- Next MCP `get_errors` - `0`;
+- screenshot: `.playwright-mcp/page-2026-05-11T22-14-32-826Z.png`.
+
+Статус: `testing`, нужна визуальная проверка на `1920` и `3400`.
+
 ## Отклоненная проверка: sampling-size отдельно от geometry-size
 
 Гипотеза: часть ощущения разрыва движения может давать не позиция ленты, а изменение video cover-кропа при переходе. Раньше shader использовал `uPlaneSize` и для физической геометрии кадра, и для `coverUv()`. Поэтому при интерполяции `frameWidth` от center к side видео внутри кадра могло заметно менять масштаб/кроп.
