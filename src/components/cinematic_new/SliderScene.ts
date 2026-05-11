@@ -60,22 +60,22 @@ type FilmStripFrameMetrics = {
 };
 
 const DESKTOP_FILM_STRIP_LAYOUT: FilmStripLayoutConfig = {
-  centerWidthRatio: 0.71,
-  centerMaxWidthRatio: 0.74,
-  centerAspect: 16 / 4.15,
-  maxHeightRatio: 0.38,
+  centerWidthRatio: 0.78,
+  centerMaxWidthRatio: 0.82,
+  centerAspect: 16 / 6.4,
+  maxHeightRatio: 0.54,
   tallDesktopMinHeight: {
     minViewportHeight: 960,
-    height: 550,
-    maxHeightRatio: 0.52,
+    height: 650,
+    maxHeightRatio: 0.64,
   },
   gap: {
     min: 20,
     max: 70,
     ratio: 0.026,
   },
-  sideVisibleRatio: 0.46,
-  sideScale: 0.96,
+  sideVisibleRatio: 0.34,
+  sideScale: 1.02,
   sideRotationY: 0.1,
   bend: {
     center: 46,
@@ -90,17 +90,17 @@ const DESKTOP_FILM_STRIP_LAYOUT: FilmStripLayoutConfig = {
   hiddenOffset: 2.5,
 };
 const MOBILE_FILM_STRIP_LAYOUT: FilmStripLayoutConfig = {
-  centerWidthRatio: 0.82,
-  centerMaxWidthRatio: 0.88,
-  centerAspect: 16 / 4,
-  maxHeightRatio: 0.42,
+  centerWidthRatio: 0.9,
+  centerMaxWidthRatio: 0.94,
+  centerAspect: 16 / 6.2,
+  maxHeightRatio: 0.58,
   gap: {
     min: 14,
     max: 28,
     ratio: 0.04,
   },
-  sideVisibleRatio: 0.34,
-  sideScale: 0.94,
+  sideVisibleRatio: 0.28,
+  sideScale: 1,
   sideRotationY: 0.07,
   bend: {
     center: 34,
@@ -170,6 +170,7 @@ export class SliderScene {
 
   private activeIndex = 0;
   private slidePosition = 0;
+  private slideProgress = 0;
   private slideVelocity = 0;
 
   private isVisible = true;
@@ -511,6 +512,7 @@ export class SliderScene {
         }
 
         this.slidePosition = to;
+        this.slideProgress = 0;
         this.slideVelocity = 0;
 
         this.mode = 'slider';
@@ -528,6 +530,7 @@ export class SliderScene {
           ease: 'power2.inOut',
           onUpdate: () => {
             this.slidePosition = motion.position;
+            this.slideProgress = motion.progress;
             this.slideVelocity = direction * (0.18 + velocityPulse(motion.progress) * 1.18);
             this.applySliderLayout();
 
@@ -804,10 +807,13 @@ export class SliderScene {
     const centerWidth = metrics.centerWidth;
     const centerHeight = metrics.centerHeight;
     const { config } = metrics;
-    const sideX = centerWidth / 2 + metrics.gap + metrics.sideWidth / 2;
-    const bufferStep = metrics.sideWidth + metrics.gap;
+    const transitionPulse = this.mode === 'sliding' ? velocityPulse(this.slideProgress) : 0;
+    const transitionGap = metrics.gap * transitionPulse * (isMobile ? 0.18 : 0.32);
+    const effectiveGap = metrics.gap + transitionGap;
+    const sideX = centerWidth / 2 + effectiveGap + metrics.sideWidth / 2;
+    const bufferStep = metrics.sideWidth + effectiveGap;
     const distanceFromCenter = absOffset <= 1 ? absOffset * sideX : sideX + (absOffset - 1) * bufferStep;
-    const sideProgress = smoothstep01(absOffset);
+    const sideProgress = smoothstep01(absOffset * (1 + transitionPulse * (isMobile ? 0.12 : 0.18)));
     const stripX = direction * distanceFromCenter;
     const localVelocity = this.slideVelocity * (isMobile ? 0.26 : 0.36) * (1 - Math.min(absOffset, 2.1) * 0.12);
 

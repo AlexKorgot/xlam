@@ -77,7 +77,7 @@ export class VideoPlane {
     });
 
     this.mesh = new THREE.Mesh(geometry, material);
-    this.mesh.frustumCulled = false;
+    (this.mesh as THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial> & { frustumCulled: boolean }).frustumCulled = false;
   }
 
   setTexture(texture: THREE.Texture, mediaSize = new THREE.Vector2(16, 9)) {

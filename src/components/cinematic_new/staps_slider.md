@@ -296,6 +296,129 @@ Contain ломает крупность центрального кадра.
 - либо `contain + letterbox/pillarbox`;
 - либо менять aspect слайда ближе к aspect видео.
 
+## Лог текущей правки transition geometry
+
+Перед переходом к этапу 8 начата правка overlap/motion в середине transition.
+
+Сделано:
+
+- В `SliderScene.ts` добавлен `slideProgress`, чтобы layout знал нормализованный прогресс текущего GSAP-перехода.
+- В `slideTo()` `slideProgress` обновляется на каждом `onUpdate` и сбрасывается в `0` на завершении.
+- В `getLayoutForOffset()` добавлен `transitionPulse = velocityPulse(slideProgress)` только для режима `sliding`.
+- Во время `sliding` gap временно увеличивается через `transitionGap`, чтобы кадры в промежуточных offset не заходили друг на друга.
+- Во время `sliding` `sideProgress` считается быстрее, чтобы уходящий центральный кадр раньше сужался к side-size, а входящий кадр не конфликтовал с ним по ширине.
+
+Важно:
+
+- Статичный layout не должен измениться: при `mode !== 'sliding'` `transitionPulse = 0`.
+- Ширина базового central frame не изменялась.
+- `sideHeight = centerHeight` не трогался.
+- На момент этой правки `containMix` еще был выключен; после требования full central video он включен через `uActive`.
+- Это первый слой исправления. После проверки mid-transition screenshot нужно решить, достаточно ли варианта "faster width role transition + dynamic gap" или нужен min-distance constraint.
+
+Следующая проверка:
+
+```js
+document.querySelector('button[aria-label="Next project"]')?.click();
+await new Promise((resolve) => setTimeout(resolve, 650));
+```
+
+Смотреть именно середину перехода: нет ли overlap, не пропадает ли боковой кадр, сохранилось ли ощущение прокрутки ленты.
+
+Проверка после правки:
+
+- `npm run lint` - прошел без errors, остались старые warnings в `src/app/layout.tsx` и `src/components/ui/MainScene.tsx`.
+- `npm run build` - прошел после типовой правки `VideoPlane.ts` для `frustumCulled`.
+- Next MCP `get_errors` - `configErrors: []`, `sessionErrors: []`.
+- Browser console после свежей проверки - без errors/warnings, кроме dev info/HMR.
+- Playwright screenshot после перехода next показывает центральный и боковые кадры без очевидного overlap в зафиксированном состоянии.
+
+Дополнительная правка:
+
+- В `VideoPlane.ts` `frustumCulled = false` оставлен, но присвоение приведено к явному типу, потому что `next build` падал на TypeScript-проверке свойства.
+
+Геометрии сохранены отдельно:
+
+- `geometria_experimental_variant-1.md` - текущий вариант после правки transition geometry.
+- `geometria_experimental_variant-2.md` - предыдущий вариант до dynamic transition compensation.
+
+## Лог правки перед этапом 8: full central video + larger composition
+
+Перед этапом 8 добавлено требование: центральный слайд должен показывать видео полностью, а ширина слайдов и общей композиции должна стать больше.
+
+Сделано:
+
+- В `SliderScene.ts` desktop center увеличен с `0.71/0.74` до `0.78/0.82` viewport width.
+- Desktop aspect изменен с `16 / 4.15` на `16 / 5.2`, чтобы полный contain-video не становился слишком мелким в сверхузкой полосе.
+- Desktop `maxHeightRatio` увеличен с `0.38` до `0.46`, tall desktop target с `550` до `600`.
+- Desktop side frames увеличены через `sideVisibleRatio: 0.34` и `sideScale: 1.02`.
+- Mobile center увеличен до `0.9/0.94`, aspect до `16 / 5`, `maxHeightRatio` до `0.5`.
+- В shader `containMix` включен через `uActive`, то есть contain применяется к активному центральному кадру.
+- Чтобы центральный слайд не стал прозрачным по краям, contain-видео композится поверх затемненного cover-background внутри того же plane.
+
+Важно:
+
+- Боковые кадры остаются cover-style, чтобы сохранить ощущение киноленты.
+- Это сознательный компромисс: полное видео в центральном кадре требует contain-поведения, поэтому внутри кадра появляется затемненная cover-подложка за полным видео.
+- После визуальной проверки нужно решить, достаточно ли увеличения ширины или нужно еще расширять centerWidthRatio / менять фон.
+
+Проверка после правки:
+
+- `npm run lint` - прошел без errors, остались старые warnings в `src/app/layout.tsx` и `src/components/ui/MainScene.tsx`.
+- `npm run build` - прошел.
+- Next MCP `get_errors` - `configErrors: []`, `sessionErrors: []`.
+- Browser console - без errors/warnings, кроме dev info/HMR.
+- Playwright screenshot на `1280x720`: центральное видео видно полностью, композиция шире, боковые кадры остаются видимыми по краям.
+- Mid-transition screenshot после `Next` на `650ms`: центральный кадр остается contain-style, боковые кадры видимы, явного runtime сбоя нет.
+
+Наблюдение:
+
+- DOM label теперь находится ближе к нижней части центрального видео и визуально может казаться наложенным на кадр. Это относится уже к UI-подгонке этапа 9, не к геометрии WebGL.
+
+Откат contain-подложки:
+
+- Пользователь заметил эффект opacity по бокам центрального слайда.
+- Причина была в `containMix = uActive` и затемненной cover-подложке `currentCoverColor * 0.36`.
+- Принято решение вернуть чистый вариант: ничто не должно влиять на целостность сцены.
+- В `shaders/videoPlane.ts` `containMix` снова `0.0`, затемненная подложка удалена, sampling вернулся к единому cover-пути.
+- Требование "видео полностью" остается нерешенным в текущей форме: без contain или изменения aspect/source невозможно одновременно показать весь ролик и сохранить заполненный широкий кадр без дополнительных визуальных слоев.
+
+## Лог правки причины раннего morph и crop
+
+Проблема:
+
+- Центральный кадр слишком рано превращался в боковой при переходе.
+- Центральное видео обрезалось, потому что shader работает в чистом `cover` (`containMix = 0.0`).
+
+Причина:
+
+- `sideProgress` был слишком агрессивным: `transitionPulse * 0.65` на desktop давал почти side-size уже в середине transition.
+- `transitionGap` был слишком сильным: `transitionPulse * 0.75` на desktop растягивал ленту в середине движения.
+- Aspect центрального кадра был слишком узким относительно 16:9-видео, поэтому `cover` сильно обрезал изображение.
+
+Сделано:
+
+- Desktop `centerAspect` изменен с `16 / 5.2` на `16 / 6.4`.
+- Desktop `maxHeightRatio` увеличен с `0.46` до `0.54`, tall target с `600` до `650`, tall max ratio с `0.58` до `0.64`.
+- Mobile `centerAspect` изменен с `16 / 5` на `16 / 6.2`, `maxHeightRatio` с `0.5` до `0.58`.
+- `transitionGap` ослаблен: desktop `0.75 -> 0.32`, mobile `0.35 -> 0.18`.
+- `sideProgress` ослаблен: desktop `0.65 -> 0.18`, mobile `0.45 -> 0.12`.
+
+Цель:
+
+- Центр дольше остается центральным во время движения.
+- Лента меньше растягивается в середине transition.
+- Чистый `cover` сохраняется, но кадр стал ближе к видео aspect, поэтому crop должен быть меньше.
+
+Проверка после правки:
+
+- `npm run lint` - прошел без errors, остались старые warnings.
+- `npm run build` - прошел.
+- Next MCP `get_errors` - без ошибок.
+- Browser console - без errors/warnings, кроме dev info/HMR.
+- Playwright screenshot `1280x720`: центр стал выше, crop меньше, сцена остается цельной без contain-подложек.
+- Mid-transition screenshot `650ms`: центр визуально дольше сохраняет крупный ленточный масштаб; раннее схлопывание стало заметно слабее.
+
 ## Этапы еще не выполнены
 
 ### 8. Проверить fullscreen open/close - не выполнено
@@ -365,7 +488,7 @@ Contain ломает крупность центрального кадра.
 - Не трогать ширину без согласования.
 - Не уменьшать боковые по высоте: `sideHeight = centerHeight`.
 - `frustumCulled = false` обязателен для shader-expanded planes.
-- `containMix` сейчас выключен намеренно.
+- `containMix` больше не выключен: после требования full central video он включен через `uActive` для активного центрального кадра.
 - Текущий главный нерешенный вопрос: overlap/ощущение движения в середине transition.
 - Хороший статичный вид уже есть: центр широкий, боковые видны, высота единая.
 - Дальше надо чинить именно transition geometry.
