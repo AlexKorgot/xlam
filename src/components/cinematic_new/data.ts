@@ -2,6 +2,7 @@ import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import type { CinematicSlide } from './types';
 
 const mainVideo = publicAssetPath('/video/timessquarenightwide.mp4');
+const mainVideoObjectPosition: [number, number] = [0.5, 0.58];
 
 export const cinematicSlides: CinematicSlide[] = [
   {
@@ -15,6 +16,7 @@ export const cinematicSlides: CinematicSlide[] = [
     year: '2026',
     accent: '#66ff66',
     videoSrc: mainVideo,
+    videoObjectPosition: mainVideoObjectPosition,
   },
   {
     id: 'city-flow',
@@ -27,6 +29,7 @@ export const cinematicSlides: CinematicSlide[] = [
     year: '2026',
     accent: '#7cff55',
     videoSrc: mainVideo,
+    videoObjectPosition: mainVideoObjectPosition,
   },
   {
     id: 'signal-room',
@@ -39,6 +42,7 @@ export const cinematicSlides: CinematicSlide[] = [
     year: '2026',
     accent: '#55ff88',
     videoSrc: mainVideo,
+    videoObjectPosition: mainVideoObjectPosition,
   },
   {
     id: 'neon-index',
@@ -51,6 +55,7 @@ export const cinematicSlides: CinematicSlide[] = [
     year: '2026',
     accent: '#b8ff2c',
     videoSrc: mainVideo,
+    videoObjectPosition: mainVideoObjectPosition,
   },
   {
     id: 'frame-unit',
@@ -63,5 +68,6 @@ export const cinematicSlides: CinematicSlide[] = [
     year: '2026',
     accent: '#58ff70',
     videoSrc: mainVideo,
+    videoObjectPosition: mainVideoObjectPosition,
   },
 ];

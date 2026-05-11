@@ -188,12 +188,13 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
     <section
       ref={rootRef}
       data-fullpage-scroll-ignore
-      className={`font-normalidad group relative isolate h-[100svh] min-h-[620px] w-full overflow-hidden bg-[#458294] text-white ${className}`}
+      className={`font-normalidad group relative isolate h-[100svh] min-h-[620px] w-full overflow-hidden bg-[#050706] text-white ${className}`}
       aria-label="Cinematic project slider"
     >
-      {/*<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(61,116,126,0.52)_0%,rgba(18,47,50,0.42)_31%,rgba(0,0,0,0)_66%)]" />*/}
-      {/*<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.08)_42%,rgba(0,0,0,0.7)_100%)]" />*/}
-      {/*<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.94)_0%,rgba(0,0,0,0.36)_17%,rgba(0,0,0,0)_50%,rgba(0,0,0,0.38)_83%,rgba(0,0,0,0.96)_100%)]" />*/}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,#030403_0%,#07110c_24%,#020302_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(102,255,102,0.16)_0%,rgba(30,76,48,0.12)_31%,rgba(0,0,0,0)_62%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.3)_14%,rgba(0,0,0,0)_50%,rgba(0,0,0,0.32)_86%,rgba(0,0,0,0.92)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.05)_36%,rgba(0,0,0,0.16)_63%,rgba(0,0,0,0.78)_100%)]" />
 
       <div ref={canvasHostRef} className="absolute inset-0 z-0 cursor-pointer touch-manipulation" />
 
@@ -202,31 +203,31 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
         className="pointer-events-none absolute inset-0 z-10"
         style={{ '--cinematic-chrome-opacity': 1 } as CinematicChromeStyle}
       >
-        <div className="absolute left-1/2 top-[16.5svh] z-10 w-full -translate-x-1/2 px-5 text-center opacity-[var(--cinematic-chrome-opacity)]">
-          <h2 className="text-[2rem] font-black uppercase leading-none md:text-[2.75rem] xl:text-[3.75rem]">
+        <div className="absolute left-1/2 top-[9.5svh] z-10 w-full -translate-x-1/2 px-5 text-center opacity-[var(--cinematic-chrome-opacity)] md:top-[10.5svh]">
+          <h2 className="text-[2rem] font-black uppercase leading-none drop-shadow-[0_12px_30px_rgba(0,0,0,0.55)] md:text-[2.75rem] xl:text-[3.65rem]">
             {headingLead} <span className="text-[#66ff66]">{headingAccent}</span>
           </h2>
         </div>
 
         <div
           ref={labelRef}
-          className="absolute inset-x-0 top-[calc(50%+16svh)] z-10 px-6 text-center opacity-[var(--cinematic-chrome-opacity)] md:top-[calc(50%+17svh)]"
+          className="absolute inset-x-0 bottom-[12svh] z-10 px-6 text-center opacity-[var(--cinematic-chrome-opacity)] md:bottom-[13svh]"
         >
-          <p data-slide-label className="mx-auto mb-2 max-w-[28rem] text-[9px] font-black uppercase leading-none text-white md:text-[10px]">
+          <p data-slide-label className="mx-auto mb-2 max-w-[28rem] text-[9px] font-black uppercase leading-none text-white/88 drop-shadow-[0_6px_16px_rgba(0,0,0,0.65)] md:text-[10px]">
             {activeSlide.eyebrow}
           </p>
           <h3
             data-slide-label
-            className="mx-auto max-w-[34rem] text-[1rem] font-black uppercase leading-none text-[#66ff66] md:text-[1.35rem] xl:text-[1.875rem]"
+            className="mx-auto max-w-[34rem] text-[1rem] font-black uppercase leading-none text-[#66ff66] drop-shadow-[0_10px_22px_rgba(0,0,0,0.62)] md:text-[1.35rem] xl:text-[1.875rem]"
           >
             {activeSlide.title}
           </h3>
         </div>
 
-        <div className="pointer-events-auto absolute bottom-[4.5svh] left-1/2 z-20 flex -translate-x-1/2 items-center gap-5 opacity-0 transition-opacity duration-300 group-hover:opacity-[calc(var(--cinematic-chrome-opacity)*0.72)] focus-within:opacity-[var(--cinematic-chrome-opacity)]">
+        <div className="pointer-events-auto absolute bottom-[4.5svh] left-1/2 z-20 flex -translate-x-1/2 items-center gap-5 opacity-[calc(var(--cinematic-chrome-opacity)*0.48)] transition-opacity duration-300 group-hover:opacity-[calc(var(--cinematic-chrome-opacity)*0.9)] focus-within:opacity-[var(--cinematic-chrome-opacity)]">
           <button
             type="button"
-            className="grid h-9 w-9 place-items-center rounded-full border border-white/12 bg-white/[0.04] text-lg font-black text-white/48 backdrop-blur-md transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"
+            className="grid h-9 w-9 place-items-center rounded-full border border-white/18 bg-black/35 text-lg font-black text-white/58 backdrop-blur-md transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"
             onClick={handlePrevious}
             aria-label="Previous project"
           >
@@ -234,14 +235,14 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
           </button>
           <button
             type="button"
-            className="h-9 border border-white/14 bg-white/[0.055] px-6 text-[9px] font-black uppercase tracking-[0.28em] text-white/74 backdrop-blur-md transition-colors hover:border-[#66ff66]/60 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:px-7 md:text-[10px]"
+            className="h-9 border border-white/20 bg-black/35 px-6 text-[9px] font-black uppercase tracking-[0.28em] text-white/78 backdrop-blur-md transition-colors hover:border-[#66ff66]/60 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:px-7 md:text-[10px]"
             onClick={handleOpen}
           >
             {openLabel}
           </button>
           <button
             type="button"
-            className="grid h-9 w-9 place-items-center rounded-full border border-white/12 bg-white/[0.04] text-lg font-black text-white/48 backdrop-blur-md transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"
+            className="grid h-9 w-9 place-items-center rounded-full border border-white/18 bg-black/35 text-lg font-black text-white/58 backdrop-blur-md transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"
             onClick={handleNext}
             aria-label="Next project"
           >
@@ -259,18 +260,18 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       >
         <div className="grid w-full items-end gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="max-w-5xl">
-            <p data-case-detail className="mb-4 text-xs font-black uppercase tracking-[0.28em] text-[#66ff66] opacity-0">
+            <p data-case-detail className="mb-4 text-xs font-black uppercase tracking-[0.28em] text-[#66ff66] opacity-0 drop-shadow-[0_8px_22px_rgba(0,0,0,0.72)]">
               {activeSlide.client} / {activeSlide.year}
             </p>
             <h3
               data-case-detail
-              className="max-w-[13ch] text-[3rem] font-black uppercase leading-[0.88] opacity-0 md:text-[5.5rem] xl:text-[8rem]"
+              className="max-w-[13ch] text-[3rem] font-black uppercase leading-[0.88] opacity-0 drop-shadow-[0_14px_42px_rgba(0,0,0,0.72)] md:text-[5.5rem] xl:text-[8rem]"
             >
               {activeSlide.title}
             </h3>
             <p
               data-case-detail
-              className="mt-6 max-w-2xl text-sm font-medium uppercase leading-relaxed text-white/78 opacity-0 sm:text-base"
+              className="mt-6 max-w-2xl text-sm font-medium uppercase leading-relaxed text-white/82 opacity-0 drop-shadow-[0_8px_24px_rgba(0,0,0,0.76)] sm:text-base"
             >
               {activeSlide.description}
             </p>
@@ -281,7 +282,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
               {activeSlide.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="border border-white/22 px-3 py-2 text-[10px] font-black uppercase text-white/78"
+                  className="border border-white/24 bg-black/22 px-3 py-2 text-[10px] font-black uppercase text-white/82 backdrop-blur-sm"
                 >
                   {tag}
                 </span>
@@ -289,11 +290,11 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-[10px] font-black uppercase text-white/58">
-              <div className="border border-white/16 p-4">
+              <div className="border border-white/18 bg-black/20 p-4 backdrop-blur-sm">
                 <span className="mb-2 block text-white/34">Format</span>
                 Case film
               </div>
-              <div className="border border-white/16 p-4">
+              <div className="border border-white/18 bg-black/20 p-4 backdrop-blur-sm">
                 <span className="mb-2 block text-white/34">Motion</span>
                 Live cut
               </div>
@@ -301,7 +302,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
             <button
               type="button"
-              className="mt-5 h-11 w-full border border-white/55 px-5 text-[11px] font-black uppercase text-white transition-colors hover:border-[#66ff66] hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66]"
+              className="mt-5 h-11 w-full border border-white/55 bg-black/20 px-5 text-[11px] font-black uppercase text-white backdrop-blur-sm transition-colors hover:border-[#66ff66] hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66]"
               onClick={handleClose}
             >
               {closeLabel}

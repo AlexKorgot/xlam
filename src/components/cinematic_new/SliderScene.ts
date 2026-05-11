@@ -222,6 +222,7 @@ export class SliderScene {
         }
       };
       const plane = new VideoPlane(texture, this.viewport);
+      plane.setObjectPosition(slide.videoObjectPosition ?? [0.5, 0.58]);
 
       video.addEventListener('loadedmetadata', handleMetadata);
       video.addEventListener('loadeddata', handleMetadata);
@@ -346,7 +347,7 @@ export class SliderScene {
         return;
       }
 
-      this.timeline?.to(plane.uniforms.uOpacity, { value: 0, duration: duration * 0.48, ease: 'power2.out' }, 0.08);
+      this.timeline?.to(plane.uniforms.uOpacity, { value: 0, duration: duration * 0.82, ease: 'power2.out' }, 0.08);
       this.timeline?.to(
           plane.mesh.position,
           { x: plane.mesh.position.x * 1.12, y: plane.mesh.position.y, z: -180, duration: duration * 0.74 },

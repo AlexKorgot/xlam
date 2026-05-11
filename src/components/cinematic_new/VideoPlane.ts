@@ -98,6 +98,10 @@ export class VideoPlane {
     this.uniforms.uActive.value = isActive ? 1 : 0;
   }
 
+  setObjectPosition(position: [number, number]) {
+    this.uniforms.uObjectPosition.value.set(position[0], position[1]);
+  }
+
   setScale(scaleX: number, scaleY: number) {
     this.scaleState.x = scaleX;
     this.scaleState.y = scaleY;

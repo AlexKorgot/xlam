@@ -10,6 +10,7 @@ export type CinematicSlide = {
   year: string;
   accent: string;
   videoSrc: string;
+  videoObjectPosition?: [number, number];
 };
 
 export type SliderSceneCallbacks = {

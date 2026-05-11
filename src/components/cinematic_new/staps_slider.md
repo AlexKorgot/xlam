@@ -421,17 +421,128 @@ await new Promise((resolve) => setTimeout(resolve, 650));
 
 ## Этапы еще не выполнены
 
-### 8. Проверить fullscreen open/close - не выполнено
+## Гипотеза: чистый contain для центрального кадра
 
-Нужно проверить:
+По просьбе пользователя включена временная проверка:
 
-- `open()` из центрального кадра;
-- `close()`;
-- возврат к slider layout;
-- отсутствие второго DOM-video;
-- нет runtime errors.
+```glsl
+float containMix = uActive;
+```
 
-### 9. Подогнать UI под Figma - не выполнено
+Без затемненной cover-подложки и без дополнительных смешиваний.
+
+Результат:
+
+- `npm run lint` - прошел без errors, остались старые warnings.
+- `npm run build` - прошел.
+- Next MCP `get_errors` - без ошибок.
+- Browser console - без errors/warnings, кроме dev info/HMR.
+- Playwright screenshot подтвердил риск: видео действительно помещается полностью, но центральный кадр визуально теряет заполненность и выглядит как уменьшенный прямоугольник внутри широкой ленты.
+
+Вывод:
+
+- Чистый contain решает "показать видео полностью", но ломает ощущение цельной широкой киноленты.
+- Если сохранять contain, нужно менять композицию/контейнер под aspect видео или принимать пустые зоны.
+- Если сохранять цельную киноленту, текущий `cover` с подобранным aspect выглядит лучше, но видео не будет видно полностью на 100%.
+
+## Гипотеза: cover + object-position как временная архитектура до wide-asset
+
+После выбора оптимального архитектурного решения проверяется компромисс:
+
+- shader остается в чистом `cover`;
+- `containMix = 0.0`;
+- кинолента остается цельной;
+- добавляется управляемый `videoObjectPosition` в data, чтобы кадрировать текущий 16:9-ролик без изменения layout.
+
+Сделано:
+
+- В `types.ts` добавлено `videoObjectPosition?: [number, number]`.
+- В `VideoPlane.ts` добавлен `setObjectPosition()`.
+- В `SliderScene.ts` plane получает `slide.videoObjectPosition ?? [0.5, 0.58]`.
+- В `data.ts` для текущих слайдов задано `[0.5, 0.58]`.
+- В shader `containMix` возвращен в `0.0`.
+
+Цель проверки:
+
+- Сохранить широкую цельную ленту.
+- Не использовать contain, подложки или opacity-зоны.
+- Сместить cover-crop к более полезной части текущего видео.
+
+Проверка:
+
+- `npm run lint` - прошел без errors, остались старые warnings.
+- `npm run build` - прошел.
+- Next MCP `get_errors` - без ошибок.
+- Browser console - без errors/warnings, кроме dev info/HMR.
+- Playwright screenshot `1280x720`: сцена остается цельной, центральный слайд широкий, без contain-полей и opacity-подложек; кадрирование смещено через `objectPosition`.
+
+### 8. Проверить fullscreen open/close - выполнено
+
+Пользователь вручную проверил этап 8: базовый `open()` / `close()` работает.
+
+Дополнительная правка этапа 8:
+
+- При `open()` боковые слайды исчезали слишком быстро.
+- Причина: opacity боковых plane анимировалась за `duration * 0.48` с offset `0.08`.
+- Для проверки гипотезы fade-out боковых при opening увеличен до `duration * 0.82`.
+- Цель: боковые слайды должны уходить дольше и ближе по ощущению к нормальной скорости появления при `close()`, не меняя fullscreen morph активного plane.
+
+Проверка:
+
+- `npm run lint` - прошел без errors, остались старые warnings.
+- `npm run build` - прошел.
+- Next MCP `get_errors` - без ошибок.
+- Browser console - без errors/warnings, кроме dev info/HMR.
+- Playwright mid-opening screenshot на ~620ms после `open`: fullscreen morph работает, боковые fade-out не ломает opening state.
+
+Финальная проверка этапа 8:
+
+- `open()` из центрального кадра - выполнено.
+- `opened` state - выполнено.
+- `close()` - выполнено.
+- Возврат к slider layout - выполнено.
+- Второй DOM-video не создается: `document.querySelectorAll('video').length === 0`, видео остается внутренним `HTMLVideoElement` для `VideoTexture`.
+- Canvas остается один: `document.querySelectorAll('canvas').length === 1`.
+- Next MCP `get_errors` - `configErrors: []`, `sessionErrors: []`.
+- Browser console - без errors/warnings, кроме dev info/HMR.
+- Playwright screenshots сделаны для initial, opened и closed states.
+
+### 9. Подогнать UI под Figma - в работе
+
+Первый UI-pass:
+
+- `CinematicVideoSlider.client.tsx` переведен с плоского `bg-[#458294]` на темный фон `#050706`.
+- Возвращены DOM overlay layers: темный vertical base, мягкое зеленое свечение за лентой, боковое затемнение и top/bottom затемнение.
+- Заголовок поднят с `top-[16.5svh]` до `top-[9.5svh] / md:top-[10.5svh]`, чтобы меньше конфликтовать с верхом центрального кадра.
+- Active label перенесен с `top-[calc(50%+16svh)]` на `bottom-[12svh] / md:bottom-[13svh]`, чтобы не лежать поверх нижней части видео.
+- WebGL geometry, shader и motion не трогались.
+
+Проверка:
+
+- `npm run lint` - прошел без errors, остались старые warnings.
+- `npm run build` - прошел.
+- Next MCP `get_errors` - без ошибок.
+- Browser console - без errors/warnings, кроме dev info/HMR.
+- Playwright screenshot `1280x720`: фон стал темным, заголовок поднят над лентой, active label находится ниже кадра и не перекрывает нижнюю часть видео.
+
+Второй UI-pass:
+
+- Controls больше не скрываются полностью: базовая opacity стала `0.34`, hover `0.82`, focus `1`.
+- Кнопки получили темную полупрозрачную подложку вместо светлой, чтобы лучше сидеть на темном фоне.
+- Details/opened UI получил drop-shadow для крупного текста и легкие `bg-black/20` подложки у тегов/мета-блоков.
+- WebGL geometry, shader и motion не трогались.
+
+Финальная правка второго UI-pass:
+
+- Базовая opacity controls поднята с `0.34` до `0.48`, hover с `0.82` до `0.9`, потому что на скриншоте controls были слишком тусклыми.
+- Opened/details screenshot проверен: крупный текст, теги, мета-блоки и close button читаются на видео.
+
+Проверка второго UI-pass:
+
+- `npm run lint` - прошел без errors, остались старые warnings.
+- `npm run build` - прошел.
+- Next MCP `get_errors` - без ошибок.
+- Browser console - без errors/warnings, кроме dev info/HMR/Fast Refresh.
 
 Нужно:
 
