@@ -341,7 +341,7 @@ export class SliderScene {
         this.timeline?.to(plane.uniforms.uBend, { value: 0, duration: duration * 0.7 }, 0);
         this.timeline?.to(plane.uniforms.uCornerRadius, { value: 0, duration: duration * 0.78 }, 0);
         this.timeline?.to(plane.uniforms.uEdgeCurve, { value: 0, duration: duration * 0.68 }, 0);
-        this.timeline?.to(plane.uniforms.uDarkness, { value: 0.24, duration }, 0);
+        this.timeline?.to(plane.uniforms.uDarkness, { value: 0, duration }, 0);
         this.timeline?.to(plane.uniforms.uVelocity, { value: 0, duration: duration * 0.7 }, 0);
 
         return;

@@ -44,6 +44,7 @@ export const videoPlaneFragmentShader = `
   uniform float uCornerRadius;
   uniform float uVelocity;
   uniform float uActive;
+  uniform float uTransitionProgress;
   uniform vec2 uMediaSize;
   uniform vec2 uNextMediaSize;
   uniform vec2 uObjectPosition;
@@ -113,6 +114,7 @@ export const videoPlaneFragmentShader = `
     vec2 motionUv = vUv;
     motionUv.x += (vUv.y - 0.5) * uVelocity * 0.016;
 
+    float openedMix = uActive * uTransitionProgress;
     float containMix = 0.0;
     vec2 coverCurrentUv = coverUv(motionUv, uPlaneSize, uMediaSize, uObjectPosition);
     vec2 coverNextUv = coverUv(motionUv, uPlaneSize, uNextMediaSize, uObjectPosition);
@@ -132,10 +134,11 @@ export const videoPlaneFragmentShader = `
     float vignette = mix(0.62, 1.0, horizontalEdge * verticalEdge);
     float frameDistance = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
     float frameEdge = smoothstep(0.0, 0.018, frameDistance);
+    float sliderEffects = 1.0 - openedMix;
 
-    color.rgb *= vignette;
-    color.rgb *= mix(0.46, 1.0, frameEdge);
-    color.rgb *= 1.0 - uDarkness;
+    color.rgb *= mix(1.0, vignette, sliderEffects);
+    color.rgb *= mix(1.0, mix(0.46, 1.0, frameEdge), sliderEffects);
+    color.rgb *= 1.0 - (uDarkness * sliderEffects);
 
     float roundedMask = roundedBoxMask(vUv, uPlaneSize, uCornerRadius);
     gl_FragColor = vec4(color.rgb, color.a * uOpacity * roundedMask);

@@ -535,6 +535,154 @@ Baseline на момент старта протокола:
 
 Статус: `testing`, нужна визуальная проверка на `1920` и `3400`.
 
+## Отклоненная проверка формы ленты: tangent-aware rotationY
+
+Гипотеза: небольшой визуальный разрыв между центральным и боковыми слайдами появляется потому, что `rotationY` задавался role-константой, а не касательной к общей shader-дуге.
+
+Проверочная правка была такой:
+
+```ts
+const curveSlope = (2 * stripX * layoutBend) / Math.max(curveScale * curveScale, 1);
+const tangentRotationY = -Math.atan(curveSlope) * (isMobile ? 0.32 : 0.38);
+```
+
+Результат: проверка отклонена по визуальной оценке пользователя.
+
+Откат:
+
+- расчет `curveSlope` / `tangentRotationY` удален;
+- `rotationY` снова считается через role-константу:
+  ```ts
+  rotationY: -direction * lerpByStripRole(0, config.sideRotationY, config.sideRotationY * 1.24, absOffset)
+  ```
+- `bend`, размеры, `edgeCurve`, `uCurveScale` не менялись.
+
+## Проверка полного видео: гипотеза 1
+
+Гипотеза: если включить чистый `contain` для всех состояний, видео будет полностью помещаться и в центральный слайд, и в боковые, и в fullscreen-opened.
+
+Проверочная правка:
+
+```glsl
+float containMix = 1.0;
+```
+
+Область проверки:
+
+- slider center;
+- slider side;
+- transition;
+- fullscreen opened.
+
+Проверка:
+
+- `npm run lint` - без errors, остались старые warnings вне `cinematic_new`;
+- `npm run build` - успешно;
+- runtime slider `1280x720` - canvas/WebGL есть, переход `Next project` работает;
+- opened state `1280x720` - кнопка `Смотреть` открывает fullscreen, canvas/WebGL остается активным;
+- browser console errors - `0`;
+- Next MCP `get_errors` - `0`;
+- slider screenshot: `.playwright-mcp/page-2026-05-11T22-42-50-131Z.png`;
+- opened screenshot: `.playwright-mcp/page-2026-05-11T22-43-15-326Z.png`.
+
+Результат: отклонена по визуальной оценке пользователя.
+
+Откат: `containMix = 1.0` удален перед проверкой следующей гипотезы.
+
+## Проверка полного видео: гипотеза 2
+
+Гипотеза: видео можно показывать полностью через foreground `contain`, а пустые зоны внутри широкого кадра закрывать затемненным cover-фоном из того же видео. Это должно сохранить смысл просмотра полного видео и не оставить кадр пустым.
+
+Проверочная правка:
+
+- foreground sampling: `containUv()` + `containMask()`;
+- background sampling: `coverUv()` из той же texture;
+- background затемнен через `* 0.34`;
+- background слегка размыт через 5 texture samples;
+- применяется ко всем состояниям: center, side, transition, fullscreen.
+
+Проверка:
+
+- `npm run lint` - без errors, остались старые warnings вне `cinematic_new`;
+- `npm run build` - успешно;
+- runtime slider `1280x720` - canvas/WebGL есть, переход `Next project` работает;
+- opened state `1280x720` - кнопка `Смотреть` открывает fullscreen, canvas/WebGL остается активным;
+- browser console errors - `0`;
+- Next MCP `get_errors` - `0`;
+- slider screenshot: `.playwright-mcp/page-2026-05-11T22-50-19-583Z.png`;
+- opened screenshot: `.playwright-mcp/page-2026-05-11T22-50-31-392Z.png`.
+
+Результат: отклонена по визуальной оценке пользователя.
+
+Откат: shader возвращен к чистому `cover` перед проверкой следующей гипотезы.
+
+## Проверка полного видео: гипотеза 3
+
+Гипотеза: если aspect слайда совпадает с aspect видео (`16:9`), можно оставить чистый `cover` без полос, opacity-подложек и contain-масок, при этом видео будет видно максимально полно.
+
+Проверочная правка:
+
+- shader возвращен к чистому `cover`;
+- desktop `centerAspect: 16 / 6.4 -> 16 / 9`;
+- mobile `centerAspect: 16 / 6.2 -> 16 / 9`;
+- `sideWidth = centerWidth` и `sideHeight = centerHeight` остаются активны.
+
+Расчет после правки:
+
+- `1280x720`: center `691.2x388.8`, aspect `1.78`;
+- `1920x1080`: center `1155.6x650.0`, aspect `1.78`;
+- `3400x1080`: center `1155.6x650.0`, aspect `1.78`;
+- `390x844`: center `351.0x197.4`, aspect `1.78`.
+
+Проверка:
+
+- `npm run lint` - без errors, остались старые warnings вне `cinematic_new`;
+- `npm run build` - успешно;
+- runtime slider `1280x720` - canvas/WebGL есть, переход `Next project` работает;
+- opened state `1280x720` - кнопка `Смотреть` открывает fullscreen, canvas/WebGL остается активным;
+- browser console errors - `0`;
+- Next MCP `get_errors` - `0`;
+- slider screenshot: `.playwright-mcp/page-2026-05-11T23-24-09-411Z.png`;
+- opened screenshot: `.playwright-mcp/page-2026-05-11T23-24-20-812Z.png`.
+
+Статус: `testing`, нужна визуальная оценка. Важный tradeoff: слайд теперь совпадает с `16:9`, но широкая форма киноленты из Figma заметно меняется.
+
+## Проверка opened/fullscreen: cover при раскрытии
+
+Требование уточнено: вокруг видео в opened/fullscreen не должно быть пустой области. Значит opened должен работать как `cover`.
+
+Проверочная правка:
+
+```glsl
+float openedMix = uActive * uTransitionProgress;
+float containMix = 0.0;
+```
+
+Эффект:
+
+- slider state остается чистым `cover`;
+- opened state тоже остается `cover`, поэтому экран заполнен без пустой области;
+- shader использует `openedMix`, чтобы отключать vignette/frame-edge эффекты в opened.
+
+Дополнительная корректировка:
+
+- гипотеза `16:9` для самой ленты отменена: desktop aspect возвращен к `16 / 6.4`, mobile к `16 / 6.2`;
+- при opened active plane `uDarkness` уводится в `0`;
+- shader выключает vignette/frame-edge затемнение при `openedMix = 1.0`, чтобы opened video отображалось чисто.
+
+Важно: `cover` убирает пустую область, но при несовпадении aspect экрана и видео часть изображения неизбежно обрезается. Это физическое ограничение object-fit/background-size cover.
+
+Финальная проверка после корректировки:
+
+- `npm run lint` - без errors, остались старые warnings вне `cinematic_new`;
+- `npm run build` - успешно;
+- opened state `1280x720` - кнопка `Смотреть` открывает fullscreen, canvas/WebGL остается активным;
+- browser console errors/warnings - `0`;
+- Next MCP `get_errors` - `0`;
+- opened screenshot: `.playwright-mcp/page-2026-05-11T23-41-43-785Z.png`.
+
+Статус: `testing`, нужна визуальная оценка opened/fullscreen.
+
 ## Отклоненная проверка: sampling-size отдельно от geometry-size
 
 Гипотеза: часть ощущения разрыва движения может давать не позиция ленты, а изменение video cover-кропа при переходе. Раньше shader использовал `uPlaneSize` и для физической геометрии кадра, и для `coverUv()`. Поэтому при интерполяции `frameWidth` от center к side видео внутри кадра могло заметно менять масштаб/кроп.
