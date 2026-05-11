@@ -359,7 +359,7 @@ await new Promise((resolve) => setTimeout(resolve, 650));
 - В `SliderScene.ts` desktop center увеличен с `0.71/0.74` до `0.78/0.82` viewport width.
 - Desktop aspect изменен с `16 / 4.15` на `16 / 5.2`, чтобы полный contain-video не становился слишком мелким в сверхузкой полосе.
 - Desktop `maxHeightRatio` увеличен с `0.38` до `0.46`, tall desktop target с `550` до `600`.
-- Desktop side frames увеличены через `sideVisibleRatio: 0.34` и `sideScale: 1.02`.
+- Desktop side frames сначала увеличивались через `sideVisibleRatio: 0.34` и `sideScale: 1.02`; затем для проверки wide-desktop поведения `sideScale` ограничен до `0.72`.
 - Mobile center увеличен до `0.9/0.94`, aspect до `16 / 5`, `maxHeightRatio` до `0.5`.
 - В shader `containMix` включен через `uActive`, то есть contain применяется к активному центральному кадру.
 - Чтобы центральный слайд не стал прозрачным по краям, contain-видео композится поверх затемненного cover-background внутри того же plane.
@@ -428,6 +428,104 @@ await new Promise((resolve) => setTimeout(resolve, 650));
 - Mid-transition screenshot `650ms`: центр визуально дольше сохраняет крупный ленточный масштаб; раннее схлопывание стало заметно слабее.
 
 ## Этапы еще не выполнены / требуют финальной проверки
+
+## Протокол проверки motion-гипотез
+
+Правило: проверять только одну гипотезу за раз. После проверки код гипотезы должен быть полностью откатан до baseline, прежде чем применять следующую гипотезу.
+
+Baseline на момент старта протокола:
+
+- `uPlaneSize` используется и для geometry, и для `coverUv()` / `containUv()` / `containMask()`;
+- `containMix = 0.0`;
+- desktop `sideScale = 1.02`;
+- `sideMinScale` отсутствует;
+- `sideWidth = Math.min(sideVisibleWidth / sideVisibleRatio, centerWidth * sideScale)`;
+- motion идет через `slidePosition`, `slideProgress`, `transitionPulse`, `sideProgress`, `slideVelocity`;
+- отклоненные ранее проверки не активны в коде.
+
+Текущий зафиксированный baseline после подтверждения гипотезы 2:
+
+- `sideWidth = centerWidth` для desktop и mobile;
+- `sideHeight = centerHeight`;
+- side visibility достигается через viewport crop и позицию plane, а не через уменьшение side plane.
+
+Единый сценарий проверки для каждой гипотезы:
+
+- viewport `1920x1080`: static, mid-transition `320ms`, mid-transition `650ms`, after transition;
+- viewport `3400x1080` или ближайший wide desktop: static, mid-transition `320ms`, mid-transition `650ms`, after transition;
+- проверить `open()` / `close()`;
+- проверить canvas nonblank, browser console errors, Next MCP `get_errors`;
+- при необходимости прогнать `npm run lint` и `npm run build`.
+
+| # | Гипотеза | Что меняем | Файлы | Проверка | Результат | Статус | Откат |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Слайд как маска, видео как фиксированный media-rect | `uMediaPlaneSize`; video UV считается через local position внутри фиксированного media-rect | `VideoPlane.ts`, `shaders/videoPlane.ts`, `SliderScene.ts` | `lint`, `build`, runtime `1280x720`, mid-transition screenshot | Runtime ok; возможно рабочая, нужна отдельная визуальная проверка | possible | yes |
+| 2 | Одинаковый aspect у center/side, боковая видимость через viewport crop | `sideWidth = centerWidth` для desktop и mobile | `SliderScene.ts` | `1920/3400` расчет, mobile расчет `390/430/768`, runtime `1280x720`, console, build | Подтверждена на desktop и mobile; side равен center, aspect morph между ролями убран | confirmed | no |
+| 3 | Contain внутри фиксированного media-rect | TBD | TBD | TBD | TBD | pending | no |
+| 4 | Global UV / одна логика киноленты вместо per-plane cover | TBD | TBD | TBD | TBD | pending | no |
+| 5 | Не менять размер кадра во время transition | TBD | TBD | TBD | TBD | pending | no |
+| 6 | Подготовить wide video asset под aspect киноленты | TBD | TBD | TBD | TBD | pending | no |
+
+## Отклоненная проверка: sampling-size отдельно от geometry-size
+
+Гипотеза: часть ощущения разрыва движения может давать не позиция ленты, а изменение video cover-кропа при переходе. Раньше shader использовал `uPlaneSize` и для физической геометрии кадра, и для `coverUv()`. Поэтому при интерполяции `frameWidth` от center к side видео внутри кадра могло заметно менять масштаб/кроп.
+
+Было сделано:
+
+- В `VideoPlaneLayout` добавлены `samplingWidth` и `samplingHeight`.
+- В `VideoPlane.ts` добавлен uniform `uSamplingPlaneSize`.
+- В `shaders/videoPlane.ts` `coverUv()`, `containUv()` и `containMask()` теперь используют `uSamplingPlaneSize`, а `uPlaneSize` остается для геометрии и rounded mask.
+- В `SliderScene.ts` sampling-size в статике совпадает с физическим размером кадра, а во время `sliding` мягче переходит от center к side.
+- В `open()`, `close()` и `resize()` `uSamplingPlaneSize` синхронизирован с fullscreen/slider состояниями, чтобы не ломать fullscreen crop.
+
+Результат:
+
+- поведение стало хуже;
+- видео стало восприниматься как отделенное от геометрии кадра;
+- правка откатана: `uSamplingPlaneSize` удален, shader снова использует `uPlaneSize` для geometry и cover sampling.
+
+## Отклоненная проверка: ограничить side width на wide desktop
+
+Гипотеза: на wide viewport (`3400px+`) боковые кадры становятся почти равны центральному по ширине, поэтому движение там выглядит намного мягче, чем на `1920px`. Нужно ограничить максимальную ширину бокового кадра, чтобы wide desktop не жил по другой visual model.
+
+Было сделано:
+
+- В `DESKTOP_FILM_STRIP_LAYOUT` `sideScale` изменялся с `1.02` на `0.72`.
+
+Расчет после правки:
+
+- `1920x1080`: side остается `474.4x599.0`, потому что его ограничивает доступное место/`sideVisibleRatio`, а не `sideScale`.
+- `3400x1080`: side становится `1170.0x650.0` вместо прежних `1657.5x650.0`.
+- `3400x1440`: side становится `1399.7x777.6` вместо прежних `1935.3x777.6`.
+
+Результат:
+
+- поведение стало хуже;
+- правка откатана: `sideScale` возвращен в `1.02`.
+
+## Отклоненная проверка: поднять минимальную side width на desktop
+
+Гипотеза: на `1920` боковой кадр физически слишком узкий, хотя видимая часть у края viewport должна оставаться небольшой. Можно увеличить реальную ширину side plane и сильнее увести ее за viewport, не меняя gap и видимую долю.
+
+Было сделано:
+
+- В `FilmStripLayoutConfig` добавлен `sideMinScale?: number`.
+- В `DESKTOP_FILM_STRIP_LAYOUT` добавлен `sideMinScale: 0.58`.
+- `sideWidth` теперь считается через clamp между `centerWidth * sideMinScale` и `centerWidth * sideScale`.
+
+Расчет после правки:
+
+- `1280x720`: side `563.8x388.8`, side aspect `1.45`, mid aspect около `1.83`.
+- `1920x1080`: side `868.6x599.0`, side aspect `1.45`, mid aspect около `1.83`.
+- `3400x1080`: side остается `1657.5x650.0`, side aspect `2.55`.
+- `3400x1440`: side остается `1935.3x777.6`, side aspect `2.49`.
+
+Результат:
+
+- проверка отклонена по запросу пользователя;
+- правка откатана: `sideMinScale` удален;
+- на тот момент `sideWidth` снова считался как `Math.min(sideVisibleWidth / sideVisibleRatio, centerWidth * sideScale)`;
+- позже эта формула заменена подтвержденной гипотезой 2: `sideWidth = centerWidth`.
 
 ## Гипотеза: чистый contain для центрального кадра
 

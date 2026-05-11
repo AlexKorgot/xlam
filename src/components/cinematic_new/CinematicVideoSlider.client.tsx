@@ -191,10 +191,10 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       className={`font-normalidad group relative isolate h-[100svh] min-h-[620px] w-full overflow-hidden bg-[#050706] text-white ${className}`}
       aria-label="Cinematic project slider"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,#030403_0%,#07110c_24%,#020302_100%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(102,255,102,0.16)_0%,rgba(30,76,48,0.12)_31%,rgba(0,0,0,0)_62%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.3)_14%,rgba(0,0,0,0)_50%,rgba(0,0,0,0.32)_86%,rgba(0,0,0,0.92)_100%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.05)_36%,rgba(0,0,0,0.16)_63%,rgba(0,0,0,0.78)_100%)]" />
+      {/*<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,#030403_0%,#07110c_24%,#020302_100%)]" />*/}
+      {/*<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(102,255,102,0.16)_0%,rgba(30,76,48,0.12)_31%,rgba(0,0,0,0)_62%)]" />*/}
+      {/*<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.3)_14%,rgba(0,0,0,0)_50%,rgba(0,0,0,0.32)_86%,rgba(0,0,0,0.92)_100%)]" />*/}
+      {/*<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.05)_36%,rgba(0,0,0,0.16)_63%,rgba(0,0,0,0.78)_100%)]" />*/}
 
       <div ref={canvasHostRef} className="absolute inset-0 z-0 cursor-pointer touch-manipulation" />
 

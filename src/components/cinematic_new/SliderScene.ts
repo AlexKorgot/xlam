@@ -689,9 +689,8 @@ export class SliderScene {
     const centerWidth = centerHeight < centerHeightByRatio ? centerHeight * config.centerAspect : centerWidthByRatio;
     const gap = clamp(width * config.gap.ratio, config.gap.min, config.gap.max);
     const visibleSpaceBesideCenter = Math.max(width / 2 - centerWidth / 2 - gap, 1);
-    const maxSideWidth = centerWidth * config.sideScale;
     const sideVisibleWidth = visibleSpaceBesideCenter;
-    const sideWidth = Math.min(sideVisibleWidth / config.sideVisibleRatio, maxSideWidth);
+    const sideWidth = centerWidth;
     const sideHeight = centerHeight;
 
     return {
