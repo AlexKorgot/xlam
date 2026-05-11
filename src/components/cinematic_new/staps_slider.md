@@ -27,6 +27,7 @@ https://www.figma.com/design/wvU80E5h11zr2RbfUkk8yc/design?node-id=506-802&m=dev
 - `VideoPlane.ts` - shader mesh wrapper.
 - `shaders/videoPlane.ts` - vertex/fragment shader, cover crop, bend, opacity, velocity.
 - `data.ts` - слайды и video sources.
+- `motion_architecture.md` - архитектура движения ленты, причины viewport-зависимого поведения и гипотезы улучшения motion.
 - `summary_slider.md` - план и промежуточные итоги.
 - `staps_slider.md` - текущая рабочая сводка для продолжения после сжатия контекста.
 
@@ -50,17 +51,23 @@ https://www.figma.com/design/wvU80E5h11zr2RbfUkk8yc/design?node-id=506-802&m=dev
 
 Добавлен `getFilmStripFrameMetrics()`.
 
-Размеры теперь считаются от viewport:
+Размеры теперь считаются от viewport.
 
-- desktop center width ratio: `0.71`;
-- desktop max width ratio: `0.74`;
-- desktop aspect сейчас `16 / 4.15`;
-- desktop max height ratio `0.38`;
+Текущий код:
+
+- desktop center width ratio: `0.78`;
+- desktop max width ratio: `0.82`;
+- desktop aspect сейчас `16 / 6.4`;
+- desktop max height ratio `0.54`;
 - tall desktop rule:
   - включается от viewport height `960`;
-  - стремится к `550px`;
-  - но не выше `52%` viewport height;
-  - и не выше aspect-limit.
+  - стремится к `650px`;
+  - но не выше `64%` viewport height;
+  - и не выше aspect-limit;
+- mobile center width ratio: `0.9`;
+- mobile max width ratio: `0.94`;
+- mobile aspect сейчас `16 / 6.2`;
+- mobile max height ratio `0.58`.
 
 Ширину после запроса пользователя не трогать без отдельного согласования.
 
@@ -220,25 +227,26 @@ Object-position инфраструктуру оставить. Она полез
 
 ## Текущая нерешенная проблема
 
-Пользователь сказал: "ничего не поменялось" после правки contain/renderOrder.
+Главный оставшийся риск - визуальный, а не архитектурный: нужно финально проверить overlap/ощущение движения в середине transition на разных viewport.
 
-Анализ:
+Что уже исправлено:
 
-1. `containMix = 0.0`, поэтому contain неактивен. Это сделано намеренно после плохого визуального теста.
-2. `renderOrder` сам по себе не решает overlap при движении.
-3. Реальная причина overlap в движении:
-   - во время transition кадры имеют промежуточные offsets;
-   - ширина интерполируется от centerWidth к sideWidth;
-   - два кадра могут быть одновременно крупными и близкими;
-   - надо менять transition geometry, а не только render order.
+- `renderOrder` сам по себе не считался решением overlap.
+- В `SliderScene.ts` добавлены `slideProgress`, `transitionPulse`, временный `transitionGap` и ускоренный `sideProgress`.
+- Агрессивность transition geometry позже ослаблена, чтобы центр не схлопывался слишком рано и лента не растягивалась в середине перехода.
+- `containMix` в shader сейчас `0.0`; активный центральный кадр не использует contain. Текущий путь - чистый `cover` + `videoObjectPosition`.
+
+Что еще не закрыто:
+
+- нет финальной адаптивной проверки `1280x720`, `1440x900`, `1920x1080`, wide desktop и mobile;
+- нет финального mid-transition сравнения после всех последних UI/geometry правок;
+- нет финальной runtime-валидации после всех изменений.
 
 ## Что нужно делать дальше
 
-Не переходить слепо к этапу 8, пока не исправлен overlap/motion.
+Следующий этап - не новая архитектурная правка, а проверка текущего варианта.
 
-Следующий технический шаг:
-
-### A. Исправить transition geometry
+### A. Проверить transition geometry
 
 Идея:
 
@@ -246,7 +254,7 @@ Object-position инфраструктуру оставить. Она полез
 - во время sliding добавить dynamic separation или width compensation;
 - кадры в промежуточной зоне не должны заходить друг на друга.
 
-Возможные решения:
+Если mid-transition все еще показывает overlap или плохое ощущение движения, тогда возможные решения:
 
 1. Dynamic gap during transition:
    - когда `mode === 'sliding'`, увеличивать gap/sideX на основе `velocityPulse`;
@@ -271,7 +279,7 @@ Object-position инфраструктуру оставить. Она полез
      ```
    - сложнее, но правильнее.
 
-Рекомендация:
+Рекомендация при обнаружении проблемы:
 
 - сначала пробовать вариант 2 + небольшой dynamic gap;
 - если не хватит, перейти к варианту 3.
@@ -313,7 +321,7 @@ Contain ломает крупность центрального кадра.
 - Статичный layout не должен измениться: при `mode !== 'sliding'` `transitionPulse = 0`.
 - Ширина базового central frame не изменялась.
 - `sideHeight = centerHeight` не трогался.
-- На момент этой правки `containMix` еще был выключен; после требования full central video он включен через `uActive`.
+- На момент этой правки `containMix` был выключен. Позже contain проверяли через `uActive`, но после визуального теста снова вернули `containMix = 0.0`.
 - Это первый слой исправления. После проверки mid-transition screenshot нужно решить, достаточно ли варианта "faster width role transition + dynamic gap" или нужен min-distance constraint.
 
 Следующая проверка:
@@ -419,7 +427,7 @@ await new Promise((resolve) => setTimeout(resolve, 650));
 - Playwright screenshot `1280x720`: центр стал выше, crop меньше, сцена остается цельной без contain-подложек.
 - Mid-transition screenshot `650ms`: центр визуально дольше сохраняет крупный ленточный масштаб; раннее схлопывание стало заметно слабее.
 
-## Этапы еще не выполнены
+## Этапы еще не выполнены / требуют финальной проверки
 
 ## Гипотеза: чистый contain для центрального кадра
 
@@ -507,7 +515,7 @@ float containMix = uActive;
 - Browser console - без errors/warnings, кроме dev info/HMR.
 - Playwright screenshots сделаны для initial, opened и closed states.
 
-### 9. Подогнать UI под Figma - в работе
+### 9. Подогнать UI под Figma - частично выполнено, требует финальной визуальной проверки
 
 Первый UI-pass:
 
@@ -544,15 +552,13 @@ float containMix = uActive;
 - Next MCP `get_errors` - без ошибок.
 - Browser console - без errors/warnings, кроме dev info/HMR/Fast Refresh.
 
-Нужно:
+Осталось:
 
-- темный фон вместо текущего teal `#458294`, если нужна строгая близость к Figma;
-- мягкое свечение за лентой;
-- позиция heading;
-- позиция active label;
-- проверить, что текст не конфликтует с видео.
+- проверить UI на целевых viewport;
+- проверить, что heading, active label и controls не конфликтуют с видео;
+- при необходимости точечно поправить позиции DOM overlay.
 
-### 10. Проверить адаптив - не выполнено
+### 10. Проверить адаптив - следующий этап, не выполнено финально
 
 Нужно проверить:
 
@@ -562,7 +568,7 @@ float containMix = uActive;
 - wide desktop;
 - mobile.
 
-Особенно проверить tall desktop rule для 550px.
+Особенно проверить tall desktop rule для `650px`.
 
 ### 11. Runtime-проверка - частично выполнялась, но финально не выполнена
 
@@ -599,7 +605,7 @@ float containMix = uActive;
 - Не трогать ширину без согласования.
 - Не уменьшать боковые по высоте: `sideHeight = centerHeight`.
 - `frustumCulled = false` обязателен для shader-expanded planes.
-- `containMix` больше не выключен: после требования full central video он включен через `uActive` для активного центрального кадра.
-- Текущий главный нерешенный вопрос: overlap/ощущение движения в середине transition.
+- `containMix` сейчас выключен: `float containMix = 0.0;`. Текущий компромисс - `cover + videoObjectPosition`, без contain-полей и без затемненной contain-подложки.
+- Текущий главный нерешенный вопрос: финально проверить overlap/ощущение движения в середине transition на всех целевых viewport.
 - Хороший статичный вид уже есть: центр широкий, боковые видны, высота единая.
-- Дальше надо чинить именно transition geometry.
+- Дальше сначала проверять адаптив и mid-transition; чинить transition geometry только если проверка покажет проблему.
