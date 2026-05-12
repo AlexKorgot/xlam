@@ -115,19 +115,16 @@ export const videoPlaneFragmentShader = `
     motionUv.x += (vUv.y - 0.5) * uVelocity * 0.016;
 
     float openedMix = uActive * uTransitionProgress;
-    float containMix = 0.0;
-    vec2 coverCurrentUv = coverUv(motionUv, uPlaneSize, uMediaSize, uObjectPosition);
-    vec2 coverNextUv = coverUv(motionUv, uPlaneSize, uNextMediaSize, uObjectPosition);
     vec2 containCurrentUv = containUv(motionUv, uPlaneSize, uMediaSize);
     vec2 containNextUv = containUv(motionUv, uPlaneSize, uNextMediaSize);
-    vec2 uv = mix(coverCurrentUv, containCurrentUv, containMix);
-    vec2 nextUv = mix(coverNextUv, containNextUv, containMix);
-    float currentContainMask = mix(1.0, containMask(motionUv, uPlaneSize, uMediaSize), containMix);
-    float nextContainMask = mix(1.0, containMask(motionUv, uPlaneSize, uNextMediaSize), containMix);
+    float currentContainMask = containMask(motionUv, uPlaneSize, uMediaSize);
+    float nextContainMask = containMask(motionUv, uPlaneSize, uNextMediaSize);
 
-    vec4 currentColor = texture2D(uTexture, clamp(uv, vec2(0.0), vec2(1.0))) * currentContainMask;
-    vec4 nextColor = texture2D(uNextTexture, clamp(nextUv, vec2(0.0), vec2(1.0))) * nextContainMask;
-    vec4 color = mix(currentColor, nextColor, uTextureMix);
+    vec4 currentColor = texture2D(uTexture, clamp(containCurrentUv, vec2(0.0), vec2(1.0)));
+    vec4 nextColor = texture2D(uNextTexture, clamp(containNextUv, vec2(0.0), vec2(1.0)));
+    vec4 videoColor = mix(currentColor, nextColor, uTextureMix);
+    float videoMask = mix(currentContainMask, nextContainMask, uTextureMix);
+    vec4 color = vec4(mix(vec3(0.0), videoColor.rgb, videoMask), videoColor.a);
 
     float horizontalEdge = smoothstep(0.0, 0.18, vUv.x) * smoothstep(1.0, 0.82, vUv.x);
     float verticalEdge = smoothstep(0.0, 0.12, vUv.y) * smoothstep(1.0, 0.88, vUv.y);
