@@ -56,6 +56,42 @@ motionUv.x += (vUv.y - 0.5) * uVelocity * 0.016;
 
 Именно это добавляет ощущение движения видеопленки, а не только перемещения карточек.
 
+## Как работает opened-навигация
+
+Opened-режим больше не переключает контент мгновенной подменой active plane.
+
+Публичные методы:
+
+- `nextOpened()` вызывает `shiftOpenedSlide(1)`;
+- `previousOpened()` вызывает `shiftOpenedSlide(-1)`;
+- если сцена уже в `opened`, управление переходит в `slideOpenedTo(direction)`.
+
+`slideOpenedTo()` вводит промежуточное состояние `openedSliding`:
+
+- `fromPlane` - текущий fullscreen кадр;
+- `targetPlane` - соседний кадр, который должен стать fullscreen;
+- `targetPlane` заранее ставится за экран по X, получает fullscreen `uPlaneSize`, `uTransitionProgress = 1`, `uBend = 0`, `uCornerRadius = 0`, `uOpacity = 1`;
+- `fromPlane` уходит в противоположную сторону;
+- target приходит в `x = 0`;
+- React получает новый `activeIndex` примерно в середине перехода, когда DOM details скрыты;
+- по завершении вызывается `applyOpenedLayout(targetIndex)`.
+
+Смысл: opened-навигация теперь является вторым режимом слайдера, а не мгновенной заменой видео и текста.
+
+## Как синхронизирован DOM-контент opened
+
+DOM details живут в `CinematicVideoSlider.client.tsx` и завязаны на `overlayState`.
+
+Текущие правила:
+
+- `opening`: details появляются с задержкой после начала WebGL morph;
+- `opened`: не перезапускает появление, если details уже были показаны в `opening`;
+- `openedSliding`: details уходят в `autoAlpha: 0`, чтобы смена `activeIndex` не выглядела мгновенной подменой текста;
+- `closing`: слой details остается видимым, а элементы уходят тем же профилем, что появлялись (`duration`, `stagger`, `y`);
+- `slider`: details скрыты и недоступны для pointer events.
+
+Причина guard на `opening -> opened`: если повторно запускать `gsap.fromTo(detailItems, { autoAlpha: 0 }, { autoAlpha: 1 })` при смене `overlayState`, контент мигает, потому что уже показанные элементы снова сбрасываются в невидимое состояние.
+
 ## Роли кадров
 
 `getSlideRole(offset)` задает визуальную роль:
@@ -74,6 +110,20 @@ motionUv.x += (vUv.y - 0.5) * uVelocity * 0.016;
 - то, насколько кадр считается частью видимой ленты или буфером.
 
 Reset видео выполняется только когда кадр уходит в `sleeping`. Это важно: кадр, который только вышел за край, еще может понадобиться при обратном движении.
+
+## Подготовка hidden planes после opened-навигации
+
+После `slideOpenedTo()` неактивные planes нельзя оставлять в остаточных fullscreen/opened координатах. Иначе при `close()` они начинают анимироваться из старого центра или из позиции предыдущего opened-перехода к side/buffer layout, и визуально кажется, что боковые кадры вылетают из центрального слайда.
+
+Текущий контракт `applyOpenedLayout(targetIndex)`:
+
+- active target plane фиксируется fullscreen в `x = 0`, `uTransitionProgress = 1`, `uOpacity = 1`;
+- каждый inactive plane получает свой `offset = centeredOffset(index, slidePosition, total)`;
+- для него считается `layout = getLayoutForOffset(offset)`;
+- position, rotation, scale, `uPlaneSize`, `uStripOffset`, bend/radius/edge/darkness/curveScale приводятся к будущей slider-раскладке;
+- opacity остается `0`, velocity `0`, `uTransitionProgress = 0`, а `z` ставится глубже.
+
+Смысл: при последующем `close()` боковые кадры уже ждут в своих side/buffer координатах и только проявляются/доворачиваются вместе с центральным morph.
 
 ## Геометрия кадра
 
@@ -384,6 +434,7 @@ minDistance = (currentWidth + neighborWidth) / 2 + gap;
 - `next` на `650ms`;
 - after transition;
 - opened/closed.
+- opened navigation: `open -> nextOpened/previousOpened -> close`.
 
 Их нужно проверять на `1280x720`, `1440x900`, `1920x1080`, wide desktop и mobile. Главный дефект может быть виден только в середине transition.
 

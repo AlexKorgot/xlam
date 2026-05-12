@@ -760,8 +760,20 @@ export class SliderScene {
         return;
       }
 
+      const offset = centeredOffset(index, this.slidePosition, this.slides.length);
+      const layout = this.getLayoutForOffset(offset);
+
       plane.mesh.renderOrder = 1;
-      plane.mesh.position.set(plane.mesh.position.x, plane.mesh.position.y, -180);
+      plane.mesh.position.set(layout.x, layout.y, -180);
+      plane.mesh.rotation.set(0, layout.rotationY, 0);
+      plane.setScale(layout.scaleX, layout.scaleY);
+      plane.uniforms.uPlaneSize.value.set(layout.width, layout.height);
+      plane.uniforms.uStripOffset.value = layout.stripX;
+      plane.uniforms.uBend.value = layout.bend;
+      plane.uniforms.uCornerRadius.value = layout.cornerRadius;
+      plane.uniforms.uEdgeCurve.value = layout.edgeCurve;
+      plane.uniforms.uCurveScale.value = layout.curveScale;
+      plane.uniforms.uDarkness.value = layout.darkness;
       plane.uniforms.uOpacity.value = 0;
       plane.uniforms.uTransitionProgress.value = 0;
       plane.uniforms.uVelocity.value = 0;

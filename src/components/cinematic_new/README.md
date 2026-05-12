@@ -65,6 +65,10 @@ https://www.figma.com/design/wvU80E5h11zr2RbfUkk8yc/design?node-id=506-802&m=dev
 - `frustumCulled = false` обязателен для shader-expanded planes;
 - motion использует `slidePosition`, `slideProgress`, `transitionPulse` и `slideVelocity`;
 - `open()` / `close()` fullscreen проверены и не создают второй DOM-video;
+- opened-навигация больше не является мгновенной подменой fullscreen plane: `nextOpened()` / `previousOpened()` переводят сцену в `openedSliding`, текущий fullscreen plane уходит в сторону, следующий входит в центр, а DOM details синхронно гаснут и появляются заново;
+- при переходе `opening -> opened` DOM details не перезапускают `fromTo()`, поэтому контент не мигает повторным сбросом в `autoAlpha: 0`;
+- при `closing` слой details остается видимым до завершения обратной GSAP-анимации, а исчезновение зеркалит появление по duration/stagger/y;
+- после opened-навигации `applyOpenedLayout()` нормализует скрытые planes в их будущие slider-layout позиции с `opacity: 0`, чтобы при `close()` боковые кадры не вылетали из центральной fullscreen-позиции;
 - фон/DOM overlay переведены на темный Figma-like pass.
 
 Текущий shader-компромисс:
@@ -81,7 +85,7 @@ https://www.figma.com/design/wvU80E5h11zr2RbfUkk8yc/design?node-id=506-802&m=dev
 - desktop адаптив `1280x720`, `1440x900`, `1920x1080`, wide desktop;
 - mobile layout;
 - UI overlay на целевых viewport;
-- финальные Playwright screenshots, canvas nonblank, console errors и Next MCP `get_errors`;
+- финальные Playwright screenshots на целевых viewport, canvas nonblank, console errors и Next MCP `get_errors`;
 - финальные `npm run lint` и `npm run build`.
 
 ## Правильное архитектурное решение
@@ -272,7 +276,13 @@ if (role === 'sleeping' && wasBufferOrVisibleBefore) {
 - остальные плоскости уходят в opacity/depth;
 - DOM details появляется после WebGL morph.
 
-Менять это нужно только после приведения базовой киноленты к Figma.
+Opened-навигация теперь является отдельным режимом этой же сцены:
+
+- состояние `openedSliding` используется только между двумя fullscreen-слайдами;
+- текущий fullscreen plane уходит по X, target plane входит из противоположной стороны;
+- `activeIndex` уведомляет React в середине перехода, когда DOM details уже скрыты;
+- после завершения target plane фиксируется как opened, а неактивные planes заранее раскладываются по будущей slider-геометрии с `opacity: 0`;
+- это сохраняет корректный `close()` после opened-навигации: боковые кадры появляются из side/buffer-позиций, а не из остаточного центра.
 
 ## План реализации
 
@@ -288,11 +298,15 @@ if (role === 'sleeping' && wasBufferOrVisibleBefore) {
 10. `[x]` Подкрутить `slideTo()`: duration/ease/`slideVelocity`, чтобы движение ощущалось как прокрутка ленты.
 11. `[x]` Подкрутить `bend`, `edgeCurve`, `rotationY`, `darkness` и `renderOrder`, чтобы боковые читались как часть одной ленты.
 12. `[x]` Проверить `open()` и `close()` после новой геометрии, особенно возврат из fullscreen в точные позиции трех кадров.
+12.1. `[x]` Добавить opened-навигацию через `openedSliding`, чтобы контент и fullscreen plane переключались вместе.
+12.2. `[x]` Убрать повторный запуск details-анимации при переходе `opening -> opened`.
+12.3. `[x]` Сделать исчезновение details при `closing` зеркальным появлению.
+12.4. `[x]` Нормализовать скрытые planes после opened-навигации, чтобы `close()` не вытягивал боковые кадры из центра.
 13. `[~]` Обновить фон/оверлей в `CinematicVideoSlider.client.tsx`: первый и второй UI-pass выполнены, нужна финальная проверка на viewport.
 14. `[ ]` Проверить desktop resize: 1280, 1440, 1920, wide desktop; пропорции должны сохраняться.
 15. `[ ]` Проверить mobile отдельно: упрощенная геометрия без плотного desktop-эффекта.
-16. `[ ]` Проверить через Playwright screenshots, canvas nonblank, console errors и Next MCP `get_errors`.
-17. `[ ]` После кода запустить финальные `npm run lint` и `npm run build`.
+16. `[~]` Проверить через Playwright screenshots, canvas nonblank, console errors и Next MCP `get_errors`: сценарий `open -> next opened -> close` проверен на dev server, полный viewport sweep еще нужен.
+17. `[x]` После последних правок запустить `npm run lint` и `npm run build`.
 
 ## Файлы, которые вероятно придется менять
 
@@ -313,5 +327,7 @@ if (role === 'sleeping' && wasBufferOrVisibleBefore) {
 - Во время перехода появляется ощущение прокрутки киноленты, а не простого fade/slide карточек.
 - Слайды изогнуты, но видео не растягивается.
 - Открытие активного кадра в fullscreen не создает второй DOM-video и не ломает WebGL lifecycle.
+- В opened-состоянии next/previous переключает fullscreen plane и DOM details синхронно, без мгновенной подмены контента.
+- При закрытии после opened-навигации боковые кадры возвращаются из подготовленных side/buffer-позиций, а не вылетают из центра.
 - Нет Next.js runtime errors, browser console errors, hydration warnings.
 - `npm run lint` и `npm run build` проходят.

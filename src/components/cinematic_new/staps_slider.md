@@ -1112,3 +1112,66 @@ vec2 coverNextUv = wideCropCoverUv(motionUv, uPlaneSize, uNextMediaSize, uObject
 Статус: гипотеза не дала полезного визуального отличия. Проверочная shader-правка откатана, код возвращен к обычному `coverUv()`.
 
 Вывод: проблема не в том, что shader не умеет сделать horizontal crop. Он уже делает близкий crop автоматически через `cover`. Для заметного улучшения нужен не shader-crop того же ролика, а реально подготовленный материал: другая композиция в кадре, отдельный wide-export с правильно размещенным действием, либо отдельные файлы для carousel/opened.
+
+## Opened navigation и close после навигации - актуальное состояние
+
+Запрос: в opened-состоянии слайдер должен продолжать работать как слайдер, а не мгновенно подменять контент. Если пользователь открыл слайд, перешел на соседний opened-слайд и затем закрыл его, боковые кадры не должны вылетать из центра.
+
+### Что изменено
+
+- В `types.ts` добавлено состояние `openedSliding`.
+- В `SliderScene.ts` `nextOpened()` / `previousOpened()` теперь запускают `slideOpenedTo(direction)`.
+- `slideOpenedTo()` анимирует два fullscreen plane:
+  - текущий plane уходит по X;
+  - target plane входит с противоположной стороны;
+  - `activeIndex` уведомляет React примерно в середине перехода.
+- В `CinematicVideoSlider.client.tsx` DOM details:
+  - скрываются во время `openedSliding`;
+  - не перезапускают `fromTo()` при переходе `opening -> opened`;
+  - при `closing` уходят тем же профилем, что появлялись;
+  - close button сделана текстовой `Закрыть` с `GlitchText`.
+- В `applyOpenedLayout(targetIndex)` hidden planes теперь нормализуются в будущие slider-layout координаты через `getLayoutForOffset(offset)`, но остаются `opacity: 0` и глубже по `z`.
+
+### Подтвержденная гипотеза
+
+Проблема "боковые слайды вылетают из центрального при close после opened-навигации" была вызвана тем, что hidden planes сохраняли остаточные opened/fullscreen X-позиции.
+
+`close()` всегда анимирует каждый plane из текущей позиции к `getLayoutForOffset(offset)`. Если inactive plane перед close стоял около центра или в координате предыдущего opened-перехода, при росте opacity он визуально вылетал из центра.
+
+Подтвержденное решение:
+
+```ts
+const offset = centeredOffset(index, this.slidePosition, this.slides.length);
+const layout = this.getLayoutForOffset(offset);
+
+plane.mesh.position.set(layout.x, layout.y, -180);
+plane.mesh.rotation.set(0, layout.rotationY, 0);
+plane.setScale(layout.scaleX, layout.scaleY);
+plane.uniforms.uPlaneSize.value.set(layout.width, layout.height);
+plane.uniforms.uStripOffset.value = layout.stripX;
+plane.uniforms.uBend.value = layout.bend;
+plane.uniforms.uCornerRadius.value = layout.cornerRadius;
+plane.uniforms.uEdgeCurve.value = layout.edgeCurve;
+plane.uniforms.uCurveScale.value = layout.curveScale;
+plane.uniforms.uDarkness.value = layout.darkness;
+plane.uniforms.uOpacity.value = 0;
+plane.uniforms.uTransitionProgress.value = 0;
+plane.uniforms.uVelocity.value = 0;
+```
+
+Смысл: inactive planes уже ждут закрытия в корректных side/buffer местах, а не стартуют из fullscreen-остатков.
+
+### Проверки после правок
+
+- `npm run lint` - прошел без errors, остались старые warnings вне `cinematic_new`;
+- `npm run build` - прошел;
+- Playwright/headless сценарий `open -> next opened -> close` - canvas один, active label после закрытия соответствует соседнему слайду;
+- browser console errors - нет;
+- Next MCP `get_errors` - `configErrors: []`, `sessionErrors: []`.
+
+### Что еще проверить
+
+- визуально оценить close после opened-навигации на desktop `1280x720`, `1440x900`, `1920x1080`;
+- отдельно проверить wide desktop и mobile;
+- сделать screenshots не только финальных состояний, но и середины `openedSliding` и `closing`;
+- проверить repeated opened navigation: `open -> next opened -> next opened -> previous opened -> close`.

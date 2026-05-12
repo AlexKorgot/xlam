@@ -5,6 +5,7 @@ import type { CSSProperties } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Container } from '@/src/components/ui/grid/Container';
+import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
 import { cinematicSlides } from './data';
 import { SliderScene } from './SliderScene';
 import type { CinematicOverlayState } from './types';
@@ -24,6 +25,7 @@ const headingAccent = '\u041f\u0420\u041e\u0415\u041a\u0422\u042b';
 const openLabel = '\u0421\u043c\u043e\u0442\u0440\u0435\u0442\u044c';
 const previousGlyph = '\u2039';
 const nextGlyph = '\u203a';
+const closeLabel = '\u0417\u0430\u043a\u0440\u044b\u0442\u044c';
 
 export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderProps) {
   const rootRef = useRef<HTMLElement | null>(null);
@@ -33,6 +35,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   const labelRef = useRef<HTMLDivElement | null>(null);
   const detailsRef = useRef<HTMLDivElement | null>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+  const wasOpenedVisibleRef = useRef(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [overlayState, setOverlayState] = useState<CinematicOverlayState>('slider');
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -42,6 +45,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   const previousSlide = slides[(activeIndex - 1 + slideCount) % slideCount];
   const nextSlide = slides[(activeIndex + 1) % slideCount];
   const isOpened = overlayState === 'opened' || overlayState === 'opening' || overlayState === 'openedSliding';
+  const isDetailsLayerVisible = isOpened || overlayState === 'closing';
   const isChromeVisible = overlayState === 'slider' || overlayState === 'sliding';
 
   useEffect(() => {
@@ -146,6 +150,10 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
     sceneRef.current?.open();
   }, []);
 
+  const handleClose = useCallback(() => {
+    sceneRef.current?.close();
+  }, []);
+
   useGSAP(
     () => {
       if (!chromeRef.current || !detailsRef.current) {
@@ -161,6 +169,8 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       });
 
       if (overlayState === 'openedSliding') {
+        wasOpenedVisibleRef.current = false;
+
         gsap.to(detailItems, {
           autoAlpha: 0,
           y: reducedMotion ? 0 : -14,
@@ -171,6 +181,12 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       }
 
       if (isOpened) {
+        if (overlayState === 'opened' && wasOpenedVisibleRef.current) {
+          return;
+        }
+
+        wasOpenedVisibleRef.current = true;
+
         gsap.fromTo(
           detailItems,
           { autoAlpha: 0, y: reducedMotion ? 0 : 24 },
@@ -186,10 +202,13 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
         return;
       }
 
+      wasOpenedVisibleRef.current = false;
+
       gsap.to(detailItems, {
         autoAlpha: 0,
-        y: reducedMotion ? 0 : 16,
-        duration: reducedMotion ? 0.01 : 0.24,
+        y: reducedMotion ? 0 : 24,
+        duration: reducedMotion ? 0.01 : 0.58,
+        stagger: 0.06,
         ease: 'power2.out',
       });
     },
@@ -270,7 +289,9 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             className="h-9 border border-white/20 bg-black/35 px-6 text-[9px] font-black uppercase tracking-[0.28em] text-white/78 backdrop-blur-md transition-colors hover:border-[#66ff66]/60 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:px-7 md:text-[10px]"
             onClick={handleOpen}
           >
-            {openLabel}
+            <GlitchText>
+              {openLabel}
+            </GlitchText>
           </button>
           <button
             type="button"
@@ -286,11 +307,23 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       <div
         ref={detailsRef}
         className={`absolute inset-0 z-20 py-7 transition-opacity duration-300 ${
-          isOpened ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+          isDetailsLayerVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
         }`}
-        aria-hidden={!isOpened}
+        aria-hidden={!isDetailsLayerVisible}
       >
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[42svh] bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(0,8,8,0.72)_44%,rgba(0,8,8,0.96)_100%)] backdrop-blur-[2px]" />
+
+        <button
+          type="button"
+          data-case-detail
+          className="absolute right-5 top-5 z-40 flex h-10 items-center justify-center border border-white/24 bg-black/38 px-4 font-black uppercase leading-none text-white/78 opacity-0 backdrop-blur-md transition-colors hover:border-[#66ff66]/65 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:right-8 md:top-8 md:h-11 md:px-5"
+          onClick={handleClose}
+          aria-label="Close project"
+        >
+          <span className="flex h-full items-center justify-center leading-none [&>div>div]:flex [&>div>div]:items-center [&>div>div]:leading-none">
+            <GlitchText size="11">{closeLabel}</GlitchText>
+          </span>
+        </button>
 
         <Container>
           <div className="relative grid min-h-[calc(100svh-3.5rem)] grid-rows-[1fr_auto] gap-5">

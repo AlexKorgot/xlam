@@ -29,6 +29,10 @@ https://www.figma.com/design/wvU80E5h11zr2RbfUkk8yc/design?node-id=506-802&m=dev
 - `frustumCulled = false` оставлен для shader-expanded planes;
 - motion использует `slidePosition`, `slideProgress`, `transitionPulse` и `slideVelocity`;
 - базовый fullscreen `open()` / `close()` проверен;
+- opened-навигация реализована через `openedSliding`: fullscreen plane и DOM details переключаются синхронно, без мгновенной подмены контента;
+- повторный запуск details-анимации при `opening -> opened` убран;
+- исчезновение details при `closing` сделано зеркальным появлению;
+- после opened-навигации hidden planes нормализуются в будущие slider-layout позиции, поэтому `close()` не вытягивает боковые кадры из центра;
 - UI переведен на темный фон со свечением и обновленными controls/details;
 - shader сейчас работает в чистом `cover`: `containMix = 0.0`, кадрирование настраивается через `videoObjectPosition`.
 
@@ -37,7 +41,7 @@ https://www.figma.com/design/wvU80E5h11zr2RbfUkk8yc/design?node-id=506-802&m=dev
 - Нужно финально проверить transition в середине движения: overlap/ощущение киноленты могут требовать донастройки на отдельных viewport.
 - Нужно проверить адаптив: `1280x720`, `1440x900`, `1920x1080`, wide desktop и mobile.
 - Нужно финально проверить UI overlay: heading, active label и controls не должны конфликтовать с видео.
-- Нужно выполнить финальную runtime-валидацию после всех правок: Playwright screenshots, canvas nonblank, browser console, Next MCP `get_errors`.
+- Нужно выполнить полный viewport sweep после всех правок: Playwright screenshots на desktop/mobile, canvas nonblank, browser console, Next MCP `get_errors`.
 - Нужно заново прогнать `npm run lint` и `npm run build` именно на финальном состоянии.
 
 ## Оценка предложенных решений
@@ -234,6 +238,15 @@ Figma-вид можно стабилизировать через расчеты
 - [x] Проверить `close()` и возврат в точную slider-позицию.
 - [x] Убедиться, что fullscreen использует тот же `VideoTexture`, без второго DOM-video.
 
+Дополнение после opened-навигации:
+
+- [x] `nextOpened()` / `previousOpened()` больше не делают мгновенный `applyOpenedLayout()` без движения.
+- [x] Добавлен режим `openedSliding`, где текущий fullscreen plane уходит по X, а target plane входит в центр.
+- [x] DOM details скрываются во время `openedSliding`, `activeIndex` меняется в середине перехода, затем details появляются заново.
+- [x] `opening -> opened` больше не перезапускает `fromTo()` и не дает мигание контента.
+- [x] `closing` держит details layer видимым и уводит details тем же duration/stagger/y, что использовались при появлении.
+- [x] После opened-навигации hidden planes получают будущие slider-layout координаты с `opacity: 0`; это убирает вылет боковых кадров из центра при `close()`.
+
 ### 9. Подогнать UI под Figma - частично выполнено
 
 Результат этапа: WebGL-лента и DOM overlay визуально соответствуют референсу.
@@ -258,11 +271,12 @@ Figma-вид можно стабилизировать через расчеты
 
 Результат этапа: нет явных runtime/hydration/WebGL проблем.
 
-- Проверить через Playwright screenshot.
-- Проверить canvas nonblank.
-- Проверить движение next/previous.
-- Проверить отсутствие browser console errors.
-- Проверить Next MCP `get_errors`.
+- [~] Проверить через Playwright screenshot: базовые сценарии проверялись, полный viewport sweep еще нужен.
+- [x] Проверить canvas nonblank / один canvas в DOM для opened-сценариев.
+- [x] Проверить движение next/previous в обычном slider.
+- [x] Проверить сценарий `open -> next opened -> close`.
+- [x] Проверить отсутствие browser console errors.
+- [x] Проверить Next MCP `get_errors`.
 
 ### 12. Финальная валидация
 
@@ -285,4 +299,6 @@ Figma-вид можно стабилизировать через расчеты
 - Видно ощущение единой изогнутой киноленты.
 - Видео не растягивается и не теряет cover-кроп.
 - Fullscreen open/close не ломается.
+- Opened next/previous переключает fullscreen plane и DOM content вместе.
+- Закрытие после opened-навигации не вытягивает боковые кадры из центра.
 - Нет hydration/runtime/browser console errors.
