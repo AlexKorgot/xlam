@@ -6,6 +6,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Container } from '@/src/components/ui/grid/Container';
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
+import { FULLPAGE_SCROLL_EVENT } from '@/src/components/ui/FullPageScroll';
 import { cinematicSlides } from './data';
 import { SliderScene } from './SliderScene';
 import type { CinematicOverlayState } from './types';
@@ -26,6 +27,8 @@ const openLabel = '\u0421\u043c\u043e\u0442\u0440\u0435\u0442\u044c';
 const previousGlyph = '\u2039';
 const nextGlyph = '\u203a';
 const closeLabel = '\u0417\u0430\u043a\u0440\u044b\u0442\u044c';
+const sectionScrollThreshold = 48;
+const sectionScrollUnlockDelay = 700;
 
 export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderProps) {
   const rootRef = useRef<HTMLElement | null>(null);
@@ -35,6 +38,11 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   const labelRef = useRef<HTMLDivElement | null>(null);
   const detailsRef = useRef<HTMLDivElement | null>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+  const sectionTouchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const wheelBridgeDirectionRef = useRef<'up' | 'down' | null>(null);
+  const wheelBridgeDeltaRef = useRef(0);
+  const wheelBridgeLockRef = useRef(false);
+  const wheelBridgeTimeoutRef = useRef<number | null>(null);
   const wasOpenedVisibleRef = useRef(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [overlayState, setOverlayState] = useState<CinematicOverlayState>('slider');
@@ -153,6 +161,137 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   const handleClose = useCallback(() => {
     sceneRef.current?.close();
   }, []);
+
+  useEffect(() => {
+    const root = rootRef.current;
+
+    if (!root || !isChromeVisible) {
+      return;
+    }
+
+    const resetWheelBridge = () => {
+      wheelBridgeDirectionRef.current = null;
+      wheelBridgeDeltaRef.current = 0;
+    };
+
+    const unlockWheelBridge = () => {
+      wheelBridgeLockRef.current = false;
+    };
+
+    const queueWheelBridgeUnlock = () => {
+      if (wheelBridgeTimeoutRef.current) {
+        window.clearTimeout(wheelBridgeTimeoutRef.current);
+      }
+
+      wheelBridgeTimeoutRef.current = window.setTimeout(() => {
+        unlockWheelBridge();
+      }, sectionScrollUnlockDelay);
+    };
+
+    const requestSectionScroll = (direction: 'up' | 'down') => {
+      window.dispatchEvent(
+        new CustomEvent(FULLPAGE_SCROLL_EVENT, {
+          detail: { direction },
+        }),
+      );
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+      const dominantDelta =
+        Math.abs(event.deltaY) >= Math.abs(event.deltaX)
+          ? event.deltaY
+          : 0;
+
+      if (Math.abs(dominantDelta) < 4) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const direction = dominantDelta > 0 ? 'down' : 'up';
+
+      if (wheelBridgeLockRef.current) {
+        return;
+      }
+
+      if (wheelBridgeDirectionRef.current !== direction) {
+        wheelBridgeDeltaRef.current = 0;
+      }
+
+      wheelBridgeDirectionRef.current = direction;
+      wheelBridgeDeltaRef.current += Math.abs(dominantDelta);
+
+      if (wheelBridgeDeltaRef.current < sectionScrollThreshold) {
+        return;
+      }
+
+      wheelBridgeLockRef.current = true;
+      resetWheelBridge();
+      queueWheelBridgeUnlock();
+      requestSectionScroll(direction);
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.pointerType !== 'touch') {
+        return;
+      }
+
+      sectionTouchStartRef.current = { x: event.clientX, y: event.clientY };
+    };
+
+    const handlePointerUp = (event: PointerEvent) => {
+      if (event.pointerType !== 'touch') {
+        return;
+      }
+
+      const start = sectionTouchStartRef.current;
+      sectionTouchStartRef.current = null;
+
+      if (!start || wheelBridgeLockRef.current) {
+        return;
+      }
+
+      const deltaX = event.clientX - start.x;
+      const deltaY = event.clientY - start.y;
+      const isVerticalSwipe =
+        Math.abs(deltaY) > sectionScrollThreshold &&
+        Math.abs(deltaY) > Math.abs(deltaX) * 1.35;
+
+      if (!isVerticalSwipe) {
+        return;
+      }
+
+      wheelBridgeLockRef.current = true;
+      queueWheelBridgeUnlock();
+      requestSectionScroll(deltaY < 0 ? 'down' : 'up');
+    };
+
+    const handlePointerCancel = () => {
+      sectionTouchStartRef.current = null;
+    };
+
+    root.addEventListener('wheel', handleWheel, { passive: false });
+    root.addEventListener('pointerdown', handlePointerDown);
+    root.addEventListener('pointerup', handlePointerUp);
+    root.addEventListener('pointercancel', handlePointerCancel);
+
+    return () => {
+      root.removeEventListener('wheel', handleWheel);
+      root.removeEventListener('pointerdown', handlePointerDown);
+      root.removeEventListener('pointerup', handlePointerUp);
+      root.removeEventListener('pointercancel', handlePointerCancel);
+
+      if (wheelBridgeTimeoutRef.current) {
+        window.clearTimeout(wheelBridgeTimeoutRef.current);
+        wheelBridgeTimeoutRef.current = null;
+      }
+
+      sectionTouchStartRef.current = null;
+      unlockWheelBridge();
+      resetWheelBridge();
+    };
+  }, [isChromeVisible]);
 
   useGSAP(
     () => {

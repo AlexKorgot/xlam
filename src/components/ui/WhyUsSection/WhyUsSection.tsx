@@ -1,6 +1,5 @@
-import Image from "next/image";
 import { Container } from "@/src/components/ui/grid/Container";
-import ballsImage from "./why-us-balls.png";
+import { publicAssetPath } from "@/src/lib/publicAssetPath";
 
 const featureRows = [
   [
@@ -22,14 +21,16 @@ export function WhyUsSection() {
       className="relative isolate h-[100svh] overflow-hidden bg-black font-normalidad text-white pt-[150px]"
       aria-labelledby="why-us-heading"
     >
-      <Image
-        src={ballsImage}
-        alt=""
+      <video
         aria-hidden="true"
-        priority
-        sizes="(min-width: 1024px) 135vw, 210vw"
-        className="pointer-events-none absolute bottom-[-7.6vw] left-[calc(50%_-_1.4vw)] -z-10 h-auto w-[210vw] max-w-none -translate-x-1/2 sm:w-[175vw] md:w-[150vw] lg:w-[135.42vw]"
-      />
+        autoPlay
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"
+        muted
+        playsInline
+        preload="metadata"
+      >
+        <source src={publicAssetPath("/video/balls.mp4")} type="video/mp4" />
+      </video>
       <Container>
         <div className="relative z-10">
           <h2

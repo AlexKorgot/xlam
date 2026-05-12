@@ -41,51 +41,54 @@ export const MainScene = () => {
 
   return (
     <div className="">
-      <CinematicVideoSlider/>
-      {/*<FullPageScroll*/}
-      {/*  progressCallback={(progress) => {*/}
-      {/*    setHeaderProgress(progress);*/}
-      {/*    secondSectionRef.current?.setProgress(progress);*/}
-      {/*  }}*/}
-      {/*  transitionStartCallback={(startIndex, targetIndex) => {*/}
-      {/*    clearMorphStartTimeout();*/}
+      <FullPageScroll
+        progressCallback={(progress) => {
+          setHeaderProgress(progress);
+          secondSectionRef.current?.setProgress(progress);
+        }}
+        transitionStartCallback={(startIndex, targetIndex) => {
+          clearMorphStartTimeout();
 
-      {/*    if (startIndex === 1 && targetIndex === 2) {*/}
-      {/*      secondSectionRef.current?.playExit();*/}
-      {/*    }*/}
+          if (startIndex === 1 && targetIndex === 2) {
+            secondSectionRef.current?.playExit();
+          }
 
-      {/*    if (startIndex === 2 && targetIndex === 1) {*/}
-      {/*      secondSectionRef.current?.playEnter();*/}
-      {/*    }*/}
+          if (startIndex === 2 && targetIndex === 1) {
+            secondSectionRef.current?.playEnter();
+          }
 
-      {/*    if (startIndex === 2 && targetIndex === 3) {*/}
-      {/*      morphStartTimeoutRef.current = window.setTimeout(() => {*/}
-      {/*        morphSectionRef.current?.playForward();*/}
-      {/*        morphStartTimeoutRef.current = null;*/}
-      {/*      }, FULLPAGE_SECTION_REVEAL_DELAY * 1000);*/}
-      {/*    }*/}
+          if (startIndex === 2 && targetIndex === 3) {
+            morphStartTimeoutRef.current = window.setTimeout(() => {
+              morphSectionRef.current?.playForward();
+              morphStartTimeoutRef.current = null;
+            }, FULLPAGE_SECTION_REVEAL_DELAY * 1000);
+          }
 
-      {/*    if (startIndex === 3 && targetIndex === 2) {*/}
-      {/*      morphSectionRef.current?.playReverse();*/}
-      {/*    }*/}
-      {/*  }}*/}
-      {/*>*/}
-      {/*  <FullPageSection id="intro" >*/}
-      {/*    <div className="sr-only">XLAM Media</div>*/}
-      {/*  </FullPageSection>*/}
+          if (startIndex === 3 && targetIndex === 2) {
+            morphSectionRef.current?.playReverse();
+          }
+        }}
+      >
+        <FullPageSection id="intro" >
+          <div className="sr-only">XLAM Media</div>
+        </FullPageSection>
 
-      {/*  <SecondSectionDesign ref={secondSectionRef} />*/}
-      {/*  <ServicesSliderSection />*/}
-      {/*  <FullPageSection id="next">*/}
-      {/*    <MorphSection*/}
-      {/*        ref={morphSectionRef}*/}
-      {/*        className={'flex flex-col items-center'}*/}
-      {/*        videoSrc={publicAssetPath('/video/3_slider_content_video.mov')}*/}
-      {/*        autoPlayTimeline={false}*/}
-      {/*        topEndWidth={820}*/}
-      {/*    />*/}
-      {/*  </FullPageSection>*/}
-      {/*</FullPageScroll>*/}
+        <SecondSectionDesign ref={secondSectionRef} />
+        <ServicesSliderSection />
+        <FullPageSection id="next">
+          <MorphSection
+              ref={morphSectionRef}
+              className={'flex flex-col items-center'}
+              videoSrc={publicAssetPath('/video/3_slider_content_video.mov')}
+              autoPlayTimeline={false}
+              topEndWidth={820}
+          />
+        </FullPageSection>
+        <FullPageSection id="projects" className="items-stretch bg-black">
+          <CinematicVideoSlider />
+        </FullPageSection>
+
+      </FullPageScroll>
     </div>
   );
 };

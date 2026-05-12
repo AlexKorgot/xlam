@@ -46,12 +46,13 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
         const timelineRef = useRef<gsap.core.Timeline | null>(null);
         const progressRef = useRef(gsap.utils.clamp(0, 1, initialProgress));
         const styles = logoVariants[variant];
+        const mediaQuery = variant === 'desktop'
+            ? '(min-width: 768px)'
+            : '(max-width: 767.98px)';
 
         useGSAP(
             (_context, contextSafe) => {
-                if (!centerLogoRef.current || !headerPlateRef.current || !headerLogoRef.current) {
-                    return;
-                }
+                const media = gsap.matchMedia();
 
                 const buildTimeline = () => {
                     if (!centerLogoRef.current || !headerPlateRef.current || !headerLogoRef.current) {
@@ -140,12 +141,20 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
 
                 const syncTimeline = contextSafe ? contextSafe(buildTimeline) : buildTimeline;
 
-                syncTimeline();
-                window.addEventListener('resize', syncTimeline);
+                media.add(mediaQuery, () => {
+                    syncTimeline();
+                    window.addEventListener('resize', syncTimeline);
+
+                    return () => {
+                        window.removeEventListener('resize', syncTimeline);
+                        timelineRef.current?.kill();
+                        timelineRef.current = null;
+                    };
+                });
 
                 return () => {
-                    window.removeEventListener('resize', syncTimeline);
-                    timelineRef.current?.kill();
+                    media.revert();
+                    timelineRef.current = null;
                 };
             },
             {scope: containerRef, dependencies: [variant]},

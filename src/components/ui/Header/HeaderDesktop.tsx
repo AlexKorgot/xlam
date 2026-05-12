@@ -34,37 +34,47 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
 
   useGSAP(
     () => {
-      if (!leftRef.current || !rightRef.current) {
-        return;
-      }
+      const media = gsap.matchMedia();
 
-      gsap.set([leftRef.current, rightRef.current], {
-        autoAlpha: 0,
-        y: -18,
+      media.add('(min-width: 768px)', () => {
+        if (!leftRef.current || !rightRef.current) {
+          return undefined;
+        }
+
+        gsap.set([leftRef.current, rightRef.current], {
+          autoAlpha: 0,
+          y: -18,
+        });
+
+        timelineRef.current = gsap
+          .timeline({
+            paused: true,
+            defaults: {
+              ease: 'power2.out',
+            },
+          })
+          .to(
+            [leftRef.current, rightRef.current],
+            {
+              autoAlpha: 1,
+              y: 0,
+              duration: 0.24,
+              stagger: 0.04,
+            },
+            0.58,
+          );
+
+        timelineRef.current.progress(progressRef.current);
+
+        return () => {
+          timelineRef.current?.kill();
+          timelineRef.current = null;
+        };
       });
 
-      timelineRef.current = gsap
-        .timeline({
-          paused: true,
-          defaults: {
-            ease: 'power2.out',
-          },
-        })
-        .to(
-          [leftRef.current, rightRef.current],
-          {
-            autoAlpha: 1,
-            y: 0,
-            duration: 0.24,
-            stagger: 0.04,
-          },
-          0.58,
-        );
-
-      timelineRef.current.progress(progressRef.current);
-
       return () => {
-        timelineRef.current?.kill();
+        media.revert();
+        timelineRef.current = null;
       };
     },
     { scope: headerRef },

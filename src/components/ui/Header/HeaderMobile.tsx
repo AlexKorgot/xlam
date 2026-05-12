@@ -26,37 +26,47 @@ const HeaderMobile = forwardRef<HeaderHandle, HeaderMobileProps>(function Header
 
   useGSAP(
     () => {
-      if (!burgerRef.current) {
-        return;
-      }
+      const media = gsap.matchMedia();
 
-      gsap.set(burgerRef.current, {
-        autoAlpha: 0,
-        y: -18,
+      media.add('(max-width: 767.98px)', () => {
+        if (!burgerRef.current) {
+          return undefined;
+        }
+
+        gsap.set(burgerRef.current, {
+          autoAlpha: 0,
+          y: -18,
+        });
+
+        timelineRef.current = gsap
+          .timeline({
+            paused: true,
+            defaults: {
+              ease: 'power2.out',
+            },
+          })
+          .to(
+            burgerRef.current,
+            {
+              autoAlpha: 1,
+              y: 0,
+              duration: 0.24,
+              stagger: 0.04,
+            },
+            0.58,
+          );
+
+        timelineRef.current.progress(progressRef.current);
+
+        return () => {
+          timelineRef.current?.kill();
+          timelineRef.current = null;
+        };
       });
 
-      timelineRef.current = gsap
-        .timeline({
-          paused: true,
-          defaults: {
-            ease: 'power2.out',
-          },
-        })
-        .to(
-          burgerRef.current,
-          {
-            autoAlpha: 1,
-            y: 0,
-            duration: 0.24,
-            stagger: 0.04,
-          },
-          0.58,
-        );
-
-      timelineRef.current.progress(progressRef.current);
-
       return () => {
-        timelineRef.current?.kill();
+        media.revert();
+        timelineRef.current = null;
       };
     },
     { scope: headerRef },
