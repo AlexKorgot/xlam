@@ -1,4 +1,4 @@
-export type CinematicOverlayState = 'slider' | 'sliding' | 'opening' | 'opened' | 'closing';
+export type CinematicOverlayState = 'slider' | 'sliding' | 'opening' | 'opened' | 'openedSliding' | 'closing';
 
 export type CinematicSlide = {
   id: string;

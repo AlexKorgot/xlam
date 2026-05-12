@@ -41,7 +41,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   const slideCount = slides.length;
   const previousSlide = slides[(activeIndex - 1 + slideCount) % slideCount];
   const nextSlide = slides[(activeIndex + 1) % slideCount];
-  const isOpened = overlayState === 'opened' || overlayState === 'opening';
+  const isOpened = overlayState === 'opened' || overlayState === 'opening' || overlayState === 'openedSliding';
   const isChromeVisible = overlayState === 'slider' || overlayState === 'sliding';
 
   useEffect(() => {
@@ -160,6 +160,16 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
         ease: 'power2.out',
       });
 
+      if (overlayState === 'openedSliding') {
+        gsap.to(detailItems, {
+          autoAlpha: 0,
+          y: reducedMotion ? 0 : -14,
+          duration: reducedMotion ? 0.01 : 0.26,
+          ease: 'power2.out',
+        });
+        return;
+      }
+
       if (isOpened) {
         gsap.fromTo(
           detailItems,
@@ -183,7 +193,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
         ease: 'power2.out',
       });
     },
-    { scope: rootRef, dependencies: [isChromeVisible, isOpened, overlayState, reducedMotion] },
+    { scope: rootRef, dependencies: [activeIndex, isChromeVisible, isOpened, overlayState, reducedMotion] },
   );
 
   useGSAP(

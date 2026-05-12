@@ -175,7 +175,7 @@ export class SliderScene {
 
   private isVisible = true;
   private isDestroyed = false;
-  private mode: 'slider' | 'sliding' | 'opening' | 'opened' | 'closing' = 'slider';
+  private mode: 'slider' | 'sliding' | 'opening' | 'opened' | 'openedSliding' | 'closing' = 'slider';
   private readonly reducedMotion: boolean;
 
   constructor(container: HTMLElement, options: SliderSceneOptions) {
@@ -476,7 +476,7 @@ export class SliderScene {
       plane.uniforms.uViewportSize.value.copy(this.viewport);
     });
 
-    if (this.mode === 'opened' || this.mode === 'opening') {
+    if (this.mode === 'opened' || this.mode === 'opening' || this.mode === 'openedSliding') {
       const activePlane = this.planes[this.activeIndex];
       activePlane.uniforms.uPlaneSize.value.copy(this.viewport);
       activePlane.uniforms.uCornerRadius.value = 0;
@@ -666,13 +666,79 @@ export class SliderScene {
       return;
     }
 
+    this.slideOpenedTo(direction);
+  }
+
+  private slideOpenedTo(direction: -1 | 1) {
+    const fromIndex = this.activeIndex;
     const targetIndex = wrapIndex(this.activeIndex + direction, this.slides.length);
+    const fromPlane = this.planes[fromIndex];
+    const targetPlane = this.planes[targetIndex];
+    const duration = this.reducedMotion ? 0.01 : 0.96;
+    const travel = this.viewport.x * 0.92;
+    let hasActivatedTarget = false;
+
+    this.mode = 'openedSliding';
+    this.callbacks.onOverlayStateChange?.('openedSliding');
+    this.timeline?.kill();
 
     this.slidePosition = targetIndex;
-    this.slideProgress = 0;
-    this.slideVelocity = 0;
-    this.activateSlideVideo(targetIndex, true);
-    this.applyOpenedLayout(targetIndex);
+    this.slideProgress = 0.5;
+    this.slideVelocity = direction * 0.32;
+
+    targetPlane.mesh.renderOrder = 31;
+    targetPlane.mesh.position.set(direction * travel, 0, 0);
+    targetPlane.mesh.rotation.set(0, 0, 0);
+    targetPlane.setScale(1, 1);
+    targetPlane.uniforms.uPlaneSize.value.copy(this.viewport);
+    targetPlane.uniforms.uStripOffset.value = 0;
+    targetPlane.uniforms.uTransitionProgress.value = 1;
+    targetPlane.uniforms.uBend.value = 0;
+    targetPlane.uniforms.uCornerRadius.value = 0;
+    targetPlane.uniforms.uEdgeCurve.value = 0;
+    targetPlane.uniforms.uCurveScale.value = Math.min(this.viewport.x * 0.5, this.viewport.x);
+    targetPlane.uniforms.uDarkness.value = 0;
+    targetPlane.uniforms.uVelocity.value = direction * 0.14;
+    targetPlane.uniforms.uOpacity.value = 1;
+
+    fromPlane.mesh.renderOrder = 30;
+    fromPlane.uniforms.uVelocity.value = direction * 0.12;
+
+    this.timeline = gsap.timeline({
+      defaults: { ease: 'power3.inOut', overwrite: 'auto' },
+      onComplete: () => {
+        if (!hasActivatedTarget) {
+          hasActivatedTarget = true;
+          this.activateSlideVideo(targetIndex, true);
+        }
+
+        this.mode = 'opened';
+        this.callbacks.onOverlayStateChange?.('opened');
+        this.slideProgress = 0;
+        this.slideVelocity = 0;
+        this.applyOpenedLayout(targetIndex);
+      },
+    });
+
+    this.timeline.call(
+      () => {
+        if (hasActivatedTarget) {
+          return;
+        }
+
+        hasActivatedTarget = true;
+        this.activateSlideVideo(targetIndex, true);
+      },
+      undefined,
+      duration * 0.42,
+    );
+
+    this.timeline.to(fromPlane.mesh.position, { x: -direction * travel, y: 0, z: 0, duration }, 0);
+    this.timeline.to(targetPlane.mesh.position, { x: 0, y: 0, z: 0, duration }, 0);
+    this.timeline.to(fromPlane.uniforms.uOpacity, { value: 0, duration: duration * 0.72, ease: 'power2.out' }, 0.12);
+    this.timeline.to(targetPlane.uniforms.uOpacity, { value: 1, duration: duration * 0.64, ease: 'power2.out' }, 0);
+    this.timeline.to(fromPlane.uniforms.uVelocity, { value: 0, duration: duration * 0.78 }, 0.08);
+    this.timeline.to(targetPlane.uniforms.uVelocity, { value: 0, duration: duration * 0.78 }, 0.08);
   }
 
   private applyOpenedLayout(targetIndex: number) {
