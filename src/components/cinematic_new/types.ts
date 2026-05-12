@@ -11,6 +11,15 @@ export type CinematicSlide = {
   accent: string;
   videoSrc: string;
   videoObjectPosition?: [number, number];
+  opened: {
+    titleLead: string;
+    titleAccent: string;
+    body: string;
+    secondaryBody?: string;
+    services: string[];
+    navLabel: string;
+    thumbnailCount: number;
+  };
 };
 
 export type SliderSceneCallbacks = {

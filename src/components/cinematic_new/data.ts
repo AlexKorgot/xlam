@@ -3,6 +3,9 @@ import type { CinematicSlide } from './types';
 
 const mainVideo = publicAssetPath('/video/timessquarenightwide.mp4');
 const mainVideoObjectPosition: [number, number] = [0.5, 0.58];
+const productionDescription =
+  'Полный цикл продакшена: разработка концепции, подбор ведущих и гостей, организация съемок, продакшн и пост-продакшн. Мы превращаем идею в полноценный формат, готовый к публикации на YouTube, ТВ или платформах.';
+const openedServices = ['сценарий', 'монтаж', 'smm', 'branding', 'продакшн'];
 
 export const cinematicSlides: CinematicSlide[] = [
   {
@@ -17,57 +20,55 @@ export const cinematicSlides: CinematicSlide[] = [
     accent: '#66ff66',
     videoSrc: mainVideo,
     videoObjectPosition: mainVideoObjectPosition,
+    opened: {
+      titleLead: 'сериал',
+      titleAccent: 'МЕР-ТВ',
+      body: productionDescription,
+      secondaryBody: productionDescription,
+      services: openedServices,
+      navLabel: 'Сериал Мер-ТВ',
+      thumbnailCount: 3,
+    },
   },
   {
-    id: 'city-flow',
-    eyebrow: 'Campaign film',
-    title: 'City Flow',
-    description:
-      'A night-city film where location movement becomes the visual dramaturgy of the brand.',
-    tags: ['Campaign', 'Cinematic', 'OOH'],
+    id: 'shame-to-know',
+    eyebrow: 'Шоу полного цикла',
+    title: 'Шоу «Стыдно знать»',
+    description: productionDescription,
+    tags: ['Scenario', 'Production', 'SMM'],
     client: 'XLAM',
     year: '2026',
     accent: '#7cff55',
     videoSrc: mainVideo,
     videoObjectPosition: mainVideoObjectPosition,
+    opened: {
+      titleLead: 'шоу',
+      titleAccent: 'Стыдно знать',
+      body: productionDescription,
+      secondaryBody: productionDescription,
+      services: openedServices,
+      navLabel: 'Шоу Стыдно знать',
+      thumbnailCount: 3,
+    },
   },
   {
-    id: 'signal-room',
-    eyebrow: 'Studio content',
-    title: 'Signal Room',
-    description:
-      'A controlled studio story with contrast lighting, screen graphics, and precise movement direction.',
-    tags: ['Studio', 'Editorial', 'Launch'],
-    client: 'Signal',
+    id: 'agritek-bio',
+    eyebrow: 'Фирменный стиль',
+    title: 'Агритек БИО',
+    description: productionDescription,
+    tags: ['Branding', 'Design', 'Production'],
+    client: 'Агритек БИО',
     year: '2026',
     accent: '#55ff88',
     videoSrc: mainVideo,
     videoObjectPosition: mainVideoObjectPosition,
-  },
-  {
-    id: 'neon-index',
-    eyebrow: 'Brand story',
-    title: 'Neon Index',
-    description:
-      'A visual system for a nocturnal brand world, built to scale from teaser to hero film.',
-    tags: ['Brand', 'Motion', 'Design'],
-    client: 'Index',
-    year: '2026',
-    accent: '#b8ff2c',
-    videoSrc: mainVideo,
-    videoObjectPosition: mainVideoObjectPosition,
-  },
-  {
-    id: 'frame-unit',
-    eyebrow: 'Case film',
-    title: 'Frame Unit',
-    description:
-      'An energetic case film with large-format framing, reflections, sharp cuts, and continuous video texture.',
-    tags: ['Case', 'Location', 'Color'],
-    client: 'Frame',
-    year: '2026',
-    accent: '#58ff70',
-    videoSrc: mainVideo,
-    videoObjectPosition: mainVideoObjectPosition,
+    opened: {
+      titleLead: 'фирменный стиль',
+      titleAccent: 'АГРИТЕК БИО',
+      body: productionDescription,
+      services: openedServices,
+      navLabel: 'Фирменный стиль Агритек БИО',
+      thumbnailCount: 4,
+    },
   },
 ];

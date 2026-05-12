@@ -280,12 +280,47 @@ export class SliderScene {
       return;
     }
 
-    if (x < rect.width / 2) {
+    if (rect.width < 760) {
+      return;
+    }
+
+    const leftLayout = this.getLayoutForOffset(-1);
+    const rightLayout = this.getLayoutForOffset(1);
+
+    if (this.isPointInsideLayout(x, y, rect, leftLayout)) {
       this.previous();
       return;
     }
 
-    this.next();
+    if (this.isPointInsideLayout(x, y, rect, rightLayout)) {
+      this.next();
+    }
+  }
+
+  handlePointerGesture(startX: number, startY: number, endX: number, endY: number) {
+    if (this.mode !== 'slider') {
+      return;
+    }
+
+    const rect = this.container.getBoundingClientRect();
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+    const isMobile = rect.width < 760;
+    const isSwipe = Math.abs(deltaX) > 42 && Math.abs(deltaX) > Math.abs(deltaY) * 1.35;
+
+    if (isMobile && isSwipe) {
+      if (deltaX < 0) {
+        this.next();
+        return;
+      }
+
+      this.previous();
+      return;
+    }
+
+    if (Math.hypot(deltaX, deltaY) < 10) {
+      this.handlePointer(endX, endY);
+    }
   }
 
   next() {
@@ -294,6 +329,14 @@ export class SliderScene {
 
   previous() {
     this.slideTo(-1);
+  }
+
+  nextOpened() {
+    this.shiftOpenedSlide(1);
+  }
+
+  previousOpened() {
+    this.shiftOpenedSlide(-1);
   }
 
   open() {
@@ -611,6 +654,54 @@ export class SliderScene {
     }
   }
 
+  private shiftOpenedSlide(direction: -1 | 1) {
+    if (this.mode === 'opening') {
+      this.timeline?.progress(1);
+      this.mode = 'opened';
+      this.callbacks.onOverlayStateChange?.('opened');
+    }
+
+    if (this.mode !== 'opened') {
+      this.slideTo(direction);
+      return;
+    }
+
+    const targetIndex = wrapIndex(this.activeIndex + direction, this.slides.length);
+
+    this.slidePosition = targetIndex;
+    this.slideProgress = 0;
+    this.slideVelocity = 0;
+    this.activateSlideVideo(targetIndex, true);
+    this.applyOpenedLayout(targetIndex);
+  }
+
+  private applyOpenedLayout(targetIndex: number) {
+    this.planes.forEach((plane, index) => {
+      if (index === targetIndex) {
+        plane.mesh.renderOrder = 30;
+        plane.mesh.position.set(0, 0, 0);
+        plane.mesh.rotation.set(0, 0, 0);
+        plane.setScale(1, 1);
+        plane.uniforms.uPlaneSize.value.copy(this.viewport);
+        plane.uniforms.uStripOffset.value = 0;
+        plane.uniforms.uTransitionProgress.value = 1;
+        plane.uniforms.uBend.value = 0;
+        plane.uniforms.uCornerRadius.value = 0;
+        plane.uniforms.uEdgeCurve.value = 0;
+        plane.uniforms.uDarkness.value = 0;
+        plane.uniforms.uVelocity.value = 0;
+        plane.uniforms.uOpacity.value = 1;
+        return;
+      }
+
+      plane.mesh.renderOrder = 1;
+      plane.mesh.position.set(plane.mesh.position.x, plane.mesh.position.y, -180);
+      plane.uniforms.uOpacity.value = 0;
+      plane.uniforms.uTransitionProgress.value = 0;
+      plane.uniforms.uVelocity.value = 0;
+    });
+  }
+
   private pauseVideo(index: number) {
     this.slideVideos[index]?.video.pause();
   }
@@ -726,6 +817,21 @@ export class SliderScene {
     }
 
     return 1 - smoothstep01(outsideDistance / fadeMargin);
+  }
+
+  private isPointInsideLayout(
+    x: number,
+    y: number,
+    rect: DOMRect,
+    layout: Pick<VideoPlaneLayout, 'x' | 'y' | 'width' | 'height'>,
+  ) {
+    const centerX = rect.width / 2 + layout.x;
+    const centerY = rect.height / 2 - layout.y;
+
+    return (
+        Math.abs(x - centerX) <= layout.width / 2 &&
+        Math.abs(y - centerY) <= layout.height / 2
+    );
   }
 
   private bindObservers() {
