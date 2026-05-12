@@ -390,23 +390,23 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             >
               <button
                 type="button"
-                className="flex h-14 w-full min-w-0 items-center gap-3 text-left text-[11px] font-medium text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] sm:text-sm"
+                className="flex h-14 w-full min-w-0 items-center gap-3 text-left text-[11px] font-medium leading-none text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] sm:text-sm"
                 onClick={handleOpenedPrevious}
               >
                 <span className="text-4xl leading-none text-[#66ff66]">{previousGlyph}</span>
-                <span className="truncate">{previousSlide.opened.navLabel}</span>
+                <span className="min-w-0 truncate leading-none">{previousSlide.opened.navLabel}</span>
               </button>
 
-              <div className="min-w-0 text-center text-[14px] font-medium text-[#66ff66] sm:text-[22px]">
-                <span className="truncate">{activeSlide.opened.navLabel}</span>
+              <div className="flex h-14 min-w-0 items-center justify-center text-center text-[14px] font-medium leading-none text-[#66ff66] sm:text-[22px]">
+                <span className="min-w-0 truncate leading-none">{activeSlide.opened.navLabel}</span>
               </div>
 
               <button
                 type="button"
-                className="flex h-14 w-full min-w-0 items-center justify-end gap-3 text-right text-[11px] font-medium text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] sm:text-sm"
+                className="flex h-14 w-full min-w-0 items-center justify-end gap-3 text-right text-[11px] font-medium leading-none text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] sm:text-sm"
                 onClick={handleOpenedNext}
               >
-                <span className="truncate">{nextSlide.opened.navLabel}</span>
+                <span className="min-w-0 truncate leading-none">{nextSlide.opened.navLabel}</span>
                 <span className="text-4xl leading-none text-[#66ff66]">{nextGlyph}</span>
               </button>
             </nav>
