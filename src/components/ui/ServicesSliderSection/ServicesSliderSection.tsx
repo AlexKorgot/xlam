@@ -36,6 +36,7 @@ type ServiceSlide = {
   id: string;
   title: string;
   description: string;
+  videoSrc: string;
   modal: ServiceModalContent;
   videoRefConfig: VideoRefConfig;
 };
@@ -190,6 +191,7 @@ export function ServicesSliderSection({
       description:
         'ОТ ИДЕИ ДО ПРЕМЬЕРЫ: РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР.',
       modal: showModalContent,
+      videoSrc: publicAssetPath('/video/services/1.mp4'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -202,6 +204,7 @@ export function ServicesSliderSection({
       description:
         'РАЗРАБАТЫВАЕМ РЕКЛАМНЫЕ ВИДЕО, УСИЛИВАЕМ БРЕНД И ПРИВОДИМ К РЕЗУЛЬТАТУ.',
       modal: adsModalContent,
+      videoSrc: publicAssetPath('/video/services/2.mp4'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -214,6 +217,7 @@ export function ServicesSliderSection({
       description:
         'ПРОИЗВОДИМ СИСТЕМНЫЙ КОНТЕНТ ДЛЯ БИЗНЕСА: ИМИДЖ, ПРОДУКТ, КОММУНИКАЦИИ.',
       modal: b2bModalContent,
+      videoSrc: publicAssetPath('/video/services/3.mp4'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -226,6 +230,7 @@ export function ServicesSliderSection({
       description:
         'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ.',
       modal: brandingModalContent,
+      videoSrc: publicAssetPath('/video/services/4.mp4'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -238,6 +243,7 @@ export function ServicesSliderSection({
       description:
         'ОТ ИДЕИ ДО ПРЕМЬЕРЫ: РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР.',
       modal: showModalContent,
+      videoSrc: publicAssetPath('/video/services/1.mp4'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -250,6 +256,7 @@ export function ServicesSliderSection({
       description:
         'РАЗРАБАТЫВАЕМ РЕКЛАМНЫЕ ВИДЕО, УСИЛИВАЕМ БРЕНД И ПРИВОДИМ К РЕЗУЛЬТАТУ.',
       modal: adsModalContent,
+      videoSrc: publicAssetPath('/video/services/2.mp4'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -262,6 +269,7 @@ export function ServicesSliderSection({
       description:
         'ПРОИЗВОДИМ СИСТЕМНЫЙ КОНТЕНТ ДЛЯ БИЗНЕСА: ИМИДЖ, ПРОДУКТ, КОММУНИКАЦИИ.',
       modal: b2bModalContent,
+      videoSrc: publicAssetPath('/video/services/3.mp4'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -274,6 +282,7 @@ export function ServicesSliderSection({
       description:
         'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ.',
       modal: brandingModalContent,
+      videoSrc: publicAssetPath('/video/services/4.mp4'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -449,7 +458,7 @@ export function ServicesSliderSection({
     <>
       <FullPageSection id="services" className="items-stretch bg-black pt-30 text-white">
         <div className="flex h-full w-full max-w-[1570px] flex-col items-center justify-center">
-          <div className="embda__wrapper w-full h-[clamp(343px,70vh,643px)]">
+          <div className="embla__wrapper w-full h-[clamp(343px,70vh,643px)]">
             <div className="embla h-full">
               <div
                 className="h-full overflow-hidden"
@@ -470,7 +479,7 @@ export function ServicesSliderSection({
                       <video
                         ref={slide.videoRefConfig.ref}
                         className="pointer-events-none h-full w-full object-cover"
-                        src={sliderVideoSrc}
+                        src={slide.videoSrc}
                         playsInline
                         loop
                         muted
