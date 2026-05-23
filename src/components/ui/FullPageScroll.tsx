@@ -10,6 +10,11 @@ gsap.registerPlugin(Observer);
 export const FULLPAGE_SCROLL_IGNORE_ATTR = 'data-fullpage-scroll-ignore';
 export const FULLPAGE_SCROLL_EVENT = 'fullpage-scroll-request';
 export const FULLPAGE_SECTION_REVEAL_DELAY = 0.24;
+export const FULLPAGE_TOUCH_SWIPE_THRESHOLD = 18;
+export const FULLPAGE_TOUCH_AXIS_LOCK_RATIO = 1.12;
+
+export const getFullPageSwipeDirection = (deltaY: number) =>
+  deltaY < 0 ? 'down' : 'up';
 
 type ScrollRequestDetail = {
   direction: 'up' | 'down';
@@ -37,6 +42,7 @@ export default function FullPageScroll({
   const currentIndexRef = useRef(0);
   const isScrollingRef = useRef(false);
   const animationRef = useRef<gsap.core.Timeline | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const getRevealElements = (section?: HTMLElement) =>
     section
@@ -193,9 +199,11 @@ export default function FullPageScroll({
         }
       });
 
+      const root = containerRef.current;
+
       const observer = Observer.create({
-        target: containerRef.current,
-        type: 'wheel,touch',
+        target: root,
+        type: 'wheel',
         onDown: handleScrollDown,
         onUp: handleScrollUp,
         wheelSpeed: 1,
@@ -203,6 +211,48 @@ export default function FullPageScroll({
         preventDefault: true,
         ignoreCheck: (event) => shouldIgnoreEvent(event),
       });
+
+      const handlePointerDown = (event: PointerEvent) => {
+        if (event.pointerType !== 'touch' || shouldIgnoreEvent(event)) {
+          return;
+        }
+
+        touchStartRef.current = { x: event.clientX, y: event.clientY };
+      };
+
+      const handlePointerUp = (event: PointerEvent) => {
+        if (event.pointerType !== 'touch' || shouldIgnoreEvent(event)) {
+          return;
+        }
+
+        const start = touchStartRef.current;
+        touchStartRef.current = null;
+
+        if (!start) {
+          return;
+        }
+
+        const deltaX = event.clientX - start.x;
+        const deltaY = event.clientY - start.y;
+        const isVerticalSwipe =
+          Math.abs(deltaY) > FULLPAGE_TOUCH_SWIPE_THRESHOLD &&
+          Math.abs(deltaY) > Math.abs(deltaX) * FULLPAGE_TOUCH_AXIS_LOCK_RATIO;
+
+        if (!isVerticalSwipe) {
+          return;
+        }
+
+        if (getFullPageSwipeDirection(deltaY) === 'down') {
+          handleScrollDown();
+          return;
+        }
+
+        handleScrollUp();
+      };
+
+      const handlePointerCancel = () => {
+        touchStartRef.current = null;
+      };
 
       const handleResize = () => {
         if (containerRef.current) {
@@ -228,13 +278,20 @@ export default function FullPageScroll({
         }
       };
 
+      root.addEventListener('pointerdown', handlePointerDown);
+      root.addEventListener('pointerup', handlePointerUp);
+      root.addEventListener('pointercancel', handlePointerCancel);
       window.addEventListener('resize', handleResize);
       window.addEventListener('keydown', handleKeyDown);
 
       return () => {
         observer.kill();
+        root.removeEventListener('pointerdown', handlePointerDown);
+        root.removeEventListener('pointerup', handlePointerUp);
+        root.removeEventListener('pointercancel', handlePointerCancel);
         window.removeEventListener('resize', handleResize);
         window.removeEventListener('keydown', handleKeyDown);
+        touchStartRef.current = null;
         animationRef.current?.kill();
       };
     },
@@ -278,7 +335,7 @@ export default function FullPageScroll({
     <div className="relative h-[100svh] w-full overflow-hidden">
       <div
         ref={containerRef}
-        className="absolute left-0 top-0 w-full"
+        className="absolute left-0 top-0 w-full touch-none"
         style={{ willChange: 'transform' }}
       >
         {children}

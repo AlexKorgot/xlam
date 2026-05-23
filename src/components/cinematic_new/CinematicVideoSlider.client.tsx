@@ -6,7 +6,12 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Container } from '@/src/components/ui/grid/Container';
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
-import { FULLPAGE_SCROLL_EVENT } from '@/src/components/ui/FullPageScroll';
+import {
+  FULLPAGE_SCROLL_EVENT,
+  FULLPAGE_TOUCH_AXIS_LOCK_RATIO,
+  FULLPAGE_TOUCH_SWIPE_THRESHOLD,
+  getFullPageSwipeDirection,
+} from '@/src/components/ui/FullPageScroll';
 import { cinematicSlides } from './data';
 import { SliderScene } from './SliderScene';
 import type { CinematicOverlayState } from './types';
@@ -255,8 +260,8 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       const deltaX = event.clientX - start.x;
       const deltaY = event.clientY - start.y;
       const isVerticalSwipe =
-        Math.abs(deltaY) > sectionScrollThreshold &&
-        Math.abs(deltaY) > Math.abs(deltaX) * 1.35;
+        Math.abs(deltaY) > FULLPAGE_TOUCH_SWIPE_THRESHOLD &&
+        Math.abs(deltaY) > Math.abs(deltaX) * FULLPAGE_TOUCH_AXIS_LOCK_RATIO;
 
       if (!isVerticalSwipe) {
         return;
@@ -264,7 +269,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
       wheelBridgeLockRef.current = true;
       queueWheelBridgeUnlock();
-      requestSectionScroll(deltaY < 0 ? 'down' : 'up');
+      requestSectionScroll(getFullPageSwipeDirection(deltaY));
     };
 
     const handlePointerCancel = () => {
