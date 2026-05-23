@@ -1,7 +1,15 @@
 # Repository Guidelines
 
 ## Project Overview
-This repository is a Next.js 16 App Router project using TypeScript, Tailwind, Sass, and GSAP.
+This repository is a Next.js 16 App Router project using TypeScript, Tailwind, Sass, Three.js, Embla, and GSAP.
+
+Current confirmed stack:
+- Next.js 16.2.1
+- React / React DOM 19.2.4
+- Tailwind CSS v4
+- GSAP 3.14 with `@gsap/react`
+- Three.js 0.184 for cinematic WebGL sections
+- Embla Carousel for service sliders
 
 Primary goals when editing this codebase:
 - preserve Next.js 16 App Router conventions
@@ -16,6 +24,8 @@ Application routes live in `src/app`, including the root page and route segments
 Use these conventions:
 - `src/app`: routes, layouts, pages, loading states, and route-level UI
 - `src/components/ui`: reusable UI components
+- `src/components/cinematic_new`: active Three.js project slider used by the main scene
+- `src/components/cinematic`: older cinematic slider implementation kept as reference unless explicitly wired in
 - `src/lib`: shared assets, fonts, utilities, and styles
     - `src/lib/assets`
     - `src/lib/fonts`
@@ -61,7 +71,7 @@ Before finishing any non-trivial change, run:
 - Do not move components to client unnecessarily
 - Avoid introducing hydration mismatches
 - Be careful when changing routing, layouts, metadata, or config
-- Before changing framework APIs, routing behavior, or config, read the relevant guide in `node_modules/next/dist/docs/` and follow deprecation notes there
+- Before changing framework APIs, routing behavior, metadata, server/client boundaries, or config, use the Next.js DevTools MCP docs workflow first: initialize MCP, read `nextjs-docs://llms-index`, fetch the exact relevant doc path with `nextjs_docs`, then make the smallest local change that matches the current docs.
 
 ## GSAP Rules
 Use GSAP with React and Next.js safely.
@@ -89,6 +99,22 @@ Avoid:
 - long chains of hard-coded delays when a timeline is more appropriate
 - animation logic inside Server Components
 - introducing animation libraries in addition to GSAP unless explicitly requested
+
+## Full-Page Scroll Rules
+The main route is an immersive full-page experience.
+
+Current flow:
+- `src/app/page.tsx` renders `MainScene`
+- `src/app/layout.tsx` wraps the app once in `HeaderProvider`
+- `MainScene` composes `FullPageScroll`, `FullPageSection`, `SecondSectionDesign`, `ServicesSliderSection`, `MorphSection`, and `cinematic_new/CinematicVideoSlider`
+
+When editing full-page scroll behavior:
+- keep `FullPageScroll` as the single owner of section index and vertical section transitions
+- use the exported `FULLPAGE_SCROLL_EVENT` for nested components that must request a parent section change
+- use `FULLPAGE_SCROLL_IGNORE_ATTR` only when the nested component handles the event itself or intentionally blocks parent scroll
+- for mobile nested sliders, preserve a vertical touch/pointer bridge back to `FullPageScroll`; otherwise a swipe inside the nested area will not switch sections
+- keep GSAP Observer scoped to the full-page container, not the entire document
+- avoid rendering the same route tree more than once; duplicate client trees will duplicate GSAP timelines, Three.js renderers, media elements, listeners, and RAF loops
 
 ## Editing Guidelines
 When making changes:

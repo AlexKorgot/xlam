@@ -45,7 +45,6 @@ interface ServicesSliderSectionProps {
   allowSectionScrollOnEdges?: boolean;
 }
 
-const sliderVideoSrc = publicAssetPath('/video/3_slider_content_video.mov');
 const scrollIgnoreAttr = { [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' } as const;
 const edgeWheelThreshold = 48;
 const edgeWheelUnlockDelay = 700;
@@ -343,6 +342,7 @@ export function ServicesSliderSection({
   const wheelBridgeDeltaRef = useRef(0);
   const wheelBridgeLockRef = useRef(false);
   const wheelBridgeTimeoutRef = useRef<number | null>(null);
+  const sectionTouchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
@@ -439,16 +439,70 @@ export function ServicesSliderSection({
       );
     };
 
+    const requestSectionScroll = (direction: 'up' | 'down') => {
+      window.dispatchEvent(
+        new CustomEvent(FULLPAGE_SCROLL_EVENT, {
+          detail: { direction },
+        }),
+      );
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!allowSectionScrollOnEdges || event.pointerType !== 'touch') {
+        return;
+      }
+
+      sectionTouchStartRef.current = { x: event.clientX, y: event.clientY };
+    };
+
+    const handlePointerUp = (event: PointerEvent) => {
+      if (!allowSectionScrollOnEdges || event.pointerType !== 'touch') {
+        return;
+      }
+
+      const start = sectionTouchStartRef.current;
+      sectionTouchStartRef.current = null;
+
+      if (!start || wheelBridgeLockRef.current) {
+        return;
+      }
+
+      const deltaX = event.clientX - start.x;
+      const deltaY = event.clientY - start.y;
+      const isVerticalSwipe =
+        Math.abs(deltaY) > edgeWheelThreshold &&
+        Math.abs(deltaY) > Math.abs(deltaX) * 1.35;
+
+      if (!isVerticalSwipe) {
+        return;
+      }
+
+      wheelBridgeLockRef.current = true;
+      queueWheelBridgeUnlock();
+      requestSectionScroll(deltaY < 0 ? 'down' : 'up');
+    };
+
+    const handlePointerCancel = () => {
+      sectionTouchStartRef.current = null;
+    };
+
     viewportNode.addEventListener('wheel', handleWheel, { passive: false });
+    viewportNode.addEventListener('pointerdown', handlePointerDown);
+    viewportNode.addEventListener('pointerup', handlePointerUp);
+    viewportNode.addEventListener('pointercancel', handlePointerCancel);
 
     return () => {
       viewportNode.removeEventListener('wheel', handleWheel);
+      viewportNode.removeEventListener('pointerdown', handlePointerDown);
+      viewportNode.removeEventListener('pointerup', handlePointerUp);
+      viewportNode.removeEventListener('pointercancel', handlePointerCancel);
 
       if (wheelBridgeTimeoutRef.current) {
         window.clearTimeout(wheelBridgeTimeoutRef.current);
         wheelBridgeTimeoutRef.current = null;
       }
 
+      sectionTouchStartRef.current = null;
       unlockWheelBridge();
       resetWheelBridge();
     };

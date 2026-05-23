@@ -74,7 +74,7 @@ export const MainScene = () => {
         </FullPageSection>
 
         <SecondSectionDesign ref={secondSectionRef} />
-        <ServicesSliderSection />
+        <ServicesSliderSection allowSectionScrollOnEdges />
         <FullPageSection id="next">
           <MorphSection
               ref={morphSectionRef}

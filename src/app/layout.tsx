@@ -48,7 +48,6 @@ export default function RootLayout({
     >
       <body className="flex min-h-[100svh] flex-col overflow-x-hidden">
         <HeaderProvider>{children}</HeaderProvider>
-        {children}
       </body>
     </html>
   );
