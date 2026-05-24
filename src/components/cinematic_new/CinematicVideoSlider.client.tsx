@@ -384,7 +384,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
     <section
       ref={rootRef}
       data-fullpage-scroll-ignore
-      className={`font-normalidad group relative isolate h-[100svh] min-h-[620px] w-full overflow-hidden bg-black text-white ${className}`}
+      className={`font-normalidad group relative isolate h-full min-h-0 w-full overflow-hidden bg-black text-white ${className}`}
       aria-label="Cinematic project slider"
     >
       <div className="pointer-events-none absolute inset-0 z-[-2] bg-black" />
@@ -470,8 +470,8 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
         </button>
 
         <Container>
-          <div className="relative grid min-h-[calc(100svh-3.5rem)] grid-rows-[1fr_auto] gap-5">
-            <div className="grid content-end gap-5 pb-[3.2svh] lg:gap-8">
+          <div className="relative grid h-[calc(var(--fullpage-height,100svh)-3.5rem)] min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-[clamp(0.75rem,2vh,1.25rem)]">
+            <div className="grid min-h-0 content-end gap-[clamp(0.75rem,2vh,1.25rem)] pb-[clamp(0.75rem,3.2vh,1.75rem)] lg:gap-8">
               <div className="grid gap-5 lg:grid-cols-[minmax(0,50.4rem)_minmax(28rem,1fr)] lg:items-end lg:gap-20">
                 <div data-case-detail className="opacity-0">
                   <h3 className="max-w-[16ch] text-[2.5rem] font-black uppercase leading-[0.88] text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.65)] sm:text-[4.75rem] lg:max-w-none lg:text-[clamp(4.4rem,7.25vw,9.1rem)]">

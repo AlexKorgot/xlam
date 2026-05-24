@@ -513,9 +513,9 @@ export function ServicesSliderSection({
 
   return (
     <>
-      <FullPageSection id="services" className="items-stretch bg-black pt-30 text-white">
-        <div className="flex h-full w-full max-w-[1570px] flex-col items-center justify-center">
-          <div className="embla__wrapper w-full h-[clamp(343px,70vh,643px)]">
+      <FullPageSection id="services" className="items-stretch bg-black px-4 py-[clamp(1rem,4vh,3rem)] text-white sm:px-6">
+        <div className="flex h-full min-h-0 w-full max-w-[1570px] flex-col items-center justify-center gap-[clamp(0.75rem,2vh,2rem)]">
+          <div className="embla__wrapper h-[clamp(260px,58vh,560px)] max-h-[62%] w-full">
             <div className="embla h-full">
               <div
                 className="h-full overflow-hidden"
@@ -554,11 +554,11 @@ export function ServicesSliderSection({
               </div>
             </div>
           </div>
-          <div className="text-center" data-reveal>
-            <p className="text-[25px] font-bold uppercase leading-[1.14] mt-[50px] text-white">
+          <div className="min-h-0 text-center" data-reveal>
+            <p className="text-[clamp(0.875rem,2.2vw,1.5625rem)] font-bold uppercase leading-[1.14] text-white">
               ЗАНИМАЕМСЯ ВСЕМИ ЭТАПАМИ СОЗДАНИЯ ПРОДУКТА: ПИШЕМ СЦЕНАРИИ, ОРГАНИЗУЕМ СЪЕМКИ, ВИДЕОСЪЕМКИ, МОНТАЖ, САУНД ДИЗАЙН, И СОЗДАЕМ ВСЕ АНИМАЦИИ
             </p>
-            <p className="text-[157px] leading-[0.99] tracking-[0.08em] font-black uppercase text-white">
+            <p className="whitespace-nowrap text-[clamp(2.75rem,9vw,9.8125rem)] font-black uppercase leading-[0.99] tracking-[0.04em] text-white sm:tracking-[0.08em]">
               ХЛАМ MEDI<span className="text-[#63ff45]">A</span>
             </p>
           </div>

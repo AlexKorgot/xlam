@@ -8,7 +8,7 @@
   --border: rgba(255, 255, 255, 0.12);
   --muted: rgba(245, 241, 232, 0.68);
   --accent: #b8ff2c;
-
+  --header-offset: 5.5rem;
 }
 
 @theme inline {
@@ -28,6 +28,12 @@
   :root {
     --background: #050505;
     --foreground: #f5f1e8;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --header-offset: 7rem;
   }
 }
 

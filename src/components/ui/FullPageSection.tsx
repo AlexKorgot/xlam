@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import type { CSSProperties } from 'react';
 
 interface FullPageSectionProps {
   children: ReactNode;
@@ -16,7 +17,8 @@ export default function FullPageSection({
   return (
     <section
       id={id}
-      className={`flex h-[100svh] w-full items-center justify-center ${className}`}
+      className={`flex w-full items-center justify-center overflow-hidden ${className}`}
+      style={{ height: 'var(--fullpage-height, 100svh)' } as CSSProperties}
     >
       {children}
     </section>

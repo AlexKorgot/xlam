@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  type CSSProperties,
   type ReactNode,
   useCallback,
   useContext,
@@ -22,6 +23,10 @@ function getInitialHeaderProgress(pathname: string) {
 export function HeaderProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const initialProgress = getInitialHeaderProgress(pathname);
+  const isImmersiveRoute = pathname === '/';
+  const contentStyle = isImmersiveRoute
+    ? undefined
+    : ({ paddingTop: 'var(--header-offset)' } satisfies CSSProperties);
   const headerRef = useRef<HeaderHandle>(null);
 
   const setHeaderProgress = useCallback<SetHeaderProgress>((progress) => {
@@ -35,7 +40,7 @@ export function HeaderProvider({ children }: { children: ReactNode }) {
   return (
     <HeaderProgressContext.Provider value={setHeaderProgress}>
       <Header ref={headerRef} initialProgress={initialProgress} />
-      {children}
+      <div style={contentStyle}>{children}</div>
     </HeaderProgressContext.Provider>
   );
 }

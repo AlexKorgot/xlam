@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, useCallback, useEffect, useRef } from 'react';
+import type { CSSProperties } from 'react';
 import gsap from 'gsap';
 import { Observer } from 'gsap/all';
 import { useGSAP } from '@gsap/react';
@@ -37,12 +38,41 @@ export default function FullPageScroll({
   transitionStartCallback,
   targetSection,
 }: FullPageScrollProps) {
+  const viewportRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const sectionsRef = useRef<HTMLElement[]>([]);
   const currentIndexRef = useRef(0);
   const isScrollingRef = useRef(false);
   const animationRef = useRef<gsap.core.Timeline | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const fullPageHeightRef = useRef(0);
+
+  const getViewportHeight = useCallback(() => {
+    const visualHeight = window.visualViewport?.height;
+
+    if (visualHeight && visualHeight > 0) {
+      return visualHeight;
+    }
+
+    return window.innerHeight;
+  }, []);
+
+  const syncFullPageHeight = useCallback(() => {
+    const nextHeight = getViewportHeight();
+
+    if (!nextHeight || nextHeight <= 0) {
+      return;
+    }
+
+    fullPageHeightRef.current = nextHeight;
+    viewportRef.current?.style.setProperty('--fullpage-height', `${nextHeight}px`);
+
+    if (containerRef.current) {
+      gsap.set(containerRef.current, {
+        y: -currentIndexRef.current * nextHeight,
+      });
+    }
+  }, [getViewportHeight]);
 
   const getRevealElements = (section?: HTMLElement) =>
     section
@@ -123,7 +153,7 @@ export default function FullPageScroll({
     animationRef.current.to(
       containerRef.current,
       {
-        y: -index * window.innerHeight,
+        y: -index * (fullPageHeightRef.current || getViewportHeight()),
         duration: animationDuration,
         onUpdate: function updateProgress() {
           syncProgress(startIndex, index, this.progress());
@@ -147,7 +177,7 @@ export default function FullPageScroll({
         );
       }
     },
-    [animationDuration, sectionChangeCallback, syncProgress, transitionStartCallback],
+    [animationDuration, getViewportHeight, sectionChangeCallback, syncProgress, transitionStartCallback],
   );
 
   const handleScrollDown = useCallback(() => {
@@ -184,6 +214,7 @@ export default function FullPageScroll({
         return;
       }
 
+      syncFullPageHeight();
       sectionsRef.current = Array.from(containerRef.current.children) as HTMLElement[];
       sectionChangeCallback?.(0);
       progressCallback?.(0);
@@ -255,11 +286,7 @@ export default function FullPageScroll({
       };
 
       const handleResize = () => {
-        if (containerRef.current) {
-          gsap.set(containerRef.current, {
-            y: -currentIndexRef.current * window.innerHeight,
-          });
-        }
+        syncFullPageHeight();
       };
 
       const handleKeyDown = (event: KeyboardEvent) => {
@@ -282,6 +309,8 @@ export default function FullPageScroll({
       root.addEventListener('pointerup', handlePointerUp);
       root.addEventListener('pointercancel', handlePointerCancel);
       window.addEventListener('resize', handleResize);
+      window.visualViewport?.addEventListener('resize', handleResize);
+      window.visualViewport?.addEventListener('scroll', handleResize);
       window.addEventListener('keydown', handleKeyDown);
 
       return () => {
@@ -290,12 +319,14 @@ export default function FullPageScroll({
         root.removeEventListener('pointerup', handlePointerUp);
         root.removeEventListener('pointercancel', handlePointerCancel);
         window.removeEventListener('resize', handleResize);
+        window.visualViewport?.removeEventListener('resize', handleResize);
+        window.visualViewport?.removeEventListener('scroll', handleResize);
         window.removeEventListener('keydown', handleKeyDown);
         touchStartRef.current = null;
         animationRef.current?.kill();
       };
     },
-    { dependencies: [animationDuration] },
+    { dependencies: [animationDuration, syncFullPageHeight] },
   );
 
   useGSAP(
@@ -332,7 +363,11 @@ export default function FullPageScroll({
   }, [handleScrollDown, handleScrollUp]);
 
   return (
-    <div className="relative h-[100svh] w-full overflow-hidden">
+    <div
+      ref={viewportRef}
+      className="relative w-full overflow-hidden"
+      style={{ height: 'var(--fullpage-height, 100svh)' } as CSSProperties}
+    >
       <div
         ref={containerRef}
         className="absolute left-0 top-0 w-full touch-none"

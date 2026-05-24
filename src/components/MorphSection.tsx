@@ -854,7 +854,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
         <section
             ref={rootRef}
             className={[
-                'w-full overflow-hidden px-6 py-8 md:px-10 md:py-10',
+                'flex h-full min-h-0 w-full justify-center overflow-hidden px-6 py-[clamp(1rem,4vh,2.5rem)] md:px-10',
                 className,
             ].join(' ')}
         >
@@ -955,7 +955,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
             </div>
 
             {/* Нижняя строка */}
-            <div ref={bottomRowRef} className="mt-10 flex gap-[36px]">
+            <div ref={bottomRowRef} className="mt-[clamp(1rem,4vh,2.5rem)] flex gap-[36px]">
                 <svg
                     width={bottomSvgWidth}
                     height={bottomSvgHeight}
@@ -1066,7 +1066,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
             </div>
 
             <div className="text-center">
-                <p  ref={textRef} className="text-[40px] font-bold uppercase leading-[1.14] mt-[50px] text-white">
+                <p  ref={textRef} className="mt-[clamp(1rem,4vh,3.125rem)] text-[clamp(1.5rem,4.5vw,2.5rem)] font-bold uppercase leading-[1.14] text-white">
                     МЫ СОЗДАЕМ КРЕАТИВНЫЕ ВИДЕО, ШОУ, РЕКЛАМУ и БРЕНДЫ, которые звучат дольше, чем длятся
                 </p>
             </div>
