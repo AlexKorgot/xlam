@@ -2,9 +2,11 @@
 
 import {
   forwardRef,
+  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
+  useState,
   type CSSProperties,
   type MutableRefObject,
 } from 'react';
@@ -37,24 +39,83 @@ type ArtKey =
   | 'tube'
   | 'brick';
 
-interface ArtItemConfig {
+type CssLength = number | string;
+
+type HorizontalPosition =
+  | {
+      left: CssLength;
+      right?: never;
+    }
+  | {
+      right: CssLength;
+      left?: never;
+    };
+
+type VerticalPosition =
+  | {
+      top: CssLength;
+      bottom?: never;
+    }
+  | {
+      bottom: CssLength;
+      top?: never;
+    };
+
+type ArtBreakpoint = 'mobilePortrait' | 'mobileLandscape' | 'desktop';
+
+type ArtLayout = {
+  size: CssLength;
+} & HorizontalPosition &
+  VerticalPosition;
+
+type ArtMotion = {
+  startX: number;
+  startY: number;
+  startRotate: number;
+  endRotate?: number;
+  scaleX?: number;
+  exitX: number;
+  exitY: number;
+  exitRotate: number;
+};
+
+type ArtItemConfig = {
   key: ArtKey;
   src: StaticImageData;
   alt: string;
   className: string;
   imageClassName: string;
-  left: number;
-  top: number;
-  size: number;
   depth: number;
   delay: number;
-  startX: number;
-  startY: number;
-  startRotate: number;
-  exitX: number;
-  exitY: number;
-  exitRotate: number;
-}
+  layouts: Record<ArtBreakpoint, ArtLayout>;
+  motion: Record<ArtBreakpoint, ArtMotion>;
+};
+
+const artStages: Record<
+  ArtBreakpoint,
+  {
+    width: number;
+    height: number;
+    className: string;
+  }
+> = {
+  mobilePortrait: {
+    width: 390,
+    height: 760,
+    className: 'scale-100',
+  },
+  mobileLandscape: {
+    width: 844,
+    height: 390,
+    className: 'scale-100',
+  },
+  desktop: {
+    width: 1710,
+    height: 962,
+    className:
+      'scale-[0.46] sm:scale-[0.58] md:scale-[0.75] lg:scale-[0.84] xl:scale-[0.9] 2xl:scale-100',
+  },
+};
 
 const artItems: ArtItemConfig[] = [
   {
@@ -63,71 +124,210 @@ const artItems: ArtItemConfig[] = [
     alt: 'Blue spring',
     className: 'absolute',
     imageClassName: 'w-full',
-    left: 158,
-    top: -225,
-    size: 584,
     depth: 0.9,
     delay: 0,
-    startX: -520,
-    startY: -340,
-    startRotate: -34,
-    exitX: -460,
-    exitY: -280,
-    exitRotate: -24,
+    layouts: {
+      mobilePortrait: {
+        left: -30,
+        top: 0,
+        size: 220,
+      },
+      mobileLandscape: {
+        left: 160,
+        top: -70,
+        size: 210,
+      },
+      desktop: {
+        left: 158,
+        top: -225,
+        size: 584,
+      },
+    },
+    motion: {
+      mobilePortrait: {
+        startX: -160,
+        startY: -120,
+        startRotate: 100,
+        endRotate: 280,
+        exitX: -220,
+        exitY: -150,
+        exitRotate: 420,
+      },
+      mobileLandscape: {
+        startX: -130,
+        startY: -90,
+        startRotate: 100,
+        endRotate: 280,
+        exitX: -180,
+        exitY: -120,
+        exitRotate: 420,
+      },
+      desktop: {
+        startX: -460,
+        startY: -300,
+        startRotate: 100,
+        endRotate: 280,
+        exitX: -520,
+        exitY: -340,
+        exitRotate: 420,
+      },
+    },
   },
   {
     key: 'sphere',
     src: Sphere,
     alt: 'Black sphere',
-    className: 'absolute',
+    className: 'absolute z-2',
     imageClassName: 'w-full',
-    left: 600,
-    top: -13,
-    size: 481,
     depth: 0.55,
     delay: 0.34,
-    startX: 0,
-    startY: -420,
-    startRotate: 22,
-    exitX: 0,
-    exitY: -360,
-    exitRotate: 18,
+    layouts: {
+      mobilePortrait: {
+        left: 'calc(50% - 140px)',
+        top: 100,
+        size: 280,
+      },
+      mobileLandscape: {
+        left: 'calc(50% - 82px)',
+        top: 30,
+        size: 164,
+      },
+      desktop: {
+        left: 'calc(50% - 240px)',
+        top: -25,
+        size: 480,
+      },
+    },
+    motion: {
+      mobilePortrait: {
+        startX: 0,
+        startY: -150,
+        startRotate: -18,
+        exitX: 0,
+        exitY: -180,
+        exitRotate: 22,
+      },
+      mobileLandscape: {
+        startX: 0,
+        startY: -110,
+        startRotate: -18,
+        exitX: 0,
+        exitY: -135,
+        exitRotate: 22,
+      },
+      desktop: {
+        startX: 0,
+        startY: -320,
+        startRotate: -18,
+        exitX: 0,
+        exitY: -360,
+        exitRotate: 22,
+      },
+    },
   },
   {
     key: 'stoneM',
     src: StoneM,
     alt: 'Stone M',
-    className: 'absolute hidden md:block',
+    className: 'absolute',
     imageClassName: 'w-full',
-    left: 795,
-    top: -277,
-    size: 803,
     depth: 0.85,
     delay: 0.16,
-    startX: 560,
-    startY: -320,
-    startRotate: 18,
-    exitX: 560,
-    exitY: -320,
-    exitRotate: 18,
+    layouts: {
+      mobilePortrait: {
+        right: -80,
+        top: 50,
+        size: 300,
+      },
+      mobileLandscape: {
+        right: 0,
+        top: -40,
+        size: 400,
+      },
+      desktop: {
+        right: 'calc(10% - 100px)',
+        top: -100,
+        size: 803,
+      },
+    },
+    motion: {
+      mobilePortrait: {
+        startX: 170,
+        startY: -110,
+        startRotate: 16,
+        exitX: 220,
+        exitY: -140,
+        exitRotate: 24,
+      },
+      mobileLandscape: {
+        startX: 160,
+        startY: -100,
+        startRotate: 16,
+        exitX: 210,
+        exitY: -130,
+        exitRotate: 24,
+      },
+      desktop: {
+        startX: 460,
+        startY: -260,
+        startRotate: 16,
+        exitX: 540,
+        exitY: -320,
+        exitRotate: 24,
+      },
+    },
   },
   {
     key: 'greenBrick',
     src: GreenBrick,
     alt: 'Green brick',
-    className: 'absolute',
+    className: 'absolute z-1',
     imageClassName: 'w-full rotate-[-34deg]',
-    left: 431,
-    top: -505,
-    size: 886,
     depth: 0.7,
     delay: 0.08,
-    startX: 80,
-    startY: -460,
-    startRotate: -20,
-    exitX: 120,
-    exitY: -520,
-    exitRotate: -22,
+    layouts: {
+      mobilePortrait: {
+        left: 'calc(50% - 80px)',
+        top: -60,
+        size: 220,
+      },
+      mobileLandscape: {
+        left: 'calc(50% - 102px)',
+        top: -90,
+        size: 204,
+      },
+      desktop: {
+        left: 'calc(50% - 200px)',
+        top: -200,
+        size: 400,
+      },
+    },
+    motion: {
+      mobilePortrait: {
+        startX: 24,
+        startY: -110,
+        startRotate: -18,
+        exitX: 48,
+        exitY: -140,
+        exitRotate: -28,
+      },
+      mobileLandscape: {
+        startX: 18,
+        startY: -80,
+        startRotate: -18,
+        exitX: 38,
+        exitY: -105,
+        exitRotate: -28,
+      },
+      desktop: {
+        startX: 32,
+        startY: -220,
+        startRotate: -18,
+        exitX: 72,
+        exitY: -280,
+        exitRotate: -28,
+      },
+    },
   },
   {
     key: 'furryX',
@@ -135,53 +335,164 @@ const artItems: ArtItemConfig[] = [
     alt: 'Green X',
     className: 'absolute',
     imageClassName: 'w-full',
-    left: 25,
-    top: 441,
-    size: 830,
     depth: 0.8,
     delay: 0.52,
-    startX: -500,
-    startY: 420,
-    startRotate: -40,
-    exitX: -520,
-    exitY: 420,
-    exitRotate: -28,
+    layouts: {
+      mobilePortrait: {
+        left: 0,
+        bottom: -4,
+        size: 230,
+      },
+      mobileLandscape: {
+        left: 180,
+        bottom: -60,
+        size: 190,
+      },
+      desktop: {
+        left: 'calc(10%)',
+        bottom: -170,
+        size: 500,
+      },
+    },
+    motion: {
+      mobilePortrait: {
+        startX: -170,
+        startY: 170,
+        startRotate: -64,
+        scaleX: -1,
+        endRotate: -20,
+        exitX: -220,
+        exitY: 210,
+        exitRotate: -82,
+      },
+      mobileLandscape: {
+        startX: -130,
+        startY: 100,
+        startRotate: -64,
+        scaleX: -1,
+        endRotate: -20,
+        exitX: -180,
+        exitY: 130,
+        exitRotate: -82,
+      },
+      desktop: {
+        startX: -360,
+        startY: 300,
+        startRotate: -64,
+        scaleX: -1,
+        endRotate: -20,
+        exitX: -420,
+        exitY: 360,
+        exitRotate: -82,
+      },
+    },
   },
   {
     key: 'shield',
     src: Shield,
     alt: 'Shield',
-    className: 'absolute hidden md:block',
+    className: 'absolute',
     imageClassName: 'w-full',
-    left: 556,
-    top: 456,
-    size: 524,
     depth: 0.45,
     delay: 0.7,
-    startX: 0,
-    startY: 420,
-    startRotate: -24,
-    exitX: 80,
-    exitY: 380,
-    exitRotate: 18,
+    layouts: {
+      mobilePortrait: {
+        left: 127,
+        bottom: 80,
+        size: 250,
+      },
+      mobileLandscape: {
+        left: 'calc(50% - 115px)',
+        bottom: 0,
+        size: 230,
+      },
+      desktop: {
+        left: 556,
+        top: 456,
+        size: 524,
+      },
+    },
+    motion: {
+      mobilePortrait: {
+        startX: 12,
+        startY: 150,
+        startRotate: -18,
+        exitX: 55,
+        exitY: 180,
+        exitRotate: 18,
+      },
+      mobileLandscape: {
+        startX: 8,
+        startY: 100,
+        startRotate: -18,
+        exitX: 42,
+        exitY: 125,
+        exitRotate: 18,
+      },
+      desktop: {
+        startX: 20,
+        startY: 320,
+        startRotate: -18,
+        exitX: 80,
+        exitY: 360,
+        exitRotate: 18,
+      },
+    },
   },
   {
     key: 'tube',
     src: Tube,
     alt: 'Metal tube',
-    className: 'absolute hidden md:block',
+    className: 'absolute',
     imageClassName: 'w-full rotate-[38deg]',
-    left: 369,
-    top: 603,
-    size: 839,
     depth: 0.35,
     delay: 1.06,
-    startX: -260,
-    startY: 560,
-    startRotate: 32,
-    exitX: -220,
-    exitY: 520,
-    exitRotate: 22,
+    layouts: {
+      mobilePortrait: {
+        left: 70,
+        bottom: -100,
+        size: 230,
+      },
+      mobileLandscape: {
+        left: 'calc(50% - 92px)',
+        bottom: '-24%',
+        size: 184,
+      },
+      desktop: {
+        left: 'calc(50% - 270px)',
+        bottom: -290,
+        size: 539,
+      },
+    },
+    motion: {
+      mobilePortrait: {
+        startX: -45,
+        startY: 180,
+        startRotate: -42,
+        exitX: -80,
+        exitY: 220,
+        exitRotate: -178,
+        endRotate: -130,
+      },
+      mobileLandscape: {
+        startX: -34,
+        startY: 120,
+        startRotate: -42,
+        exitX: -62,
+        exitY: 150,
+        exitRotate: -178,
+        endRotate: -130,
+      },
+      desktop: {
+        startX: -90,
+        startY: 360,
+        startRotate: -42,
+        exitX: -150,
+        exitY: 420,
+        exitRotate: -178,
+        endRotate: -130,
+      },
+    },
   },
   {
     key: 'brick',
@@ -189,17 +500,54 @@ const artItems: ArtItemConfig[] = [
     alt: 'Dark brick',
     className: 'absolute',
     imageClassName: 'w-full rotate-[12deg]',
-    left: 540,
-    top: 270,
-    size: 1095,
     depth: 0.65,
     delay: 0.88,
-    startX: 560,
-    startY: 460,
-    startRotate: 26,
-    exitX: 600,
-    exitY: 460,
-    exitRotate: 22,
+    layouts: {
+      mobilePortrait: {
+        right: -100,
+        bottom: -70,
+        size: 280,
+      },
+      mobileLandscape: {
+        right: 130,
+        bottom: -110,
+        size: 280,
+      },
+      desktop: {
+        right: 110,
+        bottom: -250,
+        size: 700,
+      },
+    },
+    motion: {
+      mobilePortrait: {
+        startX: 170,
+        startY: 170,
+        startRotate: -210,
+        exitX: 230,
+        exitY: 220,
+        exitRotate: -320,
+        endRotate: -260,
+      },
+      mobileLandscape: {
+        startX: 135,
+        startY: 115,
+        startRotate: -210,
+        exitX: 185,
+        exitY: 150,
+        exitRotate: -320,
+        endRotate: -260,
+      },
+      desktop: {
+        startX: 360,
+        startY: 320,
+        startRotate: -210,
+        exitX: 440,
+        exitY: 380,
+        exitRotate: -320,
+        endRotate: -260,
+      },
+    },
   },
 ];
 
@@ -213,6 +561,26 @@ function getOrCreateRef<T>(store: MutableRefObject<Record<string, T | null>>, ke
   };
 }
 
+function getRevealProgress(progress: number) {
+  return gsap.utils.clamp(0, 1, gsap.utils.mapRange(0.46, 1, 0, 1, progress));
+}
+
+function syncTitleProgress(titleNode: HTMLDivElement, progress: number) {
+  const titleProgress = gsap.utils.clamp(
+    0,
+    1,
+    gsap.utils.mapRange(0.52, 0.94, 0, 1, progress),
+  );
+  const easedTitleProgress = gsap.parseEase('power2.out')(titleProgress);
+
+  gsap.set(titleNode, {
+    autoAlpha: easedTitleProgress,
+    scale: easedTitleProgress,
+    xPercent: -50,
+    yPercent: -50,
+  });
+}
+
 export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
   function SecondSectionDesign(_props, ref) {
     const sectionRef = useRef<HTMLElement>(null);
@@ -223,6 +591,8 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
     const scatterTimelineRef = useRef<gsap.core.Timeline | null>(null);
     const titleNodeRef = useRef<HTMLDivElement | null>(null);
     const progressRef = useRef(0);
+    const [artBreakpoint, setArtBreakpoint] = useState<ArtBreakpoint>('desktop');
+    const activeArtStage = artStages[artBreakpoint];
 
     const lines = useMemo(
       () => [
@@ -232,6 +602,30 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
       ],
       [],
     );
+
+    useEffect(() => {
+      const syncBreakpoint = () => {
+        const { innerWidth, innerHeight } = window;
+
+        if (innerWidth >= 768) {
+          setArtBreakpoint('desktop');
+          return;
+        }
+
+        setArtBreakpoint(
+          innerWidth > innerHeight ? 'mobileLandscape' : 'mobilePortrait',
+        );
+      };
+
+      syncBreakpoint();
+      window.addEventListener('resize', syncBreakpoint);
+      window.visualViewport?.addEventListener('resize', syncBreakpoint);
+
+      return () => {
+        window.removeEventListener('resize', syncBreakpoint);
+        window.visualViewport?.removeEventListener('resize', syncBreakpoint);
+      };
+    }, []);
 
     useGSAP(
       () => {
@@ -255,6 +649,7 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
         });
 
         titleNodeRef.current = titleRef.current;
+        syncTitleProgress(titleRef.current, progressRef.current);
 
         artItems.forEach((item) => {
           const artNode = artRefs.current[item.key];
@@ -263,10 +658,13 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
             return;
           }
 
+          const motion = item.motion[artBreakpoint];
+
           gsap.set(artNode, {
-            x: item.startX,
-            y: item.startY,
-            rotate: item.startRotate,
+            x: motion.startX,
+            y: motion.startY,
+            rotate: motion.startRotate,
+            scaleX: motion.scaleX ?? 1,
             autoAlpha: 0,
           });
 
@@ -275,7 +673,8 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
             {
               x: 0,
               y: 0,
-              rotate: 0,
+              rotate: motion.endRotate ?? 0,
+              scaleX: motion.scaleX ?? 1,
               autoAlpha: 1,
               duration: 1.18,
               ease: 'power2.out',
@@ -285,7 +684,7 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
         });
 
         timelineRef.current = timeline;
-        timeline.progress(progressRef.current);
+        timeline.progress(getRevealProgress(progressRef.current));
 
         const parallaxControllers = artItems
           .map((item) => {
@@ -349,30 +748,17 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
           scatterTimelineRef.current?.kill();
         };
       },
-      { scope: sectionRef },
+      { scope: sectionRef, dependencies: [artBreakpoint], revertOnUpdate: true },
     );
 
     useImperativeHandle(ref, () => ({
       setProgress(progress: number) {
         scatterTimelineRef.current?.kill();
         progressRef.current = gsap.utils.clamp(0, 1, progress);
-        const revealProgress = gsap.utils.mapRange(0.46, 1, 0, 1, progressRef.current);
-        timelineRef.current?.progress(gsap.utils.clamp(0, 1, revealProgress));
+        timelineRef.current?.progress(getRevealProgress(progressRef.current));
 
         if (titleNodeRef.current) {
-          const titleProgress = gsap.utils.clamp(
-            0,
-            1,
-            gsap.utils.mapRange(0.52, 0.94, 0, 1, progressRef.current),
-          );
-          const easedTitleProgress = gsap.parseEase('power2.out')(titleProgress);
-
-          gsap.set(titleNodeRef.current, {
-            autoAlpha: easedTitleProgress,
-            scale: easedTitleProgress,
-            xPercent: -50,
-            yPercent: -50,
-          });
+          syncTitleProgress(titleNodeRef.current, progressRef.current);
         }
       },
       playEnter() {
@@ -392,12 +778,15 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
             return;
           }
 
+          const motion = item.motion[artBreakpoint];
+
           timeline.to(
             artNode,
             {
               x: 0,
               y: 0,
-              rotate: 0,
+              rotate: motion.endRotate ?? 0,
+              scaleX: motion.scaleX ?? 1,
               autoAlpha: 1,
             },
             item.delay * 0.22,
@@ -437,12 +826,15 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
             return;
           }
 
+          const motion = item.motion[artBreakpoint];
+
           timeline.to(
             artNode,
             {
-              x: item.exitX,
-              y: item.exitY,
-              rotate: item.exitRotate,
+              x: motion.exitX,
+              y: motion.exitY,
+              rotate: motion.exitRotate,
+              scaleX: motion.scaleX ?? 1,
               autoAlpha: 0,
             },
             item.delay * 0.08,
@@ -477,38 +869,50 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
           className="relative h-full w-full overflow-hidden"
         >
           <div className="pointer-events-none absolute inset-0 z-10 mx-auto w-full max-w-[1710px] overflow-visible">
-            <div className="absolute left-1/2 top-1/2 h-[962px] w-[1710px] origin-center -translate-x-1/2 -translate-y-1/2 scale-[0.46] sm:scale-[0.58] md:scale-[0.75] lg:scale-[0.84] xl:scale-[0.9] 2xl:scale-100">
-              {artItems.map((item) => (
-                <div
-                  key={item.key}
-                  ref={getOrCreateRef(artRefs, item.key)}
-                  className={`${item.className} pointer-events-none`}
-                  style={
-                    {
-                      left: item.left,
-                      top: item.top,
-                      width: item.size,
-                      height: item.size,
-                      willChange: 'transform, opacity',
-                    } as CSSProperties
-                  }
-                >
+            <div
+              className={`absolute left-1/2 top-1/2 origin-center -translate-x-1/2 -translate-y-1/2 ${activeArtStage.className}`}
+              style={{
+                width: activeArtStage.width,
+                height: activeArtStage.height,
+              }}
+            >
+              {artItems.map((item) => {
+                const layout = item.layouts[artBreakpoint];
+
+                return (
                   <div
-                    ref={getOrCreateRef(parallaxRefs, item.key)}
-                    style={{ willChange: 'transform' }}
+                    key={item.key}
+                    ref={getOrCreateRef(artRefs, item.key)}
+                    className={`${item.className} pointer-events-none`}
+                    style={
+                      {
+                        left: layout.left,
+                        right: layout.right,
+                        top: layout.top,
+                        bottom: layout.bottom,
+                        width: layout.size,
+                        height: layout.size,
+                        willChange: 'transform, opacity',
+                      } as CSSProperties
+                    }
                   >
-                    <Image
-                      src={item.src}
-                      alt=""
-                      aria-hidden="true"
-                      unoptimized
-                      loading={item.key === 'greenBrick' ? 'eager' : 'lazy'}
-                      className={item.imageClassName}
-                      sizes="(max-width: 1710px) 100vw, 1710px"
-                    />
+                    <div
+                      ref={getOrCreateRef(parallaxRefs, item.key)}
+                      style={{ willChange: 'transform' }}
+                    >
+                      <Image
+                        src={item.src}
+                        alt=""
+                        aria-hidden="true"
+                        unoptimized
+                        loading={item.key === 'greenBrick' ? 'eager' : 'lazy'}
+                        className={item.imageClassName}
+                        sizes="(max-width: 1710px) 100vw, 1710px"
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

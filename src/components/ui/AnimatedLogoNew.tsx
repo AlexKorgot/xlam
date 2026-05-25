@@ -53,6 +53,26 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
                         return;
                     }
 
+                    gsap.set(centerLogoRef.current, {
+                        x: 0,
+                        y: 0,
+                        scale: 1,
+                        autoAlpha: 1,
+                        transformOrigin: 'center center',
+                    });
+
+                    gsap.set(headerPlateRef.current, {
+                        autoAlpha: 1,
+                        y: 0,
+                        scale: 1,
+                    });
+
+                    gsap.set(headerLogoRef.current, {
+                        autoAlpha: 0,
+                        scale: 1,
+                        transformOrigin: 'center center',
+                    });
+
                     const centerRect = centerLogoRef.current.getBoundingClientRect();
                     const headerRect = headerLogoRef.current.getBoundingClientRect();
 
@@ -76,26 +96,6 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
                         headerRect.height / 2 -
                         (centerRect.top + centerRect.height / 2);
                     const scale = headerRect.width / centerRect.width;
-
-                    gsap.set(centerLogoRef.current, {
-                        x: 0,
-                        y: 0,
-                        scale: 1,
-                        autoAlpha: 1,
-                        transformOrigin: 'center center',
-                    });
-
-                    gsap.set(headerPlateRef.current, {
-                        autoAlpha: 1,
-                        y: 0,
-                        scale: 1,
-                    });
-
-                    gsap.set(headerLogoRef.current, {
-                        autoAlpha: 0,
-                        scale: 1,
-                        transformOrigin: 'center center',
-                    });
 
                     timelineRef.current = gsap
                         .timeline({
@@ -135,9 +135,11 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
 
                 buildTimeline();
                 window.addEventListener('resize', buildTimeline);
+                window.visualViewport?.addEventListener('resize', buildTimeline);
 
                 return () => {
                     window.removeEventListener('resize', buildTimeline);
+                    window.visualViewport?.removeEventListener('resize', buildTimeline);
                     timelineRef.current?.kill();
                     timelineRef.current = null;
                 };

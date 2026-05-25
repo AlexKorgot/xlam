@@ -69,7 +69,7 @@ export const MainScene = () => {
           }
         }}
       >
-        <FullPageSection id="intro" >
+        <FullPageSection id="intro"  className={'bg-transparent'}>
           <div className="sr-only">XLAM Media</div>
         </FullPageSection>
 
