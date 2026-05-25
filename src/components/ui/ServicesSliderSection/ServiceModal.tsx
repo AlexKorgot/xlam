@@ -97,8 +97,8 @@ export function ServiceModal({
       <div className="absolute inset-x-0 bottom-0 h-[59%] bg-gradient-to-t from-black via-black/72 to-transparent" />
       <div className="absolute inset-y-0 left-0 w-[56%] bg-gradient-to-r from-black/70 to-transparent" />
 
-      <div className="relative z-10 flex h-full min-h-0 flex-col px-6 pb-8 pt-16">
-        <div className="min-h-0 flex-1 overflow-y-auto pr-1 lg:overflow-visible lg:pr-0">
+      <div className="relative z-10 flex h-full min-h-0 flex-col p-5 min-[1000px]:px-6 min-[1000px]:pb-8 min-[1000px]:pt-16">
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain pr-3 [scrollbar-color:#63ff45_rgba(255,255,255,0.16)] [scrollbar-width:thin] min-[1000px]:pr-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#63ff45] [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-white/10">
           <h2
             id={titleId}
             className="max-w-[834px] text-[54px] font-black uppercase leading-[0.99] text-[#63ff45] sm:text-[76px] lg:text-[120px]"
@@ -106,7 +106,7 @@ export function ServiceModal({
             {content.title}
           </h2>
 
-          <div id={descriptionId} className="mt-8 max-w-[563px] lg:mt-[41px]">
+          <div id={descriptionId} className="mt-5 max-w-[563px] min-[1000px]:mt-[41px]">
             <p className="text-[18px] font-bold uppercase leading-[1.1] text-white sm:text-[22px] lg:text-[24px]">
               {content.subtitle}
             </p>
@@ -114,32 +114,32 @@ export function ServiceModal({
               {content.description}
             </p>
           </div>
-        </div>
 
-        <div className="grid shrink-0 gap-8 pt-8 lg:grid-cols-[565px_1fr] lg:items-end lg:gap-[102px] lg:pt-0">
-          <div>
-            <p className="text-center text-[24px] font-medium uppercase leading-[1.21] text-[#dedcd3] sm:text-[28px] lg:text-[32px]">
-              {content.ctaIntro}
-            </p>
-            <button
-              type="button"
-              className="mt-[7px] flex min-h-[66px] w-full items-center justify-center bg-[#49f041] px-8 text-center text-[24px] font-medium uppercase  text-[#1b1b1b] transition hover:bg-[#63ff45] focus-visible:outline-offset-4 focus-visible:outline-white sm:min-h-[74px] sm:text-[28px] lg:min-h-[82px] lg:text-[32px]"
-            >
-              {content.ctaLabel}
-            </button>
-          </div>
+          <div className="grid min-w-0 gap-5 pb-2 pt-5 min-[1000px]:grid-cols-[minmax(0,565px)_minmax(0,1fr)] min-[1000px]:items-end min-[1000px]:gap-[102px]">
+            <div>
+              <p className="text-center text-[24px] font-medium uppercase leading-[1.21] text-[#dedcd3] sm:text-[28px] lg:text-[32px]">
+                {content.ctaIntro}
+              </p>
+              <button
+                type="button"
+                className="mt-[7px] flex min-h-[66px] w-full items-center justify-center bg-[#49f041] px-8 text-center text-[24px] font-medium uppercase  text-[#1b1b1b] transition hover:bg-[#63ff45] focus-visible:outline-offset-4 focus-visible:outline-white sm:min-h-[74px] sm:text-[28px] lg:min-h-[82px] lg:text-[32px]"
+              >
+                {content.ctaLabel}
+              </button>
+            </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4 xl:gap-[30px]">
-            {content.features.map((feature) => (
-              <div key={feature.title} className="max-w-[210px]">
-                <h3 className="text-[20px] font-bold uppercase leading-none text-[#63ff45]">
-                  {feature.title}
-                </h3>
-                <p className="mt-[11px] text-[18px] leading-none text-white">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
+            <div className="grid min-h-0 min-w-0 gap-x-6 gap-y-6 sm:grid-cols-2 xl:grid-cols-4 xl:gap-[30px]">
+              {content.features.map((feature) => (
+                <div key={feature.title} className="max-w-none pr-2 xl:max-w-[210px] xl:pr-0">
+                  <h3 className="text-[20px] font-bold uppercase leading-none text-[#63ff45]">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-[11px] text-[18px] leading-none text-white">
+                    {feature.description}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

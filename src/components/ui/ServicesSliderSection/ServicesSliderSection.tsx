@@ -515,19 +515,19 @@ export function ServicesSliderSection({
     <>
       <FullPageSection id="services" className="items-stretch bg-black px-4 py-[clamp(1rem,4vh,3rem)] text-white sm:px-6">
         <div className="flex h-full min-h-0 w-full max-w-[1570px] flex-col items-center justify-center gap-[clamp(0.75rem,2vh,2rem)]">
-          <div className="embla__wrapper h-[clamp(260px,58vh,560px)] max-h-[62%] w-full">
+          <div className="embla__wrapper h-[clamp(260px,58vh,560px)] max-h-[62%] w-screen min-[1000px]:w-full">
             <div className="embla h-full">
               <div
                 className="h-full overflow-hidden"
                 ref={emblaRef}
                 {...scrollIgnoreAttr}
               >
-                <div className="embla__container ml-[-22px] flex h-full touch-pan-y touch-pinch-zoom">
+                <div className="embla__container ml-[-9px] flex h-full touch-pan-y touch-pinch-zoom min-[1000px]:ml-[-22px]">
                   {slides.map((slide, index) => (
                     <button
                       type="button"
                       key={slide.id}
-                      className="embla__slide relative h-full min-w-0 flex-none basis-[85%] cursor-pointer border-0 bg-transparent pb-0 pl-[22px] pr-0 pt-0 text-left text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45] sm:basis-1/2 lg:basis-1/4"
+                      className="embla__slide relative h-full min-w-0 flex-none basis-[calc((100%+9px)/2)] cursor-pointer border-0 bg-transparent pb-0 pl-[9px] pr-0 pt-0 text-left text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45] min-[600px]:basis-[calc((100%+9px)/3)] min-[1000px]:basis-1/4 min-[1000px]:pl-[22px]"
                       aria-label={`Открыть услугу ${slide.title}`}
                       onClick={() => openModal(index)}
                       onMouseEnter={slide.videoRefConfig.handleMouseEnter(slide.videoRefConfig.ref)}
@@ -543,7 +543,7 @@ export function ServicesSliderSection({
                         preload="metadata"
                       />
                       <div className="pointer-events-none absolute bottom-0 px-1.5 text-center">
-                        <p className="text-[12px]">{slide.description}</p>
+                        <p className="hidden text-[12px] min-[1000px]:block">{slide.description}</p>
                         <h4 className="text-[30px] font-black text-[#63ff45]">
                           {slide.title}
                         </h4>

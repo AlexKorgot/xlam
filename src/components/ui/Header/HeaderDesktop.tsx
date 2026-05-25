@@ -36,7 +36,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
     () => {
       const media = gsap.matchMedia();
 
-      media.add('(min-width: 768px)', () => {
+      media.add('(min-width: 900px)', () => {
         if (!leftRef.current || !rightRef.current) {
           return undefined;
         }
@@ -89,7 +89,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
   }));
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 hidden px-4 pt-5 sm:px-8 sm:pt-7 md:block">
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 hidden px-4 pt-5 sm:px-8 sm:pt-7 min-[900px]:block">
       <div className="mx-auto w-full max-w-[1740px] px-[15px]">
         <header
           ref={headerRef}

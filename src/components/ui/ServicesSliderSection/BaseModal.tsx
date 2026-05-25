@@ -105,11 +105,44 @@ export function BaseModal({
       return;
     }
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    const scrollY = window.scrollY;
+    const { style: bodyStyle } = document.body;
+    const { style: htmlStyle } = document.documentElement;
+    const previousBodyStyles = {
+      left: bodyStyle.left,
+      overflow: bodyStyle.overflow,
+      overscrollBehavior: bodyStyle.overscrollBehavior,
+      position: bodyStyle.position,
+      right: bodyStyle.right,
+      top: bodyStyle.top,
+      width: bodyStyle.width,
+    };
+    const previousHtmlStyles = {
+      overflow: htmlStyle.overflow,
+      overscrollBehavior: htmlStyle.overscrollBehavior,
+    };
+
+    htmlStyle.overflow = 'hidden';
+    htmlStyle.overscrollBehavior = 'none';
+    bodyStyle.overflow = 'hidden';
+    bodyStyle.overscrollBehavior = 'none';
+    bodyStyle.position = 'fixed';
+    bodyStyle.top = `-${scrollY}px`;
+    bodyStyle.left = '0';
+    bodyStyle.right = '0';
+    bodyStyle.width = '100%';
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      htmlStyle.overflow = previousHtmlStyles.overflow;
+      htmlStyle.overscrollBehavior = previousHtmlStyles.overscrollBehavior;
+      bodyStyle.overflow = previousBodyStyles.overflow;
+      bodyStyle.overscrollBehavior = previousBodyStyles.overscrollBehavior;
+      bodyStyle.position = previousBodyStyles.position;
+      bodyStyle.top = previousBodyStyles.top;
+      bodyStyle.left = previousBodyStyles.left;
+      bodyStyle.right = previousBodyStyles.right;
+      bodyStyle.width = previousBodyStyles.width;
+      window.scrollTo(0, scrollY);
     };
   }, [shouldRender]);
 
@@ -170,7 +203,7 @@ export function BaseModal({
     <ModalPortal>
       <div
         className={[
-          'fixed inset-0 z-[1000] overflow-y-auto bg-black text-white',
+          'fixed inset-0 z-[1000] overflow-hidden overflow-x-hidden bg-black text-white',
           'transition-opacity duration-[260ms] ease-out motion-reduce:transition-none',
           isVisible ? 'opacity-100' : 'opacity-0',
         ].join(' ')}
@@ -183,14 +216,14 @@ export function BaseModal({
       >
         <div
           className={[
-            'relative mx-auto flex min-h-[100svh] w-full max-w-[1920px] flex-col px-5 pb-6 pt-20 sm:px-8 sm:pt-24 lg:px-[66px] lg:py-[46px]',
+            'relative mx-auto flex min-h-[100svh] w-full max-w-[1920px] flex-col p-5 min-[1000px]:items-center min-[1000px]:justify-center min-[1000px]:px-[66px] min-[1000px]:py-[46px]',
             'transition-[opacity,transform] duration-[260ms] ease-out motion-reduce:transition-none',
             isVisible
               ? 'translate-y-0 scale-100 opacity-100'
               : 'translate-y-4 scale-[0.985] opacity-0',
           ].join(' ')}
         >
-          <div className="relative flex h-[calc(100svh-128px)] min-h-[620px] w-full max-w-[1756px] flex-col overflow-hidden lg:h-[min(829px,calc(100svh-251px))]">
+          <div className="relative flex h-[calc(100svh-128px)] min-h-[620px] w-full max-w-[1756px] flex-col overflow-hidden overflow-x-hidden lg:h-[min(829px,calc(100svh-251px))]">
             <button
               ref={closeButtonRef}
               type="button"

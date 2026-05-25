@@ -1,16 +1,128 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 
+const OVERLAY_TRANSITION_DURATION = 500;
+
 export default function BurgerButton() {
+    const panelRef = useRef<HTMLDivElement>(null);
+    const overlayFrameRef = useRef<number | null>(null);
+    const overlayTimeoutRef = useRef<number | null>(null);
     const [isOpen, setIsOpen] = useState(false);
+    const [isOverlayMounted, setIsOverlayMounted] = useState(false);
+    const [isOverlayVisible, setIsOverlayVisible] = useState(false);
+
+    const clearOverlayTimers = useCallback(() => {
+        if (overlayFrameRef.current !== null) {
+            window.cancelAnimationFrame(overlayFrameRef.current);
+            overlayFrameRef.current = null;
+        }
+
+        if (overlayTimeoutRef.current !== null) {
+            window.clearTimeout(overlayTimeoutRef.current);
+            overlayTimeoutRef.current = null;
+        }
+    }, []);
+
+    const openMenu = useCallback(() => {
+        clearOverlayTimers();
+        setIsOpen(true);
+        setIsOverlayMounted(true);
+        setIsOverlayVisible(false);
+
+        overlayFrameRef.current = window.requestAnimationFrame(() => {
+            overlayFrameRef.current = null;
+            setIsOverlayVisible(true);
+        });
+    }, [clearOverlayTimers]);
+
+    const closeMenu = useCallback(() => {
+        clearOverlayTimers();
+        setIsOpen(false);
+        setIsOverlayVisible(false);
+
+        overlayTimeoutRef.current = window.setTimeout(() => {
+            overlayTimeoutRef.current = null;
+            setIsOverlayMounted(false);
+        }, OVERLAY_TRANSITION_DURATION);
+    }, [clearOverlayTimers]);
+    const toggleMenu = () => {
+        if (isOpen) {
+            closeMenu();
+            return;
+        }
+
+        openMenu();
+    };
+
+    useEffect(() => {
+        if (!isOpen) {
+            return;
+        }
+
+        const handlePointerDown = (event: PointerEvent) => {
+            const target = event.target;
+
+            if (!(target instanceof Node)) {
+                return;
+            }
+
+            if (panelRef.current?.contains(target)) {
+                return;
+            }
+
+            closeMenu();
+        };
+
+        document.addEventListener('pointerdown', handlePointerDown, true);
+
+        return () => {
+            document.removeEventListener('pointerdown', handlePointerDown, true);
+        };
+    }, [closeMenu, isOpen]);
+
+    useEffect(
+        () => () => {
+            clearOverlayTimers();
+        },
+        [clearOverlayTimers],
+    );
 
     return (
         <div className="relative h-[42px] w-[42px]">
+            {isOverlayMounted
+                ? createPortal(
+                    <button
+                        type="button"
+                        aria-label="Close menu"
+                        onClick={closeMenu}
+                        className={clsx(
+                            'fixed inset-0 z-40 transition-[opacity,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                            isOverlayVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+                        )}
+                        style={{
+                            backgroundColor: isOverlayVisible
+                                ? 'rgba(0, 0, 0, 0.24)'
+                                : 'rgba(0, 0, 0, 0)',
+                            WebkitBackdropFilter: isOverlayVisible
+                                ? 'blur(32px) saturate(0.65)'
+                                : 'blur(0px) saturate(1)',
+                            backdropFilter: isOverlayVisible
+                                ? 'blur(32px) saturate(0.65)'
+                                : 'blur(0px) saturate(1)',
+                            transitionProperty: 'opacity, background-color, -webkit-backdrop-filter, backdrop-filter',
+                        }}
+                    />,
+                    document.body,
+                )
+                : null}
             <div
+                ref={panelRef}
+                aria-hidden={!isOpen}
                 className={clsx(
-                    'absolute right-0 top-0 overflow-hidden bg-white transition-[width,height,border-radius] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                    'absolute right-0 top-0 z-50 overflow-hidden bg-white transition-[width,height,border-radius] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
                     isOpen ? 'h-[342px] w-[262px] rounded-none' : 'h-[42px] w-[42px] rounded-[21px]',
                 )}
             >
@@ -18,7 +130,7 @@ export default function BurgerButton() {
                     type="button"
                     aria-label={isOpen ? 'Close menu' : 'Open menu'}
                     aria-pressed={isOpen}
-                    onClick={() => setIsOpen((v) => !v)}
+                    onClick={toggleMenu}
                     className="absolute right-0 top-0 z-20 flex h-[42px] w-[42px] items-center justify-center"
                 >
           <span className="relative block h-[16px] w-[18px]">
