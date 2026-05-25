@@ -18,6 +18,7 @@ type TeamItem = {
   name: string;
   role: string;
   image: StaticImageData;
+  videoSrc?: string;
 };
 
 const teamItems: TeamItem[] = [
@@ -91,14 +92,27 @@ export function TeamSection() {
           </div>
 
           <div className="relative z-[60] mt-8 flex justify-center lg:pointer-events-none lg:absolute lg:right-[181px] lg:top-[244px] lg:mt-0 lg:block">
-            <Image
-              key={activeItem.id}
-              src={activeItem.image}
-              alt={`${activeItem.name}, ${activeItem.role}`}
-              loading="eager"
-              sizes="(min-width: 1280px) 388px, (min-width: 1024px) 30vw, 58vw"
-              className="h-[520px] w-auto max-w-none object-contain lg:h-[704px]"
-            />
+            {activeItem.videoSrc ? (
+              <video
+                key={activeItem.id}
+                src={activeItem.videoSrc}
+                aria-label={`${activeItem.name}, ${activeItem.role}`}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="h-[520px] w-auto max-w-none object-contain lg:h-[704px]"
+              />
+            ) : (
+              <Image
+                key={activeItem.id}
+                src={activeItem.image}
+                alt={`${activeItem.name}, ${activeItem.role}`}
+                loading="eager"
+                sizes="(min-width: 1280px) 388px, (min-width: 1024px) 30vw, 58vw"
+                className="h-[520px] w-auto max-w-none object-contain lg:h-[704px]"
+              />
+            )}
           </div>
 
           <ul className="relative z-30 mt-8 w-full lg:mt-[11px]">

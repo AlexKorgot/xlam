@@ -57,7 +57,7 @@ const showModalContent: ServiceModalContent = {
   subtitle: 'Мы создаём шоу с нуля — от идеи до выхода в эфир',
   description:
     'Берём на себя весь процесс: разработка формата, сценарий, продакшн и пост. Запускаем проекты, готовые к платформам и дистрибуции.',
-  ctaIntro: 'Поговорим о вашей идее',
+  ctaIntro: 'Поговорим о проекте',
   ctaLabel: 'Оставить заявку',
   backgroundImage: showModalImage,
   features: [
@@ -85,7 +85,7 @@ const adsModalContent: ServiceModalContent = {
   subtitle: 'Разрабатываем рекламный контент для роста бренда',
   description:
     'Создаём ролики, кампании и визуальные форматы, которые помогают бренду говорить с аудиторией точнее и заметнее.',
-  ctaIntro: 'Поговорим о вашей идее',
+  ctaIntro: 'Поговорим о проекте',
   ctaLabel: 'Оставить заявку',
   backgroundImage: adsModalImage,
   features: [
@@ -113,7 +113,7 @@ const b2bModalContent: ServiceModalContent = {
   subtitle: 'Производим системный контент для бизнеса',
   description:
     'Помогаем компаниям объяснять продукты, усиливать имидж и выстраивать понятную коммуникацию с партнёрами и клиентами.',
-  ctaIntro: 'Поговорим о вашей идее',
+  ctaIntro: 'Поговорим о проекте',
   ctaLabel: 'Оставить заявку',
   backgroundImage: b2bModalImage,
   features: [
@@ -141,7 +141,7 @@ const brandingModalContent: ServiceModalContent = {
   subtitle: 'Формируем визуальный язык бренда',
   description:
     'Создаём айдентику, графические принципы и контентную упаковку, чтобы бренд выглядел цельно во всех точках контакта.',
-  ctaIntro: 'Поговорим о вашей идее',
+  ctaIntro: 'Поговорим о проекте',
   ctaLabel: 'Оставить заявку',
   backgroundImage: brandingModalImage,
   features: [

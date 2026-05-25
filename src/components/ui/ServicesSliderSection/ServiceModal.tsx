@@ -97,44 +97,44 @@ export function ServiceModal({
       <div className="absolute inset-x-0 bottom-0 h-[59%] bg-gradient-to-t from-black via-black/72 to-transparent" />
       <div className="absolute inset-y-0 left-0 w-[56%] bg-gradient-to-r from-black/70 to-transparent" />
 
-      <div className="relative z-10 flex h-full min-h-0 flex-col p-5 min-[1000px]:px-6 min-[1000px]:pb-8 min-[1000px]:pt-16">
-        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain pr-3 [scrollbar-color:#63ff45_rgba(255,255,255,0.16)] [scrollbar-width:thin] min-[1000px]:pr-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#63ff45] [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-white/10">
+      <div className="relative z-10 flex h-full min-h-0 flex-col p-5 min-[1000px]:px-6 min-[1000px]:pb-5 min-[1000px]:pt-12">
+        <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain pr-3 [scrollbar-color:#63ff45_rgba(255,255,255,0.16)] [scrollbar-width:thin] min-[1000px]:justify-between min-[1000px]:pr-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#63ff45] [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-white/10">
           <h2
             id={titleId}
-            className="max-w-[834px] text-[54px] font-black uppercase leading-[0.99] text-[#63ff45] sm:text-[76px] lg:text-[120px]"
+            className="max-w-[834px] text-[54px] font-black uppercase leading-[0.9] text-[#63ff45] sm:text-[76px] lg:text-[90px] 2xl:text-[112px]"
           >
             {content.title}
           </h2>
 
-          <div id={descriptionId} className="mt-5 max-w-[563px] min-[1000px]:mt-[41px]">
-            <p className="text-[18px] font-bold uppercase leading-[1.1] text-white sm:text-[22px] lg:text-[24px]">
+          <div id={descriptionId} className="mt-5 max-w-[563px] min-[1000px]:mt-5">
+            <p className="max-w-[420px] text-[18px] font-bold uppercase leading-[1.02] text-white sm:text-[22px] lg:text-[21px] 2xl:text-[23px]">
               {content.subtitle}
             </p>
-            <p className="mt-4 text-[17px] leading-[1.1] text-white sm:text-[20px] lg:mt-[14px] lg:text-[22px]">
+            <p className="mt-3 max-w-[455px] text-[16px] leading-[1.08] text-white sm:text-[19px] lg:text-[18px] 2xl:text-[20px]">
               {content.description}
             </p>
           </div>
 
-          <div className="grid min-w-0 gap-5 pb-2 pt-5 min-[1000px]:grid-cols-[minmax(0,565px)_minmax(0,1fr)] min-[1000px]:items-end min-[1000px]:gap-[102px]">
-            <div>
-              <p className="text-center text-[24px] font-medium uppercase leading-[1.21] text-[#dedcd3] sm:text-[28px] lg:text-[32px]">
+          <div className="grid min-w-0 gap-6 pb-1 pt-6 min-[1000px]:grid-cols-[330px_minmax(0,1fr)] min-[1000px]:items-end min-[1000px]:gap-[82px] min-[1000px]:pt-8">
+            <div className="max-w-[330px]">
+              <p className="text-center text-[22px] font-medium uppercase leading-[1.1] text-[#dedcd3] sm:text-[27px] lg:text-[26px] 2xl:text-[30px]">
                 {content.ctaIntro}
               </p>
               <button
                 type="button"
-                className="mt-[7px] flex min-h-[66px] w-full items-center justify-center bg-[#49f041] px-8 text-center text-[24px] font-medium uppercase  text-[#1b1b1b] transition hover:bg-[#63ff45] focus-visible:outline-offset-4 focus-visible:outline-white sm:min-h-[74px] sm:text-[28px] lg:min-h-[82px] lg:text-[32px]"
+                className="mt-3 flex min-h-[50px] w-full items-center justify-center border border-white/65 bg-white/10 px-4 text-center text-[22px] font-bold uppercase leading-none text-white shadow-[inset_0_0_38px_rgba(255,255,255,0.08)] transition hover:border-[#63ff45] hover:bg-white/15 hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:min-h-[58px] sm:text-[24px] lg:min-h-[56px] lg:whitespace-nowrap lg:text-[22px] 2xl:min-h-[64px] 2xl:text-[26px]"
               >
                 {content.ctaLabel}
               </button>
             </div>
 
-            <div className="grid min-h-0 min-w-0 gap-x-6 gap-y-6 sm:grid-cols-2 xl:grid-cols-4 xl:gap-[30px]">
+            <div className="grid min-h-0 min-w-0 grid-cols-2 gap-x-6 gap-y-6 min-[1172px]:grid-cols-4 lg:gap-x-[30px]">
               {content.features.map((feature) => (
-                <div key={feature.title} className="max-w-none pr-2 xl:max-w-[210px] xl:pr-0">
-                  <h3 className="text-[20px] font-bold uppercase leading-none text-[#63ff45]">
+                <div key={feature.title} className="max-w-none pr-2 min-[1000px]:max-w-[210px] min-[1000px]:pr-0">
+                  <h3 className="text-[18px] font-bold uppercase leading-none text-[#63ff45] lg:text-[16px] 2xl:text-[19px]">
                     {feature.title}
                   </h3>
-                  <p className="mt-[11px] text-[18px] leading-none text-white">
+                  <p className="mt-2 text-[15px] leading-[1.04] text-white lg:text-[14px] 2xl:text-[16px]">
                     {feature.description}
                   </p>
                 </div>
