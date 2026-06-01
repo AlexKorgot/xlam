@@ -1,10 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties } from 'react';
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { Container } from '@/src/components/ui/grid/Container';
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
 import {
   FULLPAGE_SCROLL_EVENT,
@@ -13,7 +12,7 @@ import {
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
 import { cinematicSlides } from './data';
-import { SliderScene } from './SliderScene';
+import { SliderScene, type SliderPointerAction } from './SliderScene';
 import type { CinematicOverlayState } from './types';
 
 gsap.registerPlugin(useGSAP);
@@ -35,6 +34,13 @@ const closeLabel = '\u0417\u0430\u043a\u0440\u044b\u0442\u044c';
 const sectionScrollThreshold = 48;
 const sectionScrollUnlockDelay = 700;
 
+const getFocusableElements = (container: HTMLElement) =>
+  Array.from(
+    container.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter((element) => !element.hasAttribute('disabled') && !element.getAttribute('aria-hidden'));
+
 export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderProps) {
   const rootRef = useRef<HTMLElement | null>(null);
   const canvasHostRef = useRef<HTMLDivElement | null>(null);
@@ -42,7 +48,13 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   const chromeRef = useRef<HTMLDivElement | null>(null);
   const labelRef = useRef<HTMLDivElement | null>(null);
   const detailsRef = useRef<HTMLDivElement | null>(null);
+  const sheetRef = useRef<HTMLDivElement | null>(null);
+  const sheetTitleRef = useRef<HTMLHeadingElement | null>(null);
+  const sheetScrollRef = useRef<HTMLDivElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const openTriggerRef = useRef<HTMLElement | null>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+  const sheetTouchStartRef = useRef<{ x: number; y: number; scrollTop: number } | null>(null);
   const sectionTouchStartRef = useRef<{ x: number; y: number } | null>(null);
   const wheelBridgeDirectionRef = useRef<'up' | 'down' | null>(null);
   const wheelBridgeDeltaRef = useRef(0);
@@ -60,6 +72,27 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   const isOpened = overlayState === 'opened' || overlayState === 'opening' || overlayState === 'openedSliding';
   const isDetailsLayerVisible = isOpened || overlayState === 'closing';
   const isChromeVisible = overlayState === 'slider' || overlayState === 'sliding';
+
+  const handleOpen = useCallback(() => {
+    openTriggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    sceneRef.current?.open();
+  }, []);
+
+  const handlePointerAction = useCallback((action: SliderPointerAction | null) => {
+    if (action === 'open') {
+      handleOpen();
+      return;
+    }
+
+    if (action === 'previous') {
+      sceneRef.current?.previous();
+      return;
+    }
+
+    if (action === 'next') {
+      sceneRef.current?.next();
+    }
+  }, [handleOpen]);
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -102,7 +135,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
         return;
       }
 
-      scene.handlePointerGesture(start.x, start.y, event.clientX, event.clientY);
+      handlePointerAction(scene.getPointerGestureAction(start.x, start.y, event.clientX, event.clientY));
     };
     const handlePointerCancel = () => {
       pointerStartRef.current = null;
@@ -119,7 +152,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       scene.dispose();
       sceneRef.current = null;
     };
-  }, [reducedMotion, slides]);
+  }, [handlePointerAction, reducedMotion, slides]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -159,13 +192,102 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
     sceneRef.current?.nextOpened();
   }, []);
 
-  const handleOpen = useCallback(() => {
-    sceneRef.current?.open();
-  }, []);
-
   const handleClose = useCallback(() => {
     sceneRef.current?.close();
   }, []);
+
+  useEffect(() => {
+    if (!isDetailsLayerVisible || !sheetRef.current) {
+      return;
+    }
+
+    const sheet = sheetRef.current;
+    const focusTimer = window.setTimeout(() => {
+      (sheetTitleRef.current ?? closeButtonRef.current ?? sheet).focus();
+    }, reducedMotion ? 0 : 900);
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        handleClose();
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const focusableElements = getFocusableElements(sheet);
+
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        sheet.focus();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+        return;
+      }
+
+      if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleClose, isDetailsLayerVisible, reducedMotion]);
+
+  useEffect(() => {
+    if (isDetailsLayerVisible) {
+      return;
+    }
+
+    openTriggerRef.current?.focus();
+    openTriggerRef.current = null;
+  }, [isDetailsLayerVisible]);
+
+  const handleSheetPointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'touch') {
+      return;
+    }
+
+    sheetTouchStartRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      scrollTop: sheetScrollRef.current?.scrollTop ?? 0,
+    };
+  }, []);
+
+  const handleSheetPointerUp = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'touch') {
+      return;
+    }
+
+    const start = sheetTouchStartRef.current;
+    sheetTouchStartRef.current = null;
+
+    if (!start || start.scrollTop > 0) {
+      return;
+    }
+
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+
+    if (deltaY > 56 && Math.abs(deltaY) > Math.abs(deltaX) * 1.3) {
+      handleClose();
+    }
+  }, [handleClose]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -300,11 +422,12 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
   useGSAP(
     () => {
-      if (!chromeRef.current || !detailsRef.current) {
+      if (!chromeRef.current || !detailsRef.current || !sheetRef.current) {
         return;
       }
 
       const detailItems = detailsRef.current.querySelectorAll('[data-case-detail]');
+      const sheet = sheetRef.current;
 
       gsap.to(chromeRef.current, {
         '--cinematic-chrome-opacity': isChromeVisible ? 1 : 0,
@@ -332,6 +455,18 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
         wasOpenedVisibleRef.current = true;
 
         gsap.fromTo(
+          sheet,
+          { autoAlpha: 0, yPercent: reducedMotion ? 0 : 100 },
+          {
+            autoAlpha: 1,
+            yPercent: 0,
+            duration: reducedMotion ? 0.01 : 0.62,
+            ease: 'power3.out',
+            delay: overlayState === 'opened' ? 0 : 0.18,
+          },
+        );
+
+        gsap.fromTo(
           detailItems,
           { autoAlpha: 0, y: reducedMotion ? 0 : 24 },
           {
@@ -347,6 +482,13 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       }
 
       wasOpenedVisibleRef.current = false;
+
+      gsap.to(sheet, {
+        autoAlpha: 0,
+        yPercent: reducedMotion ? 0 : 100,
+        duration: reducedMotion ? 0.01 : 0.44,
+        ease: 'power3.in',
+      });
 
       gsap.to(detailItems, {
         autoAlpha: 0,
@@ -450,46 +592,82 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
       <div
         ref={detailsRef}
-        className={`absolute inset-0 z-20 py-7 transition-opacity duration-300 ${
+        className={`absolute inset-0 z-20 transition-opacity duration-300 ${
           isDetailsLayerVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
         }`}
         aria-hidden={!isDetailsLayerVisible}
       >
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[42svh] bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(0,8,8,0.72)_44%,rgba(0,8,8,0.96)_100%)] backdrop-blur-[2px]" />
-
         <button
           type="button"
-          data-case-detail
-          className="absolute right-5 top-5 z-40 flex h-10 items-center justify-center border border-white/24 bg-black/38 px-4 font-black uppercase leading-none text-white/78 opacity-0 backdrop-blur-md transition-colors hover:border-[#66ff66]/65 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:right-8 md:top-8 md:h-11 md:px-5"
+          className="absolute inset-0 bg-black/58 backdrop-blur-[2px]"
           onClick={handleClose}
-          aria-label="Close project"
-        >
-          <span className="flex h-full items-center justify-center leading-none [&>div>div]:flex [&>div>div]:items-center [&>div>div]:leading-none">
-            <GlitchText size="11">{closeLabel}</GlitchText>
-          </span>
-        </button>
+          aria-label="Close project details"
+          tabIndex={-1}
+        />
 
-        <Container>
-          <div className="relative grid h-[calc(var(--fullpage-height,100svh)-3.5rem)] min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-[clamp(0.75rem,2vh,1.25rem)]">
-            <div className="grid min-h-0 content-end gap-[clamp(0.75rem,2vh,1.25rem)] pb-[clamp(0.75rem,3.2vh,1.75rem)] lg:gap-8">
-              <div className="grid gap-5 lg:grid-cols-[minmax(0,50.4rem)_minmax(28rem,1fr)] lg:items-end lg:gap-20">
+        <div className="absolute inset-x-0 bottom-0 z-30 flex max-h-[calc(var(--fullpage-height,100svh)-1rem)] items-end justify-center px-3 pb-3 sm:px-5 sm:pb-5 lg:px-8 lg:pb-8">
+          <div
+            ref={sheetRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cinematic-project-title"
+            tabIndex={-1}
+            className="max-h-[min(86svh,calc(var(--fullpage-height,100svh)-2rem))] w-full max-w-[76rem] overflow-hidden rounded-t-[1.35rem] border border-white/18 bg-[#050909]/94 text-white opacity-0 shadow-[0_-28px_90px_rgba(0,0,0,0.72)] outline-none backdrop-blur-xl lg:rounded-[1.35rem]"
+            onPointerDown={handleSheetPointerDown}
+            onPointerUp={handleSheetPointerUp}
+            onPointerCancel={() => {
+              sheetTouchStartRef.current = null;
+            }}
+          >
+            <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-white/28" aria-hidden="true" />
+
+            <div className="grid grid-cols-[1fr_auto] items-start gap-4 border-b border-white/10 px-5 pb-4 pt-4 sm:px-7 lg:px-9">
+              <div data-case-detail className="min-w-0 opacity-0">
+                <p className="mb-2 text-[10px] font-black uppercase leading-none tracking-[0.24em] text-white/58">
+                  {activeSlide.eyebrow}
+                </p>
+                <h3
+                  ref={sheetTitleRef}
+                  id="cinematic-project-title"
+                  tabIndex={-1}
+                  className="max-w-[18ch] text-[2.1rem] font-black uppercase leading-[0.88] outline-none sm:text-[3.3rem] lg:max-w-none lg:text-[clamp(3.6rem,6vw,7rem)]"
+                >
+                  <span className="block text-[0.56em]">{activeSlide.opened.titleLead}</span>
+                  <span className="block text-[#66ff66]">{activeSlide.opened.titleAccent}</span>
+                </h3>
+              </div>
+
+              <button
+                ref={closeButtonRef}
+                type="button"
+                data-case-detail
+                className="flex h-10 shrink-0 items-center justify-center border border-white/24 bg-black/38 px-4 font-black uppercase leading-none text-white/78 opacity-0 transition-colors hover:border-[#66ff66]/65 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-11 md:px-5"
+                onClick={handleClose}
+                aria-label="Close project"
+              >
+                <span className="flex h-full items-center justify-center leading-none [&>div>div]:flex [&>div>div]:items-center [&>div>div]:leading-none">
+                  <GlitchText size="11">{closeLabel}</GlitchText>
+                </span>
+              </button>
+            </div>
+
+            <div
+              ref={sheetScrollRef}
+              className="max-h-[calc(var(--fullpage-height,100svh)-10.5rem)] overflow-y-auto overscroll-contain px-5 py-5 sm:px-7 lg:px-9 lg:py-7"
+            >
+              <div className="grid gap-6 lg:grid-cols-[minmax(0,1.02fr)_minmax(22rem,0.78fr)] lg:gap-10">
                 <div data-case-detail className="opacity-0">
-                  <h3 className="max-w-[16ch] text-[2.5rem] font-black uppercase leading-[0.88] text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.65)] sm:text-[4.75rem] lg:max-w-none lg:text-[clamp(4.4rem,7.25vw,9.1rem)]">
-                    <span className="block text-[0.56em]">{activeSlide.opened.titleLead}</span>
-                    <span className="block whitespace-nowrap text-[#66ff66]">{activeSlide.opened.titleAccent}</span>
-                  </h3>
-
-                  <p className="mt-5 max-w-[54rem] text-[15px] font-medium leading-[1.1] text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.7)] sm:text-[18px] lg:text-[22px]">
+                  <p className="max-w-[54rem] text-[15px] font-medium leading-[1.18] text-white/92 sm:text-[18px] lg:text-[21px]">
                     {activeSlide.opened.body}
                   </p>
                 </div>
 
                 <div data-case-detail className="opacity-0 lg:pb-3">
-                  <div className="grid grid-cols-2 gap-x-2 gap-y-[11px] sm:grid-cols-5 lg:ml-auto lg:max-w-[54rem]">
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-[11px] sm:grid-cols-3">
                     {[...activeSlide.opened.services, ...activeSlide.opened.services].map((service, index) => (
                       <span
                         key={`${service}-${index}`}
-                        className="flex h-7 min-w-0 items-center justify-center border border-white/82 px-2 text-center text-[9px] font-black uppercase leading-none text-white shadow-[0_4px_18px_rgba(0,0,0,0.38)] sm:text-[10px] lg:w-[8.35rem]"
+                        className="flex h-7 min-w-0 items-center justify-center border border-white/50 px-2 text-center text-[9px] font-black uppercase leading-none text-white shadow-[0_4px_18px_rgba(0,0,0,0.38)] sm:text-[10px]"
                       >
                         {service}
                       </span>
@@ -498,11 +676,11 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
                 </div>
               </div>
 
-              <div className="grid gap-4 lg:grid-cols-[26.5rem_minmax(0,1fr)] lg:items-start lg:gap-20">
+              <div className="mt-7 grid gap-5 lg:grid-cols-[24rem_minmax(0,1fr)] lg:items-start lg:gap-10">
                 {activeSlide.opened.secondaryBody ? (
                   <p
                     data-case-detail
-                    className="max-w-[26rem] text-[15px] font-medium leading-[1.1] text-white opacity-0 drop-shadow-[0_4px_18px_rgba(0,0,0,0.7)] sm:text-[18px] lg:text-[22px]"
+                    className="max-w-[26rem] text-[15px] font-medium leading-[1.18] text-white/84 opacity-0 sm:text-[18px] lg:text-[20px]"
                   >
                     {activeSlide.opened.secondaryBody}
                   </p>
@@ -512,12 +690,12 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
                 <div
                   data-case-detail
-                  className="grid grid-cols-2 justify-items-stretch gap-4 opacity-0 sm:grid-cols-4 sm:gap-5 lg:gap-5"
+                  className="grid grid-cols-2 justify-items-stretch gap-3 opacity-0 sm:grid-cols-4 sm:gap-4"
                 >
                   {Array.from({ length: 4 }).map((_, index) => (
                     <div
                       key={index}
-                      className="relative aspect-[412/208] w-full max-w-[412px] overflow-hidden bg-black/45 shadow-[0_18px_46px_rgba(0,0,0,0.42)]"
+                      className="relative aspect-[412/208] w-full max-w-[412px] overflow-hidden rounded-[6px] bg-black/45 shadow-[0_18px_46px_rgba(0,0,0,0.42)]"
                     >
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_36%,rgba(102,255,102,0.3),rgba(102,255,102,0)_28%),linear-gradient(112deg,rgba(22,121,132,0.78),rgba(8,12,13,0.44)_44%,rgba(176,116,70,0.58))]" />
                       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.12),rgba(255,255,255,0)_34%,rgba(0,0,0,0.28))]" />
@@ -529,7 +707,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
             <nav
               data-case-detail
-              className="relative z-30 grid grid-cols-[1fr_auto_1fr] items-center gap-4 pb-[2.1svh] opacity-0"
+              className="relative z-30 grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-t border-white/10 px-5 py-3 opacity-0 sm:px-7 lg:px-9"
               aria-label="Opened project navigation"
             >
               <button
@@ -555,7 +733,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
               </button>
             </nav>
           </div>
-        </Container>
+        </div>
       </div>
     </section>
   );

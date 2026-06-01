@@ -18,6 +18,8 @@ type SlideVideo = {
   lastRole: FilmStripSlideRole;
 };
 
+export type SliderPointerAction = 'open' | 'previous' | 'next';
+
 type FilmStripLayoutConfig = {
   centerWidthRatio: number;
   centerMaxWidthRatio: number;
@@ -258,9 +260,9 @@ export class SliderScene {
     return this.activeIndex;
   }
 
-  handlePointer(clientX: number, clientY: number) {
+  getPointerAction(clientX: number, clientY: number): SliderPointerAction | null {
     if (this.mode !== 'slider') {
-      return;
+      return null;
     }
 
     const rect = this.container.getBoundingClientRect();
@@ -276,30 +278,30 @@ export class SliderScene {
         Math.abs(y - centerY) <= layout.height / 2;
 
     if (insideActive) {
-      this.open();
-      return;
+      return 'open';
     }
 
     if (rect.width < 760) {
-      return;
+      return null;
     }
 
     const leftLayout = this.getLayoutForOffset(-1);
     const rightLayout = this.getLayoutForOffset(1);
 
     if (this.isPointInsideLayout(x, y, rect, leftLayout)) {
-      this.previous();
-      return;
+      return 'previous';
     }
 
     if (this.isPointInsideLayout(x, y, rect, rightLayout)) {
-      this.next();
+      return 'next';
     }
+
+    return null;
   }
 
-  handlePointerGesture(startX: number, startY: number, endX: number, endY: number) {
+  getPointerGestureAction(startX: number, startY: number, endX: number, endY: number): SliderPointerAction | null {
     if (this.mode !== 'slider') {
-      return;
+      return null;
     }
 
     const rect = this.container.getBoundingClientRect();
@@ -310,17 +312,17 @@ export class SliderScene {
 
     if (isMobile && isSwipe) {
       if (deltaX < 0) {
-        this.next();
-        return;
+        return 'next';
       }
 
-      this.previous();
-      return;
+      return 'previous';
     }
 
     if (Math.hypot(deltaX, deltaY) < 10) {
-      this.handlePointer(endX, endY);
+      return this.getPointerAction(endX, endY);
     }
+
+    return null;
   }
 
   next() {
