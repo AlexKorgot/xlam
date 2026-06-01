@@ -13,7 +13,7 @@ import {
 } from '@/src/components/ui/FullPageScroll';
 import { cinematicSlides } from './data';
 import { SliderScene, type SliderPointerAction } from './SliderScene';
-import type { CinematicOverlayState } from './types';
+import type { CinematicOverlayState, CinematicSlide } from './types';
 
 gsap.registerPlugin(useGSAP);
 
@@ -33,6 +33,13 @@ const nextGlyph = '\u203a';
 const closeLabel = '\u0417\u0430\u043a\u0440\u044b\u0442\u044c';
 const sectionScrollThreshold = 48;
 const sectionScrollUnlockDelay = 700;
+const openedSlideTransitionDuration = 0.96;
+const openedSlideContentSwitchProgress = 0.42;
+const openedSlideIncomingDuration = 0.32;
+const openedSlideIncomingDelay =
+  openedSlideTransitionDuration * (1 - openedSlideContentSwitchProgress) -
+  openedSlideIncomingDuration -
+  0.04;
 
 const getFocusableElements = (container: HTMLElement) =>
   Array.from(
@@ -40,6 +47,61 @@ const getFocusableElements = (container: HTMLElement) =>
       'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
     ),
   ).filter((element) => !element.hasAttribute('disabled') && !element.getAttribute('aria-hidden'));
+
+function OpenedSheetBody({ slide }: { slide: CinematicSlide }) {
+  return (
+    <>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.02fr)_minmax(22rem,0.78fr)] lg:gap-10">
+        <div data-case-content className="opacity-0">
+          <p className="max-w-[54rem] text-[15px] font-medium leading-[1.18] text-white/92 transition-[color] duration-300 sm:text-[18px] lg:text-[21px]">
+            {slide.opened.body}
+          </p>
+        </div>
+
+        <div data-case-content className="opacity-0 lg:pb-3">
+          <div className="grid grid-cols-2 gap-x-2 gap-y-[11px] sm:grid-cols-3">
+            {[...slide.opened.services, ...slide.opened.services].map((service, index) => (
+              <span
+                key={`${service}-${index}`}
+                className="flex h-7 min-w-0 items-center justify-center border border-white/50 px-2 text-center text-[9px] font-black uppercase leading-none text-white shadow-[0_4px_18px_rgba(0,0,0,0.38)] transition-colors duration-300 sm:text-[10px]"
+              >
+                {service}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-7 grid gap-5 lg:grid-cols-[24rem_minmax(0,1fr)] lg:items-start lg:gap-10">
+        {slide.opened.secondaryBody ? (
+          <p
+            data-case-content
+            className="max-w-[26rem] text-[15px] font-medium leading-[1.18] text-white/84 opacity-0 transition-[color] duration-300 sm:text-[18px] lg:text-[20px]"
+          >
+            {slide.opened.secondaryBody}
+          </p>
+        ) : (
+          <div />
+        )}
+
+        <div
+          data-case-content
+          className="grid grid-cols-2 justify-items-stretch gap-3 opacity-0 sm:grid-cols-4 sm:gap-4"
+        >
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="relative aspect-[412/208] w-full max-w-[412px] overflow-hidden rounded-[6px] bg-black/45 shadow-[0_18px_46px_rgba(0,0,0,0.42)]"
+            >
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_36%,rgba(102,255,102,0.3),rgba(102,255,102,0)_28%),linear-gradient(112deg,rgba(22,121,132,0.78),rgba(8,12,13,0.44)_44%,rgba(176,116,70,0.58))]" />
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.12),rgba(255,255,255,0)_34%,rgba(0,0,0,0.28))]" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
 
 export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderProps) {
   const rootRef = useRef<HTMLElement | null>(null);
@@ -49,6 +111,8 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   const labelRef = useRef<HTMLDivElement | null>(null);
   const detailsRef = useRef<HTMLDivElement | null>(null);
   const sheetRef = useRef<HTMLDivElement | null>(null);
+  const sheetContentRef = useRef<HTMLDivElement | null>(null);
+  const measureSheetContentRef = useRef<HTMLDivElement | null>(null);
   const sheetTitleRef = useRef<HTMLHeadingElement | null>(null);
   const sheetScrollRef = useRef<HTMLDivElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -61,7 +125,12 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   const wheelBridgeLockRef = useRef(false);
   const wheelBridgeTimeoutRef = useRef<number | null>(null);
   const wasOpenedVisibleRef = useRef(false);
+  const isSheetVisibleRef = useRef(false);
+  const previousSheetContentHeightRef = useRef<number | null>(null);
+  const sheetContentHeightTweenRef = useRef<gsap.core.Tween | null>(null);
+  const openedSlidingContentRevealedRef = useRef(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [pendingOpenedIndex, setPendingOpenedIndex] = useState<number | null>(null);
   const [overlayState, setOverlayState] = useState<CinematicOverlayState>('slider');
   const [reducedMotion, setReducedMotion] = useState(false);
   const slides = useMemo(() => cinematicSlides, []);
@@ -69,6 +138,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   const slideCount = slides.length;
   const previousSlide = slides[(activeIndex - 1 + slideCount) % slideCount];
   const nextSlide = slides[(activeIndex + 1) % slideCount];
+  const pendingOpenedSlide = pendingOpenedIndex === null ? null : slides[pendingOpenedIndex];
   const isOpened = overlayState === 'opened' || overlayState === 'opening' || overlayState === 'openedSliding';
   const isDetailsLayerVisible = isOpened || overlayState === 'closing';
   const isChromeVisible = overlayState === 'slider' || overlayState === 'sliding';
@@ -118,6 +188,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       reducedMotion,
       onActiveSlideChange: setActiveIndex,
       onOverlayStateChange: setOverlayState,
+      onOpenedSlideTargetChange: setPendingOpenedIndex,
     });
 
     sceneRef.current = scene;
@@ -185,12 +256,20 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   }, []);
 
   const handleOpenedPrevious = useCallback(() => {
+    if (overlayState !== 'opened') {
+      return;
+    }
+
     sceneRef.current?.previousOpened();
-  }, []);
+  }, [overlayState]);
 
   const handleOpenedNext = useCallback(() => {
+    if (overlayState !== 'opened') {
+      return;
+    }
+
     sceneRef.current?.nextOpened();
-  }, []);
+  }, [overlayState]);
 
   const handleClose = useCallback(() => {
     sceneRef.current?.close();
@@ -422,12 +501,15 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
   useGSAP(
     () => {
-      if (!chromeRef.current || !detailsRef.current || !sheetRef.current) {
+      if (!chromeRef.current || !detailsRef.current || !sheetRef.current || !sheetContentRef.current) {
         return;
       }
 
-      const detailItems = detailsRef.current.querySelectorAll('[data-case-detail]');
       const sheet = sheetRef.current;
+      const sheetContent = sheetContentRef.current;
+      const contentItems = sheet.querySelectorAll('[data-case-content]');
+      const headingItems = sheet.querySelectorAll('[data-case-heading]');
+      const shouldAnimateSheetContentHeight = window.innerWidth >= 1024 && !reducedMotion;
 
       gsap.to(chromeRef.current, {
         '--cinematic-chrome-opacity': isChromeVisible ? 1 : 0,
@@ -438,12 +520,81 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       if (overlayState === 'openedSliding') {
         wasOpenedVisibleRef.current = false;
 
-        gsap.to(detailItems, {
-          autoAlpha: 0,
-          y: reducedMotion ? 0 : -14,
-          duration: reducedMotion ? 0.01 : 0.26,
-          ease: 'power2.out',
-        });
+        const isIncomingOpenedContent = pendingOpenedIndex === activeIndex;
+
+        if (shouldAnimateSheetContentHeight && previousSheetContentHeightRef.current === null) {
+          const nextHeight = measureSheetContentRef.current?.getBoundingClientRect().height ?? null;
+          const previousHeight = sheetContent.getBoundingClientRect().height;
+
+          previousSheetContentHeightRef.current = previousHeight;
+
+          if (nextHeight !== null) {
+            sheetContentHeightTweenRef.current?.kill();
+            gsap.set(sheetContent, { height: previousHeight });
+            sheetContentHeightTweenRef.current = gsap.to(sheetContent, {
+              height: nextHeight,
+              duration: 0.96,
+              ease: 'power3.inOut',
+              overwrite: 'auto',
+              onComplete: () => {
+                gsap.set(sheetContent, { height: 'auto' });
+                previousSheetContentHeightRef.current = null;
+                sheetContentHeightTweenRef.current = null;
+              },
+            });
+          }
+        }
+
+        if (isIncomingOpenedContent) {
+          openedSlidingContentRevealedRef.current = true;
+
+          gsap.fromTo(
+            headingItems,
+            { autoAlpha: 0, y: reducedMotion ? 0 : 10 },
+            {
+              autoAlpha: 1,
+              y: 0,
+              duration: reducedMotion ? 0.01 : openedSlideIncomingDuration,
+              stagger: 0.035,
+              ease: 'power2.out',
+              delay: reducedMotion ? 0 : openedSlideIncomingDelay,
+              overwrite: 'auto',
+            },
+          );
+
+          gsap.fromTo(
+            contentItems,
+            { autoAlpha: 0, y: reducedMotion ? 0 : 14 },
+            {
+              autoAlpha: 1,
+              y: 0,
+              duration: reducedMotion ? 0.01 : openedSlideIncomingDuration,
+              stagger: 0.035,
+              ease: 'power2.out',
+              delay: reducedMotion ? 0 : openedSlideIncomingDelay,
+              overwrite: 'auto',
+            },
+          );
+        } else {
+          openedSlidingContentRevealedRef.current = false;
+
+          gsap.to(headingItems, {
+            autoAlpha: 0,
+            y: reducedMotion ? 0 : -6,
+            duration: reducedMotion ? 0.01 : 0.18,
+            ease: 'power2.out',
+            overwrite: 'auto',
+          });
+
+          gsap.to(contentItems, {
+            autoAlpha: 0,
+            y: reducedMotion ? 0 : -10,
+            duration: reducedMotion ? 0.01 : 0.22,
+            ease: 'power2.out',
+            overwrite: 'auto',
+          });
+        }
+
         return;
       }
 
@@ -454,34 +605,90 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
         wasOpenedVisibleRef.current = true;
 
-        gsap.fromTo(
-          sheet,
-          { autoAlpha: 0, yPercent: reducedMotion ? 0 : 100 },
-          {
-            autoAlpha: 1,
-            yPercent: 0,
-            duration: reducedMotion ? 0.01 : 0.62,
-            ease: 'power3.out',
-            delay: overlayState === 'opened' ? 0 : 0.18,
-          },
-        );
+        const wasSheetVisible = isSheetVisibleRef.current;
+        const contentDelay = wasSheetVisible ? 0.04 : overlayState === 'opened' ? 0 : 0.62;
 
-        gsap.fromTo(
-          detailItems,
-          { autoAlpha: 0, y: reducedMotion ? 0 : 24 },
-          {
-            autoAlpha: 1,
-            y: 0,
-            duration: reducedMotion ? 0.01 : 0.58,
-            stagger: 0.06,
-            ease: 'power2.out',
-            delay: overlayState === 'opened' ? 0 : 0.62,
-          },
-        );
+        if (!sheetContentHeightTweenRef.current && shouldAnimateSheetContentHeight && wasSheetVisible && previousSheetContentHeightRef.current !== null) {
+          const previousHeight = previousSheetContentHeightRef.current;
+
+          gsap.set(sheetContent, { height: 'auto' });
+
+          const nextHeight = sheetContent.getBoundingClientRect().height;
+
+          gsap.set(sheetContent, { height: previousHeight });
+          gsap.to(sheetContent, {
+            height: nextHeight,
+            duration: 0.42,
+            ease: 'power2.inOut',
+            delay: 0.02,
+            overwrite: 'auto',
+            onComplete: () => {
+              gsap.set(sheetContent, { height: 'auto' });
+              previousSheetContentHeightRef.current = null;
+            },
+          });
+        } else if (!sheetContentHeightTweenRef.current) {
+          gsap.set(sheetContent, { height: 'auto' });
+          previousSheetContentHeightRef.current = null;
+        }
+
+        if (!wasSheetVisible) {
+          isSheetVisibleRef.current = true;
+
+          gsap.fromTo(
+            sheet,
+            { autoAlpha: 0, yPercent: reducedMotion ? 0 : 100 },
+            {
+              autoAlpha: 1,
+              yPercent: 0,
+              duration: reducedMotion ? 0.01 : 0.62,
+              ease: 'power3.out',
+              delay: overlayState === 'opened' ? 0 : 0.18,
+            },
+          );
+        } else {
+          gsap.set(sheet, { autoAlpha: 1, yPercent: 0 });
+        }
+
+        if (openedSlidingContentRevealedRef.current && wasSheetVisible) {
+          gsap.set([headingItems, contentItems], { autoAlpha: 1, y: 0 });
+          openedSlidingContentRevealedRef.current = false;
+        } else {
+          gsap.fromTo(
+            headingItems,
+            { autoAlpha: 0, y: reducedMotion ? 0 : wasSheetVisible ? 6 : 12 },
+            {
+              autoAlpha: 1,
+              y: 0,
+              duration: reducedMotion ? 0.01 : 0.26,
+              stagger: 0.035,
+              ease: 'power2.out',
+              delay: contentDelay,
+            },
+          );
+
+          gsap.fromTo(
+            contentItems,
+            { autoAlpha: 0, y: reducedMotion ? 0 : 12 },
+            {
+              autoAlpha: 1,
+              y: 0,
+              duration: reducedMotion ? 0.01 : 0.3,
+              stagger: 0.035,
+              ease: 'power2.out',
+              delay: contentDelay,
+            },
+          );
+        }
         return;
       }
 
       wasOpenedVisibleRef.current = false;
+      isSheetVisibleRef.current = false;
+      previousSheetContentHeightRef.current = null;
+      sheetContentHeightTweenRef.current?.kill();
+      sheetContentHeightTweenRef.current = null;
+      openedSlidingContentRevealedRef.current = false;
 
       gsap.to(sheet, {
         autoAlpha: 0,
@@ -490,15 +697,24 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
         ease: 'power3.in',
       });
 
-      gsap.to(detailItems, {
+      gsap.set(sheetContent, { clearProps: 'height' });
+
+      gsap.to(contentItems, {
         autoAlpha: 0,
         y: reducedMotion ? 0 : 24,
         duration: reducedMotion ? 0.01 : 0.58,
         stagger: 0.06,
         ease: 'power2.out',
       });
+
+      gsap.to(headingItems, {
+        autoAlpha: 0,
+        y: reducedMotion ? 0 : 12,
+        duration: reducedMotion ? 0.01 : 0.36,
+        ease: 'power2.out',
+      });
     },
-    { scope: rootRef, dependencies: [activeIndex, isChromeVisible, isOpened, overlayState, reducedMotion] },
+    { scope: rootRef, dependencies: [activeIndex, isChromeVisible, isOpened, overlayState, pendingOpenedIndex, reducedMotion] },
   );
 
   useGSAP(
@@ -599,7 +815,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       >
         <button
           type="button"
-          className="absolute inset-0 bg-black/58 backdrop-blur-[2px]"
+          className="absolute inset-0 bg-black/34 backdrop-blur-[1px] sm:bg-black/58 sm:backdrop-blur-[2px]"
           onClick={handleClose}
           aria-label="Close project details"
           tabIndex={-1}
@@ -612,108 +828,63 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             aria-modal="true"
             aria-labelledby="cinematic-project-title"
             tabIndex={-1}
-            className="max-h-[min(86svh,calc(var(--fullpage-height,100svh)-2rem))] w-full max-w-[76rem] overflow-hidden rounded-t-[1.35rem] border border-white/18 bg-[#050909]/94 text-white opacity-0 shadow-[0_-28px_90px_rgba(0,0,0,0.72)] outline-none backdrop-blur-xl lg:rounded-[1.35rem]"
+            className="max-h-[min(86svh,calc(var(--fullpage-height,100svh)-2rem))] w-full max-w-[76rem] overflow-hidden rounded-t-[1.35rem] border border-white/18 bg-[#050909]/82 text-white opacity-0 shadow-[0_-28px_90px_rgba(0,0,0,0.72)] outline-none backdrop-blur-lg sm:bg-[#050909]/94 sm:backdrop-blur-xl lg:rounded-[1.35rem]"
             onPointerDown={handleSheetPointerDown}
             onPointerUp={handleSheetPointerUp}
             onPointerCancel={() => {
               sheetTouchStartRef.current = null;
             }}
           >
-            <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-white/28" aria-hidden="true" />
+            <div ref={sheetContentRef} className="overflow-hidden">
+              <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-white/28" aria-hidden="true" />
 
-            <div className="grid grid-cols-[1fr_auto] items-start gap-4 border-b border-white/10 px-5 pb-4 pt-4 sm:px-7 lg:px-9">
-              <div data-case-detail className="min-w-0 opacity-0">
-                <p className="mb-2 text-[10px] font-black uppercase leading-none tracking-[0.24em] text-white/58">
-                  {activeSlide.eyebrow}
-                </p>
-                <h3
-                  ref={sheetTitleRef}
-                  id="cinematic-project-title"
-                  tabIndex={-1}
-                  className="max-w-[18ch] text-[2.1rem] font-black uppercase leading-[0.88] outline-none sm:text-[3.3rem] lg:max-w-none lg:text-[clamp(3.6rem,6vw,7rem)]"
-                >
-                  <span className="block text-[0.56em]">{activeSlide.opened.titleLead}</span>
-                  <span className="block text-[#66ff66]">{activeSlide.opened.titleAccent}</span>
-                </h3>
-              </div>
-
-              <button
-                ref={closeButtonRef}
-                type="button"
-                data-case-detail
-                className="flex h-10 shrink-0 items-center justify-center border border-white/24 bg-black/38 px-4 font-black uppercase leading-none text-white/78 opacity-0 transition-colors hover:border-[#66ff66]/65 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-11 md:px-5"
-                onClick={handleClose}
-                aria-label="Close project"
-              >
-                <span className="flex h-full items-center justify-center leading-none [&>div>div]:flex [&>div>div]:items-center [&>div>div]:leading-none">
-                  <GlitchText size="11">{closeLabel}</GlitchText>
-                </span>
-              </button>
-            </div>
-
-            <div
-              ref={sheetScrollRef}
-              className="max-h-[calc(var(--fullpage-height,100svh)-10.5rem)] overflow-y-auto overscroll-contain px-5 py-5 sm:px-7 lg:px-9 lg:py-7"
-            >
-              <div className="grid gap-6 lg:grid-cols-[minmax(0,1.02fr)_minmax(22rem,0.78fr)] lg:gap-10">
-                <div data-case-detail className="opacity-0">
-                  <p className="max-w-[54rem] text-[15px] font-medium leading-[1.18] text-white/92 sm:text-[18px] lg:text-[21px]">
-                    {activeSlide.opened.body}
+              <div className="grid grid-cols-[1fr_auto] items-start gap-4 border-b border-white/10 px-5 pb-4 pt-4 sm:px-7 lg:px-9">
+                <div data-case-heading className="min-w-0 opacity-0">
+                  <p className="mb-2 text-[10px] font-black uppercase leading-none tracking-[0.24em] text-white/58">
+                    {activeSlide.eyebrow}
                   </p>
-                </div>
-
-                <div data-case-detail className="opacity-0 lg:pb-3">
-                  <div className="grid grid-cols-2 gap-x-2 gap-y-[11px] sm:grid-cols-3">
-                    {[...activeSlide.opened.services, ...activeSlide.opened.services].map((service, index) => (
-                      <span
-                        key={`${service}-${index}`}
-                        className="flex h-7 min-w-0 items-center justify-center border border-white/50 px-2 text-center text-[9px] font-black uppercase leading-none text-white shadow-[0_4px_18px_rgba(0,0,0,0.38)] sm:text-[10px]"
-                      >
-                        {service}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-7 grid gap-5 lg:grid-cols-[24rem_minmax(0,1fr)] lg:items-start lg:gap-10">
-                {activeSlide.opened.secondaryBody ? (
-                  <p
-                    data-case-detail
-                    className="max-w-[26rem] text-[15px] font-medium leading-[1.18] text-white/84 opacity-0 sm:text-[18px] lg:text-[20px]"
+                  <h3
+                    ref={sheetTitleRef}
+                    id="cinematic-project-title"
+                    tabIndex={-1}
+                    className="max-w-[18ch] text-[2.1rem] font-black uppercase leading-[0.88] outline-none sm:text-[3.3rem] lg:max-w-none lg:text-[clamp(3.6rem,6vw,7rem)]"
                   >
-                    {activeSlide.opened.secondaryBody}
-                  </p>
-                ) : (
-                  <div />
-                )}
-
-                <div
-                  data-case-detail
-                  className="grid grid-cols-2 justify-items-stretch gap-3 opacity-0 sm:grid-cols-4 sm:gap-4"
-                >
-                  {Array.from({ length: 4 }).map((_, index) => (
-                    <div
-                      key={index}
-                      className="relative aspect-[412/208] w-full max-w-[412px] overflow-hidden rounded-[6px] bg-black/45 shadow-[0_18px_46px_rgba(0,0,0,0.42)]"
-                    >
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_36%,rgba(102,255,102,0.3),rgba(102,255,102,0)_28%),linear-gradient(112deg,rgba(22,121,132,0.78),rgba(8,12,13,0.44)_44%,rgba(176,116,70,0.58))]" />
-                      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.12),rgba(255,255,255,0)_34%,rgba(0,0,0,0.28))]" />
-                    </div>
-                  ))}
+                    <span className="block text-[0.56em]">{activeSlide.opened.titleLead}</span>
+                    <span className="block text-[#66ff66]">{activeSlide.opened.titleAccent}</span>
+                  </h3>
                 </div>
+
+                <button
+                  ref={closeButtonRef}
+                  type="button"
+                  className="flex h-10 shrink-0 items-center justify-center border border-white/24 bg-black/38 px-4 font-black uppercase leading-none text-white/78 transition-colors hover:border-[#66ff66]/65 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-11 md:px-5"
+                  onClick={handleClose}
+                  aria-label="Close project"
+                >
+                  <span className="flex h-full items-center justify-center leading-none [&>div>div]:flex [&>div>div]:items-center [&>div>div]:leading-none">
+                    <GlitchText size="11">{closeLabel}</GlitchText>
+                  </span>
+                </button>
+              </div>
+
+              <div
+                ref={sheetScrollRef}
+                className="max-h-[calc(var(--fullpage-height,100svh)-10.5rem)] overflow-y-auto overscroll-contain px-5 py-5 sm:px-7 lg:px-9 lg:py-7"
+              >
+                <OpenedSheetBody slide={activeSlide} />
               </div>
             </div>
 
             <nav
               data-case-detail
-              className="relative z-30 grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-t border-white/10 px-5 py-3 opacity-0 sm:px-7 lg:px-9"
+              className="relative z-30 grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-t border-white/10 px-5 py-3 sm:px-7 lg:px-9"
               aria-label="Opened project navigation"
             >
               <button
                 type="button"
-                className="flex h-14 w-full min-w-0 items-center gap-3 text-left text-[11px] font-medium leading-none text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] sm:text-sm"
+                className="flex h-14 w-full min-w-0 items-center gap-3 text-left text-[11px] font-medium leading-none text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] disabled:pointer-events-none disabled:text-white/32 sm:text-sm"
                 onClick={handleOpenedPrevious}
+                disabled={overlayState === 'openedSliding'}
               >
                 <span className="text-4xl leading-none text-[#66ff66]">{previousGlyph}</span>
                 <span className="min-w-0 truncate leading-none">{previousSlide.opened.navLabel}</span>
@@ -725,14 +896,43 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
               <button
                 type="button"
-                className="flex h-14 w-full min-w-0 items-center justify-end gap-3 text-right text-[11px] font-medium leading-none text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] sm:text-sm"
+                className="flex h-14 w-full min-w-0 items-center justify-end gap-3 text-right text-[11px] font-medium leading-none text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] disabled:pointer-events-none disabled:text-white/32 sm:text-sm"
                 onClick={handleOpenedNext}
+                disabled={overlayState === 'openedSliding'}
               >
                 <span className="min-w-0 truncate leading-none">{nextSlide.opened.navLabel}</span>
                 <span className="text-4xl leading-none text-[#66ff66]">{nextGlyph}</span>
               </button>
             </nav>
           </div>
+
+          {pendingOpenedSlide ? (
+            <div
+              ref={measureSheetContentRef}
+              aria-hidden="true"
+              className="pointer-events-none invisible absolute bottom-[calc(0.75rem+5.25rem)] left-3 right-3 max-h-[calc(min(86svh,calc(var(--fullpage-height,100svh)-2rem))-5.25rem)] max-w-[76rem] overflow-hidden text-white sm:bottom-[calc(1.25rem+5.25rem)] sm:left-5 sm:right-5 lg:bottom-[calc(2rem+5.25rem)] lg:left-8 lg:right-8 lg:mx-auto"
+            >
+              <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-white/28" aria-hidden="true" />
+
+              <div className="grid grid-cols-[1fr_auto] items-start gap-4 border-b border-white/10 px-5 pb-4 pt-4 sm:px-7 lg:px-9">
+                <div className="min-w-0">
+                  <p className="mb-2 text-[10px] font-black uppercase leading-none tracking-[0.24em] text-white/58">
+                    {pendingOpenedSlide.eyebrow}
+                  </p>
+                  <h3 className="max-w-[18ch] text-[2.1rem] font-black uppercase leading-[0.88] outline-none sm:text-[3.3rem] lg:max-w-none lg:text-[clamp(3.6rem,6vw,7rem)]">
+                    <span className="block text-[0.56em]">{pendingOpenedSlide.opened.titleLead}</span>
+                    <span className="block text-[#66ff66]">{pendingOpenedSlide.opened.titleAccent}</span>
+                  </h3>
+                </div>
+
+                <div className="h-10 shrink-0 border border-white/24 bg-black/38 px-4 md:h-11 md:px-5" />
+              </div>
+
+              <div className="max-h-[calc(var(--fullpage-height,100svh)-10.5rem)] overflow-y-auto overscroll-contain px-5 py-5 sm:px-7 lg:px-9 lg:py-7">
+                <OpenedSheetBody slide={pendingOpenedSlide} />
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </section>

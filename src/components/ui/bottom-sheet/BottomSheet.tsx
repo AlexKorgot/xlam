@@ -11,6 +11,7 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent,
+  type PointerEvent,
   type ReactNode,
 } from 'react';
 import { ModalPortal } from '@/src/components/ui/modal';
@@ -24,6 +25,7 @@ type BottomSheetProps = {
   footer?: ReactNode;
   closeOnOverlayClick?: boolean;
   closeOnEscape?: boolean;
+  closeOnSwipeDown?: boolean;
   closeLabel?: string;
 };
 
@@ -68,15 +70,19 @@ export function BottomSheet({
   footer,
   closeOnOverlayClick = true,
   closeOnEscape = true,
+  closeOnSwipeDown = true,
   closeLabel = 'Close',
 }: BottomSheetProps) {
   const generatedTitleId = useId();
   const generatedDescriptionId = useId();
   const sheetRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const closeTimerRef = useRef<number | null>(null);
+  const focusTimerRef = useRef<number | null>(null);
   const visibilityFrameRef = useRef<number | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
+  const sheetPointerStartRef = useRef<{ x: number; y: number; scrollTop: number } | null>(null);
   const [shouldRender, setShouldRender] = useState(open);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -103,6 +109,11 @@ export function BottomSheet({
       visibilityFrameRef.current = null;
     }
 
+    if (focusTimerRef.current) {
+      window.clearTimeout(focusTimerRef.current);
+      focusTimerRef.current = null;
+    }
+
     if (open) {
       triggerRef.current =
         document.activeElement instanceof HTMLElement
@@ -115,10 +126,27 @@ export function BottomSheet({
         visibilityFrameRef.current = null;
       });
 
+      focusTimerRef.current = window.setTimeout(() => {
+        const titleElement = document.getElementById(generatedTitleId);
+
+        if (titleElement instanceof HTMLElement) {
+          titleElement.focus();
+        } else {
+          closeButtonRef.current?.focus();
+        }
+
+        focusTimerRef.current = null;
+      }, prefersReducedMotion ? 0 : 80);
+
       return () => {
         if (visibilityFrameRef.current) {
           window.cancelAnimationFrame(visibilityFrameRef.current);
           visibilityFrameRef.current = null;
+        }
+
+        if (focusTimerRef.current) {
+          window.clearTimeout(focusTimerRef.current);
+          focusTimerRef.current = null;
         }
       };
     }
@@ -148,8 +176,13 @@ export function BottomSheet({
         window.clearTimeout(closeTimerRef.current);
         closeTimerRef.current = null;
       }
+
+      if (focusTimerRef.current) {
+        window.clearTimeout(focusTimerRef.current);
+        focusTimerRef.current = null;
+      }
     };
-  }, [open, shouldRender]);
+  }, [generatedTitleId, open, shouldRender]);
 
   useEffect(() => {
     if (!shouldRender) {
@@ -198,20 +231,6 @@ export function BottomSheet({
   }, [shouldRender]);
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const frame = window.requestAnimationFrame(() => {
-      closeButtonRef.current?.focus();
-    });
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-    };
-  }, [open]);
-
-  useEffect(() => {
     if (!open || !closeOnEscape) {
       return;
     }
@@ -247,10 +266,11 @@ export function BottomSheet({
 
     const focusableElements = Array.from(
       sheetRef.current?.querySelectorAll<HTMLElement>(focusableSelector) ?? [],
-    ).filter((element) => !element.hasAttribute('disabled'));
+    ).filter((element) => !element.hasAttribute('disabled') && !element.getAttribute('aria-hidden'));
 
     if (focusableElements.length === 0) {
       event.preventDefault();
+      sheetRef.current?.focus();
       return;
     }
 
@@ -274,6 +294,38 @@ export function BottomSheet({
     descriptionId: generatedDescriptionId,
   };
 
+  const handleSheetPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (!closeOnSwipeDown || event.pointerType !== 'touch') {
+      return;
+    }
+
+    sheetPointerStartRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      scrollTop: bodyRef.current?.scrollTop ?? 0,
+    };
+  };
+
+  const handleSheetPointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    if (!closeOnSwipeDown || event.pointerType !== 'touch') {
+      return;
+    }
+
+    const start = sheetPointerStartRef.current;
+    sheetPointerStartRef.current = null;
+
+    if (!start || start.scrollTop > 0) {
+      return;
+    }
+
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+
+    if (deltaY > 56 && Math.abs(deltaY) > Math.abs(deltaX) * 1.3) {
+      close();
+    }
+  };
+
   return (
     <ModalPortal>
       <BottomSheetContext.Provider value={contextValue}>
@@ -289,7 +341,8 @@ export function BottomSheet({
           <div
             ref={sheetRef}
             className={[
-              'grid h-[92dvh] max-h-[92dvh] w-full max-w-[520px] grid-rows-[auto_1fr_auto] overflow-hidden rounded-t-[24px] bg-[#f7f6f1] shadow-[0_-18px_60px_rgba(0,0,0,0.35)]',
+              'grid h-[92dvh] max-h-[92dvh] w-full max-w-[520px] overflow-hidden rounded-t-[24px] bg-[#f7f6f1] shadow-[0_-18px_60px_rgba(0,0,0,0.35)] outline-none',
+              footer ? 'grid-rows-[auto_minmax(0,1fr)_auto]' : 'grid-rows-[auto_minmax(0,1fr)]',
               'transition-transform duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
               isVisible ? 'translate-y-0' : 'translate-y-full',
             ].join(' ')}
@@ -298,8 +351,14 @@ export function BottomSheet({
             aria-label={title ? undefined : 'Bottom sheet'}
             aria-labelledby={title ? generatedTitleId : undefined}
             aria-describedby={description ? generatedDescriptionId : undefined}
+            tabIndex={-1}
             onKeyDown={handleKeyDown}
             onMouseDown={(event) => event.stopPropagation()}
+            onPointerDown={handleSheetPointerDown}
+            onPointerUp={handleSheetPointerUp}
+            onPointerCancel={() => {
+              sheetPointerStartRef.current = null;
+            }}
           >
             <BottomSheetHeader>
               <div className="h-[5px] w-11 rounded-full bg-black/20" aria-hidden="true" />
@@ -315,13 +374,15 @@ export function BottomSheet({
                     </p>
                   ) : null}
                 </div>
-                <BottomSheetClose ref={closeButtonRef} ariaLabel={closeLabel} />
+                <BottomSheetClose ref={closeButtonRef} ariaLabel={closeLabel}>
+                  {closeLabel}
+                </BottomSheetClose>
               </div>
             </BottomSheetHeader>
 
-            <BottomSheetBody>{children}</BottomSheetBody>
+            <BottomSheetBody ref={bodyRef}>{children}</BottomSheetBody>
 
-            {footer ? <BottomSheetFooter>{footer}</BottomSheetFooter> : <div />}
+            {footer ? <BottomSheetFooter>{footer}</BottomSheetFooter> : null}
           </div>
         </div>
       </BottomSheetContext.Provider>
@@ -354,8 +415,9 @@ export function BottomSheetTitle({
   return (
     <h2
       id={titleId}
+      tabIndex={-1}
       className={[
-        'truncate text-[20px] font-semibold leading-[1.15] text-black',
+        'truncate text-[20px] font-semibold leading-[1.15] text-black outline-none',
         className,
       ].join(' ')}
     >
@@ -364,12 +426,14 @@ export function BottomSheetTitle({
   );
 }
 
-export function BottomSheetBody({
+export const BottomSheetBody = forwardRef<HTMLDivElement, BottomSheetSectionProps>(
+function BottomSheetBody({
   children,
   className = '',
-}: BottomSheetSectionProps) {
+}, ref) {
   return (
     <div
+      ref={ref}
       className={[
         'min-h-0 overflow-y-auto overscroll-y-contain px-5 py-4 [-webkit-overflow-scrolling:touch]',
         className,
@@ -378,7 +442,9 @@ export function BottomSheetBody({
       {children}
     </div>
   );
-}
+});
+
+BottomSheetBody.displayName = 'BottomSheetBody';
 
 export function BottomSheetFooter({
   children,
@@ -398,8 +464,9 @@ export function BottomSheetFooter({
 
 export const BottomSheetClose = forwardRef<HTMLButtonElement, {
   ariaLabel?: string;
+  children?: ReactNode;
 }>(
-function BottomSheetClose({ ariaLabel = 'Close' }, ref) {
+function BottomSheetClose({ ariaLabel = 'Close', children }, ref) {
   const { close } = useBottomSheetContext();
 
   return (
@@ -407,17 +474,15 @@ function BottomSheetClose({ ariaLabel = 'Close' }, ref) {
       ref={ref}
       type="button"
       aria-label={ariaLabel}
-      className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/12 bg-white text-black shadow-sm transition hover:border-black/25 hover:bg-[#eeeeea] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+      className="flex h-11 shrink-0 items-center justify-center rounded-full border border-black/12 bg-white px-4 text-[12px] font-semibold leading-none text-black shadow-sm transition hover:border-black/25 hover:bg-[#eeeeea] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
       onClick={close}
     >
-      <span
-        className="absolute h-[2px] w-4 rotate-45 rounded-full bg-current"
-        aria-hidden="true"
-      />
-      <span
-        className="absolute h-[2px] w-4 -rotate-45 rounded-full bg-current"
-        aria-hidden="true"
-      />
+      {children ?? (
+        <span className="relative h-4 w-4" aria-hidden="true">
+          <span className="absolute left-0 top-1/2 h-[2px] w-4 -translate-y-1/2 rotate-45 rounded-full bg-current" />
+          <span className="absolute left-0 top-1/2 h-[2px] w-4 -translate-y-1/2 -rotate-45 rounded-full bg-current" />
+        </span>
+      )}
     </button>
   );
 });

@@ -681,6 +681,7 @@ export class SliderScene {
     let hasActivatedTarget = false;
 
     this.mode = 'openedSliding';
+    this.callbacks.onOpenedSlideTargetChange?.(targetIndex);
     this.callbacks.onOverlayStateChange?.('openedSliding');
     this.timeline?.kill();
 
@@ -716,6 +717,7 @@ export class SliderScene {
 
         this.mode = 'opened';
         this.callbacks.onOverlayStateChange?.('opened');
+        this.callbacks.onOpenedSlideTargetChange?.(null);
         this.slideProgress = 0;
         this.slideVelocity = 0;
         this.applyOpenedLayout(targetIndex);
