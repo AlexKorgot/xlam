@@ -22,9 +22,11 @@ type BaseModalProps = {
   onNext?: () => void;
   onAfterClose?: () => void;
   closeLabel?: string;
+  closeText?: ReactNode;
   animationDuration?: number;
   closeOnBackdropClick?: boolean;
   closeOnEscape?: boolean;
+  variant?: 'center' | 'sheet';
 };
 
 const defaultAnimationDuration = 260;
@@ -48,9 +50,11 @@ export function BaseModal({
   onNext,
   onAfterClose,
   closeLabel = 'Close modal',
+  closeText,
   animationDuration = defaultAnimationDuration,
   closeOnBackdropClick = true,
   closeOnEscape = true,
+  variant = 'center',
 }: BaseModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -257,13 +261,21 @@ export function BaseModal({
     }
   };
 
+  const isSheet = variant === 'sheet';
+
   return (
     <ModalPortal>
       <div
         ref={dialogRef}
         className={[
-          'fixed inset-0 z-[1000] overflow-hidden overflow-x-hidden bg-black text-white',
-          'transition-opacity duration-[260ms] ease-out motion-reduce:transition-none',
+          'fixed inset-0 z-[1000] overflow-hidden overflow-x-hidden text-white',
+          'transition-opacity motion-reduce:transition-none',
+          isSheet
+            ? 'duration-[360ms] ease-out'
+            : 'duration-[260ms] ease-out',
+          isSheet
+            ? 'bg-black/34 backdrop-blur-[1px] sm:bg-black/58 sm:backdrop-blur-[2px]'
+            : 'bg-black',
           isVisible ? 'opacity-100' : 'opacity-0',
         ].join(' ')}
         data-fullpage-scroll-ignore="true"
@@ -276,28 +288,68 @@ export function BaseModal({
       >
         <div
           className={[
-            'relative mx-auto flex min-h-[100svh] w-full max-w-[1920px] flex-col p-5 min-[1000px]:items-center min-[1000px]:justify-center min-[1000px]:px-[66px] min-[1000px]:py-[46px]',
-            'transition-[opacity,transform] duration-[260ms] ease-out motion-reduce:transition-none',
-            isVisible
-              ? 'translate-y-0 scale-100 opacity-100'
-              : 'translate-y-4 scale-[0.985] opacity-0',
+            isSheet
+              ? 'relative mx-auto flex min-h-[100svh] w-full max-w-[1920px] flex-col items-center justify-end px-0 pt-8 sm:px-4 sm:pt-10 lg:justify-center lg:px-8 lg:py-8'
+              : 'relative mx-auto flex min-h-[100svh] w-full max-w-[1920px] flex-col p-5 min-[1000px]:items-center min-[1000px]:justify-center min-[1000px]:px-[66px] min-[1000px]:py-[46px]',
+            isSheet
+              ? ''
+              : [
+                  'transition-[opacity,transform] duration-[260ms] ease-out motion-reduce:transition-none',
+                  isVisible ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-4 scale-[0.985] opacity-0',
+                ].join(' '),
           ].join(' ')}
         >
-          <div className="relative flex h-[calc(100svh-128px)] min-h-[620px] w-full max-w-[1756px] flex-col overflow-hidden overflow-x-hidden lg:h-[min(829px,calc(100svh-251px))]">
+          <div
+            className={[
+              'relative flex w-full flex-col overflow-hidden overflow-x-hidden',
+              isSheet
+                ? [
+                    'h-[min(86svh,calc(100svh-1.5rem))] max-w-none rounded-t-[1.35rem] border border-b-0 border-white/18 bg-[#050909]/82 shadow-[0_-28px_90px_rgba(0,0,0,0.72)] backdrop-blur-lg transition-[opacity,transform] duration-[620ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:bg-[#050909]/94 sm:backdrop-blur-xl lg:h-[min(760px,calc(100svh-4rem))] lg:max-w-[min(1540px,calc(100vw-4rem))] lg:rounded-[1.35rem] lg:border-b lg:shadow-[0_28px_90px_rgba(0,0,0,0.72)]',
+                    isVisible
+                      ? 'translate-y-0 scale-100 opacity-100'
+                      : 'translate-y-full opacity-0 lg:translate-y-6 lg:scale-[0.985]',
+                  ].join(' ')
+                : 'h-[calc(100svh-128px)] min-h-[620px] max-w-[1756px] lg:h-[min(829px,calc(100svh-251px))]',
+            ].join(' ')}
+          >
             <button
               ref={closeButtonRef}
               type="button"
-              className="absolute right-5 top-5 z-20 flex h-11 w-11 items-center justify-center border border-white/30 bg-black/50 text-[30px] leading-none text-white transition hover:border-[#63ff45] hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45]"
+              className={[
+                'absolute z-20 flex items-center justify-center border bg-black/50 leading-none text-white transition hover:border-[#63ff45] hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45]',
+                isSheet
+                  ? 'right-5 top-4 h-9 w-9 rounded-full border-white/55 sm:right-7 lg:right-9'
+                  : 'right-5 top-5 h-11 w-11 text-[30px]',
+              ].join(' ')}
               aria-label={closeLabel}
               onClick={close}
             >
-              x
+              {isSheet ? (
+                <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center text-[24px] leading-none">
+                  ×
+                </span>
+              ) : (
+                closeText ?? 'x'
+              )}
             </button>
 
-            {children}
+            {isSheet ? (
+              <div
+                className={[
+                  'relative min-h-0 flex-1 overflow-hidden transition-opacity duration-[420ms] ease-out motion-reduce:transition-none',
+                  isVisible ? 'opacity-100' : 'opacity-0',
+                ].join(' ')}
+              >
+                {children}
+              </div>
+            ) : (
+              children
+            )}
+
+            {isSheet ? footer : null}
           </div>
 
-          {footer}
+          {isSheet ? null : footer}
         </div>
       </div>
     </ModalPortal>

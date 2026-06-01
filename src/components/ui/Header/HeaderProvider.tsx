@@ -11,19 +11,20 @@ import {
 } from 'react';
 import { usePathname } from 'next/navigation';
 import { Header, type HeaderHandle } from '@/src/components/ui/Header/Header';
+import { RouteNoiseOverlay } from '@/src/components/ui/RouteNoiseOverlay';
 
 type SetHeaderProgress = (progress: number) => void;
 
 const HeaderProgressContext = createContext<SetHeaderProgress>(() => {});
 
 function getInitialHeaderProgress(pathname: string) {
-  return pathname === '/' ? 0 : 1;
+  return pathname === '/' || pathname === '/main' ? 0 : 1;
 }
 
 export function HeaderProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const initialProgress = getInitialHeaderProgress(pathname);
-  const isImmersiveRoute = pathname === '/';
+  const isImmersiveRoute = initialProgress === 0;
   const contentStyle = isImmersiveRoute
     ? undefined
     : ({ paddingTop: 'var(--header-offset)' } satisfies CSSProperties);
@@ -40,6 +41,7 @@ export function HeaderProvider({ children }: { children: ReactNode }) {
   return (
     <HeaderProgressContext.Provider value={setHeaderProgress}>
       <Header ref={headerRef} initialProgress={initialProgress} />
+      <RouteNoiseOverlay />
       <div style={contentStyle}>{children}</div>
     </HeaderProgressContext.Provider>
   );

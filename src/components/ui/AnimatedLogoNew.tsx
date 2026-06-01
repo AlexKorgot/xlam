@@ -1,6 +1,6 @@
 'use client';
 
-import {forwardRef, useImperativeHandle, useRef} from 'react';
+import {forwardRef, useImperativeHandle, useRef, type CSSProperties} from 'react';
 import gsap from 'gsap';
 import {useGSAP} from '@gsap/react';
 import Image from 'next/image';
@@ -37,15 +37,34 @@ const logoVariants = {
 
 const LOGO_MORPH_DURATION = 0.86;
 
+const getInitialCenterLogoStyle = (progress: number): CSSProperties => ({
+    opacity: progress >= 1 ? 0 : 1,
+    visibility: progress >= 1 ? 'hidden' : 'visible',
+    transform: 'translate(0, 0) scale(1)',
+    transformOrigin: 'center center',
+    willChange: 'transform, opacity',
+});
+
+const getInitialHeaderLogoStyle = (progress: number): CSSProperties => ({
+    opacity: progress >= 1 ? 1 : 0,
+    visibility: progress >= 1 ? 'visible' : 'hidden',
+    transform: 'scale(1)',
+    transformOrigin: 'center center',
+    willChange: 'transform, opacity',
+});
+
 export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewProps>(
     function AnimatedLogoNew({variant = 'desktop', initialProgress = 0}, ref) {
+        const initialProgressValue = gsap.utils.clamp(0, 1, initialProgress);
         const containerRef = useRef<HTMLDivElement>(null);
         const centerLogoRef = useRef<HTMLDivElement>(null);
         const headerPlateRef = useRef<HTMLDivElement>(null);
         const headerLogoRef = useRef<HTMLDivElement>(null);
         const timelineRef = useRef<gsap.core.Timeline | null>(null);
-        const progressRef = useRef(gsap.utils.clamp(0, 1, initialProgress));
+        const progressRef = useRef(initialProgressValue);
         const styles = logoVariants[variant];
+        const initialCenterLogoStyle = getInitialCenterLogoStyle(initialProgressValue);
+        const initialHeaderLogoStyle = getInitialHeaderLogoStyle(initialProgressValue);
         useGSAP(
             () => {
                 const buildTimeline = () => {
@@ -160,10 +179,7 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
                     <div
                         ref={centerLogoRef}
                         className={styles.centerWidthClass}
-                        style={{
-                            transformOrigin: 'center center',
-                            willChange: 'transform, opacity',
-                        }}
+                        style={initialCenterLogoStyle}
                     >
                         <Image
                             src={Logo}
@@ -190,7 +206,7 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
                         <div
                             ref={headerLogoRef}
                             className={`relative mx-auto ${styles.logoWidthClass}`}
-                            style={{willChange: 'transform, opacity'}}
+                            style={initialHeaderLogoStyle}
                         >
                             <Link className="pointer-events-auto block" href={'/'}>
                                 <Image

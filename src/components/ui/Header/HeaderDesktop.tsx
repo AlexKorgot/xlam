@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useImperativeHandle, useRef, type CSSProperties } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { AnimatedLogoNew, type AnimatedLogoHandle } from '@/src/components/ui/AnimatedLogoNew';
@@ -11,6 +11,19 @@ import Link from "next/link";
 gsap.registerPlugin(useGSAP);
 
 const MENU_ITEM_SIZE = '20';
+
+const getInitialMenuStyle = (progress: number): CSSProperties =>
+  progress <= 0
+    ? {
+        opacity: 0,
+        visibility: 'hidden',
+        transform: 'translateY(-18px)',
+      }
+    : {
+        opacity: 1,
+        visibility: 'visible',
+        transform: 'translateY(0)',
+      };
 
 const desktopMenu = {
   left: [{ elem: <Link href={'/about'}>Услуги</Link>, key: 'about'}, {elem: <Link href={'/contacts'}>Портфолио</Link>, key: 'contacts'}],
@@ -25,12 +38,14 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
   { initialProgress = 0 },
   ref,
 ) {
+  const initialProgressValue = gsap.utils.clamp(0, 1, initialProgress);
   const headerRef = useRef<HTMLElement>(null);
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<AnimatedLogoHandle>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
-  const progressRef = useRef(gsap.utils.clamp(0, 1, initialProgress));
+  const progressRef = useRef(initialProgressValue);
+  const initialMenuStyle = getInitialMenuStyle(initialProgressValue);
 
   useGSAP(
     () => {
@@ -90,7 +105,12 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
 
   return (
     <div className="pointer-events-none fixed inset-x-0 top-0 z-50 hidden px-4 pt-5 sm:px-8 sm:pt-7 min-[1000px]:block">
-      <div className="mx-auto w-full max-w-[1740px] px-[15px]">
+      <div
+        data-header-fill
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-[var(--header-offset)] origin-left bg-[var(--accent)] opacity-0 shadow-[0_18px_54px_rgba(184,255,44,0.2)] [transform:scaleX(0)] transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+      />
+      <div className="relative mx-auto w-full max-w-[1740px] px-[15px]">
         <header
           ref={headerRef}
           className="grid grid-cols-[1fr_auto_1fr] items-center font-normalidad font-medium uppercase"
@@ -98,6 +118,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
           <div
             ref={leftRef}
             className="pointer-events-auto flex items-center gap-[20px] text-white lg:gap-[32px]"
+            style={initialMenuStyle}
           >
             {desktopMenu.left.map((item) => (
               <GlitchText key={item.key} size={MENU_ITEM_SIZE}>
@@ -117,6 +138,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
           <div
             ref={rightRef}
             className="pointer-events-auto flex items-center justify-end gap-[20px] text-white lg:gap-[32px]"
+            style={initialMenuStyle}
           >
             {desktopMenu.right.map((item) => (
               <GlitchText key={item} size={MENU_ITEM_SIZE}>
