@@ -48,12 +48,15 @@
 }
 
 html {
+  height: 100%;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at top, rgba(184, 255, 44, 0.08), transparent 28%),
     linear-gradient(180deg, #050505 0%, #0a0c10 100%);
 }
 
 body {
+  min-height: 100%;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-normalidad);

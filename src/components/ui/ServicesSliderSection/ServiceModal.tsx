@@ -2,7 +2,7 @@
 
 import Image, { type StaticImageData } from 'next/image';
 import { useId, type ReactNode } from 'react';
-import { BaseModal } from './BaseModal';
+import { BaseModal } from '@/src/components/ui/modal';
 
 export type ServiceModalFeature = {
   title: string;
