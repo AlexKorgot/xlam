@@ -289,7 +289,7 @@ export function BaseModal({
         <div
           className={[
             isSheet
-              ? 'relative mx-auto flex min-h-[100svh] w-full max-w-[1920px] flex-col items-center justify-end px-0 pt-8 sm:px-4 sm:pt-10 lg:justify-center lg:px-8 lg:py-8'
+              ? 'relative mx-auto flex min-h-[100svh] w-full max-w-[1920px] flex-col items-center justify-end px-0 pt-6 sm:px-4 sm:pt-8 lg:justify-center lg:px-8 lg:py-8'
               : 'relative mx-auto flex min-h-[100svh] w-full max-w-[1920px] flex-col p-5 min-[1000px]:items-center min-[1000px]:justify-center min-[1000px]:px-[66px] min-[1000px]:py-[46px]',
             isSheet
               ? ''
@@ -304,10 +304,10 @@ export function BaseModal({
               'relative flex w-full flex-col overflow-hidden overflow-x-hidden',
               isSheet
                 ? [
-                    'h-[min(86svh,calc(100svh-1.5rem))] max-w-none rounded-t-[1.35rem] border border-b-0 border-white/18 bg-[#050909]/82 shadow-[0_-28px_90px_rgba(0,0,0,0.72)] backdrop-blur-lg transition-[opacity,transform] duration-[620ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:bg-[#050909]/94 sm:backdrop-blur-xl lg:h-[min(760px,calc(100svh-4rem))] lg:max-w-[min(1540px,calc(100vw-4rem))] lg:rounded-[1.35rem] lg:border-b lg:shadow-[0_28px_90px_rgba(0,0,0,0.72)]',
+                    'h-[min(92svh,calc(100svh-1rem))] max-w-none rounded-t-lg border border-b-0 border-white/18 bg-[#050909]/88 shadow-[0_-28px_90px_rgba(0,0,0,0.76)] backdrop-blur-lg transition-[opacity,transform] duration-[620ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:bg-[#050909]/94 sm:backdrop-blur-xl lg:h-[min(829px,calc(100svh-4rem))] lg:max-w-[min(1756px,calc(100vw-4rem))] lg:rounded-lg lg:border-b lg:shadow-[0_30px_100px_rgba(0,0,0,0.78)]',
                     isVisible
                       ? 'translate-y-0 scale-100 opacity-100'
-                      : 'translate-y-full opacity-0 lg:translate-y-6 lg:scale-[0.985]',
+                      : 'translate-y-full opacity-0 lg:translate-y-5 lg:scale-[0.99]',
                   ].join(' ')
                 : 'h-[calc(100svh-128px)] min-h-[620px] max-w-[1756px] lg:h-[min(829px,calc(100svh-251px))]',
             ].join(' ')}
@@ -316,18 +316,16 @@ export function BaseModal({
               ref={closeButtonRef}
               type="button"
               className={[
-                'absolute z-20 flex items-center justify-center border bg-black/50 leading-none text-white transition hover:border-[#63ff45] hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45]',
+                'absolute z-20 flex items-center justify-center border bg-black/50 font-black uppercase leading-none text-white transition hover:border-[#63ff45] hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45]',
                 isSheet
-                  ? 'right-5 top-4 h-9 w-9 rounded-full border-white/55 sm:right-7 lg:right-9'
+                  ? 'right-5 top-4 h-10 px-4 border-white/55 sm:right-7 lg:right-9'
                   : 'right-5 top-5 h-11 w-11 text-[30px]',
               ].join(' ')}
               aria-label={closeLabel}
               onClick={close}
             >
               {isSheet ? (
-                <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center text-[24px] leading-none">
-                  ×
-                </span>
+                closeText ?? 'Закрыть'
               ) : (
                 closeText ?? 'x'
               )}

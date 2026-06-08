@@ -16,6 +16,7 @@ import MorphSection, {
 import { useHeaderProgress } from '@/src/components/ui/Header/HeaderProvider';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import { CinematicVideoSlider } from '@/src/components/cinematic_new';
+import { TextSection } from '@/src/components/textSection';
 
 export const MainScene = () => {
   const setHeaderProgress = useHeaderProgress();
@@ -57,14 +58,14 @@ export const MainScene = () => {
             secondSectionRef.current?.playEnter();
           }
 
-          if (startIndex === 2 && targetIndex === 3) {
+          if (startIndex === 3 && targetIndex === 4) {
             morphStartTimeoutRef.current = window.setTimeout(() => {
               morphSectionRef.current?.playForward();
               morphStartTimeoutRef.current = null;
             }, FULLPAGE_SECTION_REVEAL_DELAY * 1000);
           }
 
-          if (startIndex === 3 && targetIndex === 2) {
+          if (startIndex === 4 && targetIndex === 3) {
             morphSectionRef.current?.playReverse();
           }
         }}
@@ -75,6 +76,7 @@ export const MainScene = () => {
 
         <SecondSectionDesign ref={secondSectionRef} />
         <ServicesSliderSection allowSectionScrollOnEdges />
+        <TextSection intervalMs={1500} />
         <FullPageSection id="next">
           <MorphSection
               ref={morphSectionRef}
