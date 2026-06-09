@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -12,6 +13,13 @@ import Image from 'next/image';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import FullPageSection from '@/src/components/ui/FullPageSection';
+import {
+  FULLPAGE_SCROLL_EVENT,
+  FULLPAGE_SCROLL_IGNORE_ATTR,
+  FULLPAGE_TOUCH_AXIS_LOCK_RATIO,
+  FULLPAGE_TOUCH_SWIPE_THRESHOLD,
+  getFullPageSwipeDirection,
+} from '@/src/components/ui/FullPageScroll';
 import GeneralBackground from './assets/img/general_bg.png';
 import BlueTop from './assets/img/blue_top.png';
 import BlueBottom from './assets/img/blue_bottom.png';
@@ -30,6 +38,10 @@ type TextSlide = {
 interface TextSectionProps {
   intervalMs?: number;
 }
+
+const scrollIgnoreAttr = { [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' } as const;
+const slideWheelThreshold = 48;
+const slideInputUnlockDelay = 700;
 
 const slides: TextSlide[] = [
   {
@@ -65,6 +77,11 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
   const backgroundYToRef = useRef<((value: number) => void) | null>(null);
   const activeIndexRef = useRef(0);
   const incomingIndexRef = useRef<number | null>(null);
+  const wheelDirectionRef = useRef<'up' | 'down' | null>(null);
+  const wheelDeltaRef = useRef(0);
+  const inputLockRef = useRef(false);
+  const inputUnlockTimeoutRef = useRef<number | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [incomingIndex, setIncomingIndex] = useState<number | null>(null);
 
@@ -78,6 +95,156 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
   useEffect(() => {
     incomingIndexRef.current = incomingIndex;
   }, [incomingIndex]);
+
+  const requestParentSectionScroll = useCallback((direction: 'up' | 'down') => {
+    window.dispatchEvent(
+      new CustomEvent(FULLPAGE_SCROLL_EVENT, {
+        detail: { direction },
+      }),
+    );
+  }, []);
+
+  const requestSlideDirection = useCallback(
+    (direction: 'up' | 'down') => {
+      if (incomingIndexRef.current !== null) {
+        return;
+      }
+
+      const currentIndex = activeIndexRef.current;
+      const nextIndex = direction === 'down' ? currentIndex + 1 : currentIndex - 1;
+
+      if (nextIndex < 0 || nextIndex >= slides.length) {
+        requestParentSectionScroll(direction);
+        return;
+      }
+
+      setIncomingIndex(nextIndex);
+    },
+    [requestParentSectionScroll],
+  );
+
+  useEffect(() => {
+    const sectionNode = sectionRef.current;
+
+    if (!sectionNode) {
+      return;
+    }
+
+    const resetWheelInput = () => {
+      wheelDirectionRef.current = null;
+      wheelDeltaRef.current = 0;
+    };
+
+    const unlockInput = () => {
+      inputLockRef.current = false;
+    };
+
+    const queueInputUnlock = () => {
+      if (inputUnlockTimeoutRef.current) {
+        window.clearTimeout(inputUnlockTimeoutRef.current);
+      }
+
+      inputUnlockTimeoutRef.current = window.setTimeout(() => {
+        unlockInput();
+      }, slideInputUnlockDelay);
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+      const dominantDelta =
+        Math.abs(event.deltaY) >= Math.abs(event.deltaX)
+          ? event.deltaY
+          : 0;
+
+      if (Math.abs(dominantDelta) < 4) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const direction = dominantDelta > 0 ? 'down' : 'up';
+
+      if (inputLockRef.current) {
+        return;
+      }
+
+      if (wheelDirectionRef.current !== direction) {
+        wheelDeltaRef.current = 0;
+      }
+
+      wheelDirectionRef.current = direction;
+      wheelDeltaRef.current += Math.abs(dominantDelta);
+
+      if (wheelDeltaRef.current < slideWheelThreshold) {
+        return;
+      }
+
+      inputLockRef.current = true;
+      resetWheelInput();
+      queueInputUnlock();
+      requestSlideDirection(direction);
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.pointerType !== 'touch') {
+        return;
+      }
+
+      touchStartRef.current = { x: event.clientX, y: event.clientY };
+    };
+
+    const handlePointerUp = (event: PointerEvent) => {
+      if (event.pointerType !== 'touch') {
+        return;
+      }
+
+      const start = touchStartRef.current;
+      touchStartRef.current = null;
+
+      if (!start || inputLockRef.current) {
+        return;
+      }
+
+      const deltaX = event.clientX - start.x;
+      const deltaY = event.clientY - start.y;
+      const isVerticalSwipe =
+        Math.abs(deltaY) > FULLPAGE_TOUCH_SWIPE_THRESHOLD &&
+        Math.abs(deltaY) > Math.abs(deltaX) * FULLPAGE_TOUCH_AXIS_LOCK_RATIO;
+
+      if (!isVerticalSwipe) {
+        return;
+      }
+
+      inputLockRef.current = true;
+      queueInputUnlock();
+      requestSlideDirection(getFullPageSwipeDirection(deltaY));
+    };
+
+    const handlePointerCancel = () => {
+      touchStartRef.current = null;
+    };
+
+    sectionNode.addEventListener('wheel', handleWheel, { passive: false });
+    sectionNode.addEventListener('pointerdown', handlePointerDown);
+    sectionNode.addEventListener('pointerup', handlePointerUp);
+    sectionNode.addEventListener('pointercancel', handlePointerCancel);
+
+    return () => {
+      sectionNode.removeEventListener('wheel', handleWheel);
+      sectionNode.removeEventListener('pointerdown', handlePointerDown);
+      sectionNode.removeEventListener('pointerup', handlePointerUp);
+      sectionNode.removeEventListener('pointercancel', handlePointerCancel);
+
+      if (inputUnlockTimeoutRef.current) {
+        window.clearTimeout(inputUnlockTimeoutRef.current);
+        inputUnlockTimeoutRef.current = null;
+      }
+
+      touchStartRef.current = null;
+      unlockInput();
+      resetWheelInput();
+    };
+  }, [requestSlideDirection]);
 
   useEffect(() => {
     if (slides.length < 2 || intervalMs <= 0) {
@@ -152,6 +319,10 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
 
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const duration = reduceMotion ? 0.12 : 0.62;
+      const artExitScale = reduceMotion ? 1 : 1.1;
+      const artEnterScale = reduceMotion ? 1 : 0.92;
+      const textExitScale = reduceMotion ? 1 : 1.35;
+      const textEnterScale = reduceMotion ? 1 : 0.9;
       const timeline = gsap.timeline({
         defaults: {
           ease: 'power3.inOut',
@@ -165,16 +336,20 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
       gsap.set(incomingTextRef.current, {
         autoAlpha: 0,
         y: reduceMotion ? 0 : 36,
-        scale: reduceMotion ? 1 : 0.98,
+        scale: textEnterScale,
         filter: reduceMotion ? 'none' : 'blur(10px)',
       });
       gsap.set(incomingTopRef.current, {
         autoAlpha: 0,
         y: reduceMotion ? 0 : 72,
+        scale: artEnterScale,
+        transformOrigin: '50% 100%',
       });
       gsap.set(incomingBottomRef.current, {
         autoAlpha: 0,
         y: reduceMotion ? 0 : -72,
+        scale: artEnterScale,
+        transformOrigin: '50% 0%',
       });
 
       timeline
@@ -183,7 +358,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
           {
             autoAlpha: 0,
             y: reduceMotion ? 0 : -34,
-            scale: reduceMotion ? 1 : 0.98,
+            scale: textExitScale,
             filter: reduceMotion ? 'none' : 'blur(8px)',
             duration,
           },
@@ -194,6 +369,8 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
           {
             autoAlpha: 0,
             y: reduceMotion ? 0 : -112,
+            scale: artExitScale,
+            transformOrigin: '50% 100%',
             duration,
           },
           0,
@@ -203,6 +380,8 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
           {
             autoAlpha: 0,
             y: reduceMotion ? 0 : 112,
+            scale: artExitScale,
+            transformOrigin: '50% 0%',
             duration,
           },
           0,
@@ -223,6 +402,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
           {
             autoAlpha: 1,
             y: 0,
+            scale: 1,
             duration: duration * 0.96,
           },
           0.1,
@@ -232,6 +412,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
           {
             autoAlpha: 1,
             y: 0,
+            scale: 1,
             duration: duration * 0.96,
           },
           0.1,
@@ -252,6 +433,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
         aria-label="XLAM Media statements"
         onPointerMove={handleBackgroundPointerMove}
         onPointerLeave={resetBackgroundParallax}
+        {...scrollIgnoreAttr}
       >
         <div
           ref={backgroundRef}

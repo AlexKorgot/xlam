@@ -76,7 +76,7 @@ export const MainScene = () => {
 
         <SecondSectionDesign ref={secondSectionRef} />
         <ServicesSliderSection allowSectionScrollOnEdges />
-        <TextSection intervalMs={5000} />
+        <TextSection intervalMs={0} />
         <FullPageSection id="next">
           <MorphSection
               ref={morphSectionRef}
