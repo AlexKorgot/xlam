@@ -319,9 +319,9 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
 
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const duration = reduceMotion ? 0.12 : 0.62;
-      const artExitScale = reduceMotion ? 1 : 1.1;
-      const artEnterScale = reduceMotion ? 1 : 0.92;
-      const textExitScale = reduceMotion ? 1 : 1.35;
+      const artExitDistance = reduceMotion ? 0 : 190;
+      const artEnterDistance = reduceMotion ? 0 : 190;
+      const textExitScale = reduceMotion ? 1 : 1.65;
       const textEnterScale = reduceMotion ? 1 : 0.9;
       const timeline = gsap.timeline({
         defaults: {
@@ -341,14 +341,14 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
       });
       gsap.set(incomingTopRef.current, {
         autoAlpha: 0,
-        y: reduceMotion ? 0 : 72,
-        scale: artEnterScale,
+        y: -artEnterDistance,
+        scale: 1,
         transformOrigin: '50% 100%',
       });
       gsap.set(incomingBottomRef.current, {
         autoAlpha: 0,
-        y: reduceMotion ? 0 : -72,
-        scale: artEnterScale,
+        y: artEnterDistance,
+        scale: 1,
         transformOrigin: '50% 0%',
       });
 
@@ -368,10 +368,9 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
           activeTopRef.current,
           {
             autoAlpha: 0,
-            y: reduceMotion ? 0 : -112,
-            scale: artExitScale,
+            y: -artExitDistance,
             transformOrigin: '50% 100%',
-            duration,
+            duration: duration * 1.08,
           },
           0,
         )
@@ -379,10 +378,9 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
           activeBottomRef.current,
           {
             autoAlpha: 0,
-            y: reduceMotion ? 0 : 112,
-            scale: artExitScale,
+            y: artExitDistance,
             transformOrigin: '50% 0%',
-            duration,
+            duration: duration * 1.08,
           },
           0,
         )
