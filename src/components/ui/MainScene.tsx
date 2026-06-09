@@ -17,6 +17,10 @@ import { useHeaderProgress } from '@/src/components/ui/Header/HeaderProvider';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import { CinematicVideoSlider } from '@/src/components/cinematic_new';
 import { TextSection } from '@/src/components/textSection';
+import { MobileXHeroSection } from '@/src/components/ui/MobileXHeroSection';
+
+const isDesktopMorphViewport = () =>
+  typeof window !== 'undefined' && window.matchMedia('(min-width: 1000px)').matches;
 
 export const MainScene = () => {
   const setHeaderProgress = useHeaderProgress();
@@ -58,14 +62,14 @@ export const MainScene = () => {
             secondSectionRef.current?.playEnter();
           }
 
-          if (startIndex === 3 && targetIndex === 4) {
+          if (startIndex === 3 && targetIndex === 4 && isDesktopMorphViewport()) {
             morphStartTimeoutRef.current = window.setTimeout(() => {
               morphSectionRef.current?.playForward();
               morphStartTimeoutRef.current = null;
             }, FULLPAGE_SECTION_REVEAL_DELAY * 1000);
           }
 
-          if (startIndex === 4 && targetIndex === 3) {
+          if (startIndex === 4 && targetIndex === 3 && isDesktopMorphViewport()) {
             morphSectionRef.current?.playReverse();
           }
         }}
@@ -77,10 +81,11 @@ export const MainScene = () => {
         <SecondSectionDesign ref={secondSectionRef} />
         <ServicesSliderSection allowSectionScrollOnEdges />
         <TextSection intervalMs={0} />
-        <FullPageSection id="next">
+        <FullPageSection id="next" className="items-stretch bg-black">
+          <MobileXHeroSection />
           <MorphSection
               ref={morphSectionRef}
-              className={'flex flex-col items-center'}
+              className={'hidden flex-col items-center min-[1000px]:flex'}
               videoSrc={publicAssetPath('/video/3_slider_content_video.mov')}
               autoPlayTimeline={false}
               topEndWidth={820}
