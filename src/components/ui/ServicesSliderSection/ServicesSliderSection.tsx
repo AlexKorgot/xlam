@@ -540,7 +540,7 @@ export function ServicesSliderSection({
                         playsInline
                         loop
                         muted
-                        preload="metadata"
+                        preload="none"
                       />
                       <div className="pointer-events-none absolute bottom-0 px-1.5 text-center">
                         <p className="hidden text-[12px] min-[1000px]:block">{slide.description}</p>

@@ -932,7 +932,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                                 src={videoSrc}
                                 muted
                                 playsInline
-                                preload="auto"
+                                preload="metadata"
                                 className="h-full w-full object-cover"
                             />
                         </div>
@@ -983,7 +983,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                                 src={videoSrc}
                                 muted
                                 playsInline
-                                preload="auto"
+                                preload="metadata"
                                 className="h-full w-full object-cover"
                             />
                         </div>

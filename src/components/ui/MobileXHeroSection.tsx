@@ -62,7 +62,7 @@ export function MobileXHeroSection() {
                 clipPath="url(#mobile-x-hero-clip)"
               >
                 <video
-                  className="h-full w-full scale-x-[-1] object-cover brightness-125 contrast-110 saturate-0"
+                  className="h-full w-full scale-x-[-1] object-cover brightness-125 contrast-110"
                   autoPlay
                   muted
                   loop
