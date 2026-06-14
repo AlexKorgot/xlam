@@ -40,6 +40,8 @@ type TextSlide = {
 type TextSlideImagePosition = {
   top: string;
   bottom: string;
+  topHeight: string;
+  bottomHeight: string;
 };
 
 type TextSlideImagePositionBreakpoint =
@@ -59,6 +61,8 @@ type ResponsivePositionValue = string | Partial<Record<TextSlideImagePositionBre
 type TextSlideImagePositionConfig = Partial<{
   top: ResponsivePositionValue;
   bottom: ResponsivePositionValue;
+  topHeight: ResponsivePositionValue;
+  bottomHeight: ResponsivePositionValue;
 }>;
 
 interface TextSectionProps {
@@ -85,6 +89,8 @@ const imagePositionBreakpoints: Array<{
 const defaultImagePosition: TextSlideImagePosition = {
   top: '0',
   bottom: '0',
+  topHeight: 'clamp(320px, 46.35vw, 890px)',
+  bottomHeight: 'clamp(260px, 38.02vw, 730px)',
 };
 
 const slides: TextSlide[] = [
@@ -97,16 +103,50 @@ const slides: TextSlide[] = [
       top: {
         base: defaultImagePosition.top,
         sm: '0',
+        md: '0',
+        lg: '0',
+        xl: '0',
+        '2xl': '0',
+        '3xl': '-150px',
         '4xl': '-100px',
         '5xl': '-150px',
-        '6xl': '-300px'
+        '6xl': '-300px',
       },
       bottom: {
         base: defaultImagePosition.bottom,
         sm: '0',
+        md: '0',
+        lg: '0',
+        xl: '0',
+        '2xl': '0',
+        '3xl': '-150px',
         '4xl': '-100px',
         '5xl': '-150px',
-        '6xl': '-300px'
+        '6xl': '-300px',
+      },
+      topHeight: {
+        base: defaultImagePosition.topHeight,
+        sm: '360px',
+        md: '420px',
+        lg: '520px',
+        xl: '590px',
+        '2xl': '710px',
+        '3xl': '890px',
+        '4xl': '980px',
+        '5xl': '1060px',
+        '6xl': '1180px',
+      },
+      bottomHeight: {
+        base: defaultImagePosition.bottomHeight,
+        sm: '300px',
+        md: '350px',
+        lg: '430px',
+        xl: '490px',
+        '2xl': '585px',
+        '3xl': '730px',
+        '4xl': '800px',
+        '5xl': '870px',
+        '6xl': '960px',
       },
     },
   },
@@ -119,16 +159,50 @@ const slides: TextSlide[] = [
       top: {
         base: defaultImagePosition.top,
         sm: '0',
+        md: '0',
+        lg: '0',
+        xl: '0',
+        '2xl': '0',
+        '3xl': '-40px',
         '4xl': '-150px',
         '5xl': '-150px',
-        '6xl': '-300px'
+        '6xl': '-300px',
       },
       bottom: {
         base: defaultImagePosition.bottom,
         sm: '0',
+        md: '0',
+        lg: '0',
+        xl: '0',
+        '2xl': '0',
+        '3xl': '0',
         '4xl': '0',
         '5xl': '-150px',
-        '6xl': '-100px'
+        '6xl': '-100px',
+      },
+      topHeight: {
+        base: defaultImagePosition.topHeight,
+        sm: '360px',
+        md: '420px',
+        lg: '520px',
+        xl: '590px',
+        '2xl': '710px',
+        '3xl': '890px',
+        '4xl': '1010px',
+        '5xl': '1080px',
+        '6xl': '1200px',
+      },
+      bottomHeight: {
+        base: defaultImagePosition.bottomHeight,
+        sm: '300px',
+        md: '350px',
+        lg: '430px',
+        xl: '490px',
+        '2xl': '585px',
+        '3xl': '730px',
+        '4xl': '790px',
+        '5xl': '870px',
+        '6xl': '940px',
       },
     },
   },
@@ -141,18 +215,50 @@ const slides: TextSlide[] = [
       top: {
         base: defaultImagePosition.top,
         sm: '0',
+        md: '0',
+        lg: '0',
         xl: '0',
+        '2xl': '0',
+        '3xl': '0',
         '4xl': '0',
         '5xl': '-150px',
-        '6xl': '-150px'
+        '6xl': '-150px',
       },
       bottom: {
         base: defaultImagePosition.bottom,
         sm: '0',
+        md: '0',
+        lg: '0',
         xl: '0',
+        '2xl': '0',
+        '3xl': '0',
         '4xl': '0',
         '5xl': '-150px',
-        '6xl': '-150px'
+        '6xl': '-150px',
+      },
+      topHeight: {
+        base: defaultImagePosition.topHeight,
+        sm: '360px',
+        md: '420px',
+        lg: '520px',
+        xl: '590px',
+        '2xl': '710px',
+        '3xl': '870px',
+        '4xl': '960px',
+        '5xl': '1060px',
+        '6xl': '1160px',
+      },
+      bottomHeight: {
+        base: defaultImagePosition.bottomHeight,
+        sm: '300px',
+        md: '350px',
+        lg: '430px',
+        xl: '490px',
+        '2xl': '585px',
+        '3xl': '710px',
+        '4xl': '780px',
+        '5xl': '860px',
+        '6xl': '940px',
       },
     },
   },
@@ -217,6 +323,16 @@ const resolveImagePosition = (
   bottom: resolveResponsivePositionValue(
     config?.bottom,
     defaultImagePosition.bottom,
+    activeBreakpoint,
+  ),
+  topHeight: resolveResponsivePositionValue(
+    config?.topHeight,
+    defaultImagePosition.topHeight,
+    activeBreakpoint,
+  ),
+  bottomHeight: resolveResponsivePositionValue(
+    config?.bottomHeight,
+    defaultImagePosition.bottomHeight,
     activeBreakpoint,
   ),
 });
@@ -678,10 +794,12 @@ function SlideArtwork({
   const imagePosition = resolveImagePosition(slide.imagePosition, activeBreakpoint);
   const topImageStyle = {
     top: imagePosition.top,
+    height: imagePosition.topHeight,
     willChange: 'transform, opacity',
   } as CSSProperties;
   const bottomImageStyle = {
     bottom: imagePosition.bottom,
+    height: imagePosition.bottomHeight,
     willChange: 'transform, opacity',
   } as CSSProperties;
 
@@ -689,7 +807,7 @@ function SlideArtwork({
     <div className={`pointer-events-none absolute inset-0 ${layerClassName}`}>
       <div
         ref={topRef}
-        className="absolute left-1/2 aspect-[1920/890] w-screen -translate-x-1/2"
+        className="absolute left-1/2 w-screen -translate-x-1/2"
         style={topImageStyle}
       >
         <Image
@@ -705,7 +823,7 @@ function SlideArtwork({
 
       <div
         ref={bottomRef}
-        className="absolute left-1/2 aspect-[1920/730] w-screen -translate-x-1/2"
+        className="absolute left-1/2 w-screen -translate-x-1/2"
         style={bottomImageStyle}
       >
         <Image
