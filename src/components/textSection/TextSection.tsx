@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type PointerEvent as ReactPointerEvent,
   type RefObject,
 } from 'react';
@@ -33,7 +34,32 @@ type TextSlide = {
   lines: string[];
   topImage: StaticImageData;
   bottomImage: StaticImageData;
+  imagePosition?: TextSlideImagePositionConfig;
 };
+
+type TextSlideImagePosition = {
+  top: string;
+  bottom: string;
+};
+
+type TextSlideImagePositionBreakpoint =
+  | 'base'
+  | 'sm'
+  | 'md'
+  | 'lg'
+  | 'xl'
+  | '2xl'
+  | '3xl'
+  | '4xl'
+  | '5xl'
+  | '6xl';
+
+type ResponsivePositionValue = string | Partial<Record<TextSlideImagePositionBreakpoint, string>>;
+
+type TextSlideImagePositionConfig = Partial<{
+  top: ResponsivePositionValue;
+  bottom: ResponsivePositionValue;
+}>;
 
 interface TextSectionProps {
   intervalMs?: number;
@@ -42,6 +68,24 @@ interface TextSectionProps {
 const scrollIgnoreAttr = { [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' } as const;
 const slideWheelThreshold = 48;
 const slideInputUnlockDelay = 700;
+const imagePositionBreakpoints: Array<{
+  key: Exclude<TextSlideImagePositionBreakpoint, 'base'>;
+  minWidth: number;
+}> = [
+  { key: 'sm', minWidth: 640 },
+  { key: 'md', minWidth: 768 },
+  { key: 'lg', minWidth: 1024 },
+  { key: 'xl', minWidth: 1280 },
+  { key: '2xl', minWidth: 1536 },
+  { key: '3xl', minWidth: 1920 },
+  { key: '4xl', minWidth: 2240 },
+  { key: '5xl', minWidth: 2560 },
+  { key: '6xl', minWidth: 3000 },
+];
+const defaultImagePosition: TextSlideImagePosition = {
+  top: '0',
+  bottom: '0',
+};
 
 const slides: TextSlide[] = [
   {
@@ -49,20 +93,133 @@ const slides: TextSlide[] = [
     lines: ['В идеальном мире все гладко,', 'но гладкое', 'не запоминается'],
     topImage: BlueTop,
     bottomImage: BlueBottom,
+    imagePosition: {
+      top: {
+        base: defaultImagePosition.top,
+        sm: '0',
+        '4xl': '-100px',
+        '5xl': '-150px',
+        '6xl': '-300px'
+      },
+      bottom: {
+        base: defaultImagePosition.bottom,
+        sm: '0',
+        '4xl': '-100px',
+        '5xl': '-150px',
+        '6xl': '-300px'
+      },
+    },
   },
   {
     id: 'noise',
     lines: ['Мы не делаем идеально', '- мы делаем интересно'],
     topImage: GreenTop,
     bottomImage: GreenBottom,
+    imagePosition: {
+      top: {
+        base: defaultImagePosition.top,
+        sm: '0',
+        '4xl': '-150px',
+        '5xl': '-150px',
+        '6xl': '-300px'
+      },
+      bottom: {
+        base: defaultImagePosition.bottom,
+        sm: '0',
+        '4xl': '0',
+        '5xl': '-150px',
+        '6xl': '-100px'
+      },
+    },
   },
   {
     id: 'idea',
     lines: ['Если ваш бренд готов', 'Перестать быть аккуратным', 'и стать настоящим'],
     topImage: GrayTop,
     bottomImage: GrayBottom,
+    imagePosition: {
+      top: {
+        base: defaultImagePosition.top,
+        sm: '0',
+        xl: '0',
+        '4xl': '0',
+        '5xl': '-150px',
+        '6xl': '-150px'
+      },
+      bottom: {
+        base: defaultImagePosition.bottom,
+        sm: '0',
+        xl: '0',
+        '4xl': '0',
+        '5xl': '-150px',
+        '6xl': '-150px'
+      },
+    },
   },
 ];
+
+const getActiveImagePositionBreakpoint = (): TextSlideImagePositionBreakpoint => {
+  if (typeof window === 'undefined') {
+    return 'base';
+  }
+
+  for (let index = imagePositionBreakpoints.length - 1; index >= 0; index -= 1) {
+    const breakpoint = imagePositionBreakpoints[index];
+
+    if (window.matchMedia(`(min-width: ${breakpoint.minWidth}px)`).matches) {
+      return breakpoint.key;
+    }
+  }
+
+  return 'base';
+};
+
+const resolveResponsivePositionValue = (
+  value: ResponsivePositionValue | undefined,
+  fallback: string,
+  activeBreakpoint: TextSlideImagePositionBreakpoint,
+) => {
+  if (!value) {
+    return fallback;
+  }
+
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  const activeBreakpointIndex =
+    activeBreakpoint === 'base'
+      ? -1
+      : imagePositionBreakpoints.findIndex(
+          (breakpoint) => breakpoint.key === activeBreakpoint,
+        );
+
+  for (let index = activeBreakpointIndex; index >= 0; index -= 1) {
+    const breakpointValue = value[imagePositionBreakpoints[index].key];
+
+    if (breakpointValue) {
+      return breakpointValue;
+    }
+  }
+
+  return value.base ?? fallback;
+};
+
+const resolveImagePosition = (
+  config: TextSlideImagePositionConfig | undefined,
+  activeBreakpoint: TextSlideImagePositionBreakpoint,
+): TextSlideImagePosition => ({
+  top: resolveResponsivePositionValue(
+    config?.top,
+    defaultImagePosition.top,
+    activeBreakpoint,
+  ),
+  bottom: resolveResponsivePositionValue(
+    config?.bottom,
+    defaultImagePosition.bottom,
+    activeBreakpoint,
+  ),
+});
 
 export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
@@ -84,9 +241,33 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [incomingIndex, setIncomingIndex] = useState<number | null>(null);
+  const [activeImagePositionBreakpoint, setActiveImagePositionBreakpoint] =
+    useState<TextSlideImagePositionBreakpoint>('base');
 
   const activeSlide = slides[activeIndex];
   const incomingSlide = incomingIndex === null ? null : slides[incomingIndex];
+
+  useEffect(() => {
+    const updateActiveBreakpoint = () => {
+      setActiveImagePositionBreakpoint(getActiveImagePositionBreakpoint());
+    };
+
+    updateActiveBreakpoint();
+
+    const mediaQueries = imagePositionBreakpoints.map((breakpoint) =>
+      window.matchMedia(`(min-width: ${breakpoint.minWidth}px)`),
+    );
+
+    mediaQueries.forEach((mediaQuery) => {
+      mediaQuery.addEventListener('change', updateActiveBreakpoint);
+    });
+
+    return () => {
+      mediaQueries.forEach((mediaQuery) => {
+        mediaQuery.removeEventListener('change', updateActiveBreakpoint);
+      });
+    };
+  }, []);
 
   useEffect(() => {
     activeIndexRef.current = activeIndex;
@@ -458,6 +639,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
           topRef={activeTopRef}
           bottomRef={activeBottomRef}
           layerClassName="z-10"
+          activeBreakpoint={activeImagePositionBreakpoint}
         />
 
         {incomingSlide ? (
@@ -468,6 +650,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
             topRef={incomingTopRef}
             bottomRef={incomingBottomRef}
             layerClassName="z-20"
+            activeBreakpoint={activeImagePositionBreakpoint}
           />
         ) : null}
       </section>
@@ -481,6 +664,7 @@ interface SlideArtworkProps {
   topRef: RefObject<HTMLDivElement | null>;
   bottomRef: RefObject<HTMLDivElement | null>;
   layerClassName: string;
+  activeBreakpoint: TextSlideImagePositionBreakpoint;
 }
 
 function SlideArtwork({
@@ -489,13 +673,24 @@ function SlideArtwork({
   topRef,
   bottomRef,
   layerClassName,
+  activeBreakpoint,
 }: SlideArtworkProps) {
+  const imagePosition = resolveImagePosition(slide.imagePosition, activeBreakpoint);
+  const topImageStyle = {
+    top: imagePosition.top,
+    willChange: 'transform, opacity',
+  } as CSSProperties;
+  const bottomImageStyle = {
+    bottom: imagePosition.bottom,
+    willChange: 'transform, opacity',
+  } as CSSProperties;
+
   return (
     <div className={`pointer-events-none absolute inset-0 ${layerClassName}`}>
       <div
         ref={topRef}
-        className="absolute left-1/2 top-[clamp(-190px,-9.9vw,-40px)] aspect-[1920/890] w-screen -translate-x-1/2"
-        style={{ willChange: 'transform, opacity' }}
+        className="absolute left-1/2 aspect-[1920/890] w-screen -translate-x-1/2"
+        style={topImageStyle}
       >
         <Image
           src={slide.topImage}
@@ -510,8 +705,8 @@ function SlideArtwork({
 
       <div
         ref={bottomRef}
-        className="absolute bottom-[clamp(-190px,-9.9vw,-40px)] left-1/2 aspect-[1920/730] w-screen -translate-x-1/2"
-        style={{ willChange: 'transform, opacity' }}
+        className="absolute left-1/2 aspect-[1920/730] w-screen -translate-x-1/2"
+        style={bottomImageStyle}
       >
         <Image
           src={slide.bottomImage}

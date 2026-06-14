@@ -4,6 +4,7 @@ import Image, { type StaticImageData } from 'next/image';
 import { useId, type ReactNode } from 'react';
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
 import { BaseModal } from '@/src/components/ui/modal';
+import { useContactModal } from '@/src/components/ui/contact-modal';
 
 export type ServiceModalFeature = {
   title: string;
@@ -43,6 +44,7 @@ export function ServiceModal({
   onNext,
   onAfterClose,
 }: ServiceModalProps) {
+  const { openContactModal } = useContactModal();
   const titleId = useId();
   const descriptionId = useId();
 
@@ -138,6 +140,7 @@ export function ServiceModal({
             <button
               type="button"
               className="mt-3 flex min-h-[52px] w-full items-center justify-center border border-white/68 bg-white/10 px-4 text-center text-[20px] font-bold uppercase leading-none text-white shadow-[inset_0_0_38px_rgba(255,255,255,0.08)] backdrop-blur-[1px] transition hover:border-[#63ff45] hover:bg-white/15 hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:min-h-[58px] sm:text-[23px] lg:min-h-[58px] lg:whitespace-nowrap lg:text-[23px]"
+              onClick={openContactModal}
             >
               {content.ctaLabel}
             </button>

@@ -23,10 +23,12 @@ type BaseModalProps = {
   onAfterClose?: () => void;
   closeLabel?: string;
   closeText?: ReactNode;
+  showCloseButton?: boolean;
   animationDuration?: number;
   closeOnBackdropClick?: boolean;
   closeOnEscape?: boolean;
   variant?: 'center' | 'sheet';
+  backdropClassName?: string;
 };
 
 const defaultAnimationDuration = 260;
@@ -51,10 +53,12 @@ export function BaseModal({
   onAfterClose,
   closeLabel = 'Close modal',
   closeText,
+  showCloseButton = true,
   animationDuration = defaultAnimationDuration,
   closeOnBackdropClick = true,
   closeOnEscape = true,
   variant = 'center',
+  backdropClassName,
 }: BaseModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -276,6 +280,7 @@ export function BaseModal({
           isSheet
             ? 'bg-black/34 backdrop-blur-[1px] sm:bg-black/58 sm:backdrop-blur-[2px]'
             : 'bg-black',
+          backdropClassName,
           isVisible ? 'opacity-100' : 'opacity-0',
         ].join(' ')}
         data-fullpage-scroll-ignore="true"
@@ -312,24 +317,26 @@ export function BaseModal({
                 : 'h-[calc(100svh-128px)] min-h-[620px] max-w-[1756px] lg:h-[min(829px,calc(100svh-251px))]',
             ].join(' ')}
           >
-            <button
-              ref={closeButtonRef}
-              type="button"
-              className={[
-                'absolute z-20 flex items-center justify-center border bg-black/50 font-black uppercase leading-none text-white transition hover:border-[#63ff45] hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45]',
-                isSheet
-                  ? 'right-5 top-4 h-10 px-4 border-white/55 sm:right-7 lg:right-9'
-                  : 'right-5 top-5 h-11 w-11 text-[30px]',
-              ].join(' ')}
-              aria-label={closeLabel}
-              onClick={close}
-            >
-              {isSheet ? (
-                closeText ?? 'Закрыть'
-              ) : (
-                closeText ?? 'x'
-              )}
-            </button>
+            {showCloseButton ? (
+              <button
+                ref={closeButtonRef}
+                type="button"
+                className={[
+                  'absolute z-20 flex items-center justify-center border bg-black/50 font-black uppercase leading-none text-white transition hover:border-[#63ff45] hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45]',
+                  isSheet
+                    ? 'right-5 top-4 h-10 px-4 border-white/55 sm:right-7 lg:right-9'
+                    : 'right-5 top-5 h-11 w-11 text-[30px]',
+                ].join(' ')}
+                aria-label={closeLabel}
+                onClick={close}
+              >
+                {isSheet ? (
+                  closeText ?? 'Закрыть'
+                ) : (
+                  closeText ?? 'x'
+                )}
+              </button>
+            ) : null}
 
             {isSheet ? (
               <div

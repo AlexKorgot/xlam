@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import localFont from 'next/font/local'
 import { HeaderProvider } from '@/src/components/ui/Header/HeaderProvider';
+import { ContactModalProvider } from '@/src/components/ui/contact-modal';
 
 const sans = localFont({
   src: [
@@ -47,7 +48,9 @@ export default function RootLayout({
       className={`h-full antialiased ${sans.variable}`}
     >
       <body className="flex min-h-[100svh] flex-col overflow-x-hidden">
-        <HeaderProvider>{children}</HeaderProvider>
+        <ContactModalProvider>
+          <HeaderProvider>{children}</HeaderProvider>
+        </ContactModalProvider>
       </body>
     </html>
   );

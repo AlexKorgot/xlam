@@ -3,10 +3,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
+import { useContactModal } from '@/src/components/ui/contact-modal';
 
 const OVERLAY_TRANSITION_DURATION = 500;
 
+type CloseMenuOptions = {
+    immediate?: boolean;
+};
+
 export default function BurgerButton() {
+    const { openContactModal } = useContactModal();
+    const toggleButtonRef = useRef<HTMLButtonElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
     const overlayFrameRef = useRef<number | null>(null);
     const overlayTimeoutRef = useRef<number | null>(null);
@@ -38,10 +45,15 @@ export default function BurgerButton() {
         });
     }, [clearOverlayTimers]);
 
-    const closeMenu = useCallback(() => {
+    const closeMenu = useCallback((options: CloseMenuOptions = {}) => {
         clearOverlayTimers();
         setIsOpen(false);
         setIsOverlayVisible(false);
+
+        if (options.immediate) {
+            setIsOverlayMounted(false);
+            return;
+        }
 
         overlayTimeoutRef.current = window.setTimeout(() => {
             overlayTimeoutRef.current = null;
@@ -55,6 +67,12 @@ export default function BurgerButton() {
         }
 
         openMenu();
+    };
+
+    const handleContactClick = () => {
+        closeMenu({ immediate: true });
+        toggleButtonRef.current?.focus();
+        openContactModal();
     };
 
     useEffect(() => {
@@ -97,7 +115,7 @@ export default function BurgerButton() {
                     <button
                         type="button"
                         aria-label="Close menu"
-                        onClick={closeMenu}
+                        onClick={() => closeMenu()}
                         className={clsx(
                             'fixed inset-0 z-40 transition-[opacity,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
                             isOverlayVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
@@ -123,10 +141,11 @@ export default function BurgerButton() {
                 aria-hidden={!isOpen}
                 className={clsx(
                     'absolute right-0 top-0 z-50 overflow-hidden bg-white transition-[width,height,border-radius] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
-                    isOpen ? 'h-[342px] w-[262px] rounded-none' : 'h-[42px] w-[42px] rounded-[21px]',
+                    isOpen ? 'h-[388px] w-[262px] rounded-none' : 'h-[42px] w-[42px] rounded-[21px]',
                 )}
             >
                 <button
+                    ref={toggleButtonRef}
                     type="button"
                     aria-label={isOpen ? 'Close menu' : 'Open menu'}
                     aria-pressed={isOpen}
@@ -195,9 +214,13 @@ export default function BurgerButton() {
                     <div className="border-t border-black px-[31px] py-[14px] text-[18px] uppercase text-black">
                         Контакты
                     </div>
-                    <div className="border-y border-black px-[31px] py-[14px] text-[18px] font-semibold uppercase text-black">
+                    <button
+                        type="button"
+                        className="w-full border-y border-black px-[31px] py-[14px] text-left text-[18px] font-semibold uppercase text-black"
+                        onClick={handleContactClick}
+                    >
                         Оставить заявку
-                    </div>
+                    </button>
                 </div>
             </div>
         </div>

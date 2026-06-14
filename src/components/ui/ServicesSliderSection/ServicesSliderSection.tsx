@@ -51,6 +51,7 @@ interface ServicesSliderSectionProps {
 const scrollIgnoreAttr = { [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' } as const;
 const edgeWheelThreshold = 48;
 const edgeWheelUnlockDelay = 700;
+const initialPreloadedSlideCount = 4;
 
 const showModalContent: ServiceModalContent = {
   title: 'Шоу под ключ',
@@ -167,6 +168,16 @@ const brandingModalContent: ServiceModalContent = {
 export function ServicesSliderSection({
   allowSectionScrollOnEdges = false,
 }: ServicesSliderSectionProps) {
+  const sectionContentRef = useRef<HTMLDivElement | null>(null);
+  const [isSectionInView, setIsSectionInView] = useState(false);
+  const [preloadedSlideIndexes, setPreloadedSlideIndexes] = useState<
+    ReadonlySet<number>
+  >(
+    () =>
+      new Set(
+        Array.from({ length: initialPreloadedSlideCount }, (_, index) => index),
+      ),
+  );
 
   const handleLeave = (ref: ServiceVideoRef) => {
     return () => {
@@ -360,6 +371,81 @@ export function ServicesSliderSection({
     [WheelGesturesPlugin({ forceWheelAxis: 'y' })],
   );
 
+  const addPreloadedSlideIndexes = useCallback((indexes: number[]) => {
+    if (indexes.length === 0) {
+      return;
+    }
+
+    setPreloadedSlideIndexes((currentIndexes) => {
+      const nextIndexes = new Set(currentIndexes);
+      let hasNewIndex = false;
+
+      indexes.forEach((index) => {
+        if (!nextIndexes.has(index)) {
+          nextIndexes.add(index);
+          hasNewIndex = true;
+        }
+      });
+
+      return hasNewIndex ? nextIndexes : currentIndexes;
+    });
+  }, []);
+
+  const addVisibleSlidePreloads = useCallback(() => {
+    if (!emblaApi) {
+      addPreloadedSlideIndexes(
+        Array.from({ length: initialPreloadedSlideCount }, (_, index) => index),
+      );
+      return;
+    }
+
+    addPreloadedSlideIndexes(emblaApi.slidesInView());
+  }, [addPreloadedSlideIndexes, emblaApi]);
+
+  useEffect(() => {
+    const sectionContent = sectionContentRef.current;
+
+    if (!sectionContent) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) {
+          return;
+        }
+
+        setIsSectionInView(true);
+        addVisibleSlidePreloads();
+      },
+      { threshold: 0.28 },
+    );
+
+    observer.observe(sectionContent);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [addVisibleSlidePreloads]);
+
+  useEffect(() => {
+    if (!emblaApi || !isSectionInView) {
+      return;
+    }
+
+    addVisibleSlidePreloads();
+
+    emblaApi.on('select', addVisibleSlidePreloads);
+    emblaApi.on('settle', addVisibleSlidePreloads);
+    emblaApi.on('reInit', addVisibleSlidePreloads);
+
+    return () => {
+      emblaApi.off('select', addVisibleSlidePreloads);
+      emblaApi.off('settle', addVisibleSlidePreloads);
+      emblaApi.off('reInit', addVisibleSlidePreloads);
+    };
+  }, [addVisibleSlidePreloads, emblaApi, isSectionInView]);
+
   useEffect(() => {
     if (!emblaApi) {
       return;
@@ -514,7 +600,10 @@ export function ServicesSliderSection({
   return (
     <>
       <FullPageSection id="services" className="items-stretch bg-black px-4 py-[clamp(1rem,4vh,3rem)] text-white sm:px-6">
-        <div className="flex h-full min-h-0 w-full max-w-[1570px] flex-col items-center justify-center gap-[clamp(0.75rem,2vh,2rem)]">
+        <div
+          ref={sectionContentRef}
+          className="flex h-full min-h-0 w-full max-w-[1570px] flex-col items-center justify-center gap-[clamp(0.75rem,2vh,2rem)]"
+        >
           <div className="embla__wrapper h-[clamp(260px,58vh,560px)] max-h-[62%] w-screen min-[1000px]:w-full">
             <div className="embla h-full">
               <div
@@ -540,7 +629,9 @@ export function ServicesSliderSection({
                         playsInline
                         loop
                         muted
-                        preload="none"
+                        preload={
+                          preloadedSlideIndexes.has(index) ? 'metadata' : 'none'
+                        }
                       />
                       <div className="pointer-events-none absolute bottom-0 px-1.5 text-center">
                         <p className="hidden text-[12px] min-[1000px]:block">{slide.description}</p>

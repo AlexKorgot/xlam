@@ -7,6 +7,7 @@ import { AnimatedLogoNew, type AnimatedLogoHandle } from '@/src/components/ui/An
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
 import type { HeaderHandle } from '@/src/components/ui/Header/types';
 import Link from "next/link";
+import { useContactModal } from '@/src/components/ui/contact-modal';
 
 gsap.registerPlugin(useGSAP);
 
@@ -27,7 +28,7 @@ const getInitialMenuStyle = (progress: number): CSSProperties =>
 
 const desktopMenu = {
   left: [{ elem: <Link href={'/about'}>Услуги</Link>, key: 'about'}, {elem: <Link href={'/contacts'}>Портфолио</Link>, key: 'contacts'}],
-  right: ['Контакты', 'Связаться с нами'],
+  right: ['Контакты'],
 } as const;
 
 interface HeaderDesktopProps {
@@ -38,6 +39,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
   { initialProgress = 0 },
   ref,
 ) {
+  const { openContactModal } = useContactModal();
   const initialProgressValue = gsap.utils.clamp(0, 1, initialProgress);
   const headerRef = useRef<HTMLElement>(null);
   const leftRef = useRef<HTMLDivElement>(null);
@@ -145,6 +147,15 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
                 {item}
               </GlitchText>
             ))}
+            <GlitchText size={MENU_ITEM_SIZE}>
+              <button
+                type="button"
+                className="uppercase"
+                onClick={openContactModal}
+              >
+                Связаться с нами
+              </button>
+            </GlitchText>
           </div>
         </header>
       </div>
