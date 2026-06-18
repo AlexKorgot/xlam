@@ -1067,7 +1067,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
 
             <div className="text-center">
                 <p  ref={textRef} className="mt-[clamp(1rem,4vh,3.125rem)] text-[clamp(1.5rem,4.5vw,2.5rem)] font-bold uppercase leading-[1.14] text-white">
-                    МЫ СОЗДАЕМ КРЕАТИВНЫЕ ВИДЕО, ШОУ, РЕКЛАМУ и БРЕНДЫ, которые звучат дольше, чем длятся
+                    Мы делаем шоу для платформ, рекламу для брендов и <br/> контент для бизнеса. Такие дела.
                 </p>
             </div>
         </section>

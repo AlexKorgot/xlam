@@ -18,6 +18,11 @@ import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import { CinematicVideoSlider } from '@/src/components/cinematic_new';
 import { TextSection } from '@/src/components/textSection';
 import { MobileXHeroSection } from '@/src/components/ui/MobileXHeroSection';
+import {WhyUsSection} from "@/src/components/ui/WhyUsSection";
+import {TeamSection} from "@/src/components/ui/TeamSection";
+
+const SECOND_SECTION_INDEX = 1;
+const MORPH_SECTION_INDEX = 2;
 
 const isDesktopMorphViewport = () =>
   typeof window !== 'undefined' && window.matchMedia('(min-width: 1000px)').matches;
@@ -54,22 +59,30 @@ export const MainScene = () => {
         transitionStartCallback={(startIndex, targetIndex) => {
           clearMorphStartTimeout();
 
-          if (startIndex === 1 && targetIndex === 2) {
+          if (startIndex === SECOND_SECTION_INDEX && targetIndex === MORPH_SECTION_INDEX) {
             secondSectionRef.current?.playExit();
           }
 
-          if (startIndex === 2 && targetIndex === 1) {
+          if (startIndex === MORPH_SECTION_INDEX && targetIndex === SECOND_SECTION_INDEX) {
             secondSectionRef.current?.playEnter();
           }
 
-          if (startIndex === 3 && targetIndex === 4 && isDesktopMorphViewport()) {
+          if (
+            startIndex === SECOND_SECTION_INDEX &&
+            targetIndex === MORPH_SECTION_INDEX &&
+            isDesktopMorphViewport()
+          ) {
             morphStartTimeoutRef.current = window.setTimeout(() => {
               morphSectionRef.current?.playForward();
               morphStartTimeoutRef.current = null;
             }, FULLPAGE_SECTION_REVEAL_DELAY * 1000);
           }
 
-          if (startIndex === 4 && targetIndex === 3 && isDesktopMorphViewport()) {
+          if (
+            startIndex === MORPH_SECTION_INDEX &&
+            targetIndex === SECOND_SECTION_INDEX &&
+            isDesktopMorphViewport()
+          ) {
             morphSectionRef.current?.playReverse();
           }
         }}
@@ -79,8 +92,7 @@ export const MainScene = () => {
         </FullPageSection>
 
         <SecondSectionDesign ref={secondSectionRef} />
-        <ServicesSliderSection allowSectionScrollOnEdges />
-        <TextSection intervalMs={0} />
+
         <FullPageSection id="next" className="items-stretch bg-black">
           <MobileXHeroSection />
           <MorphSection
@@ -91,8 +103,20 @@ export const MainScene = () => {
               topEndWidth={820}
           />
         </FullPageSection>
+
+        <ServicesSliderSection allowSectionScrollOnEdges />
+
+        <FullPageSection id="why" fullBleed className="items-stretch bg-black">
+          <WhyUsSection />
+        </FullPageSection>
         <FullPageSection id="projects" className="items-stretch bg-black">
           <CinematicVideoSlider />
+        </FullPageSection>
+
+        <TextSection intervalMs={0} />
+
+        <FullPageSection id="about" fullBleed className="items-stretch bg-black">
+          <TeamSection />
         </FullPageSection>
 
       </FullPageScroll>
