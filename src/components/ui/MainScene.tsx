@@ -115,8 +115,17 @@ export const MainScene = () => {
             targetIndex > MORPH_SECTION_INDEX &&
             isDesktopMorphViewport()
           ) {
-            morphSectionRef.current?.hideExpandedVideo();
+            morphSectionRef.current?.fadeExpandedVideoOut();
           }
+
+          if (
+            startIndex > MORPH_SECTION_INDEX &&
+            targetIndex === MORPH_SECTION_INDEX &&
+            isDesktopMorphViewport()
+          ) {
+            morphSectionRef.current?.fadeExpandedVideoIn();
+          }
+
         }}
       >
         <FullPageSection id="intro"  className={'bg-transparent'}>

@@ -14,6 +14,8 @@ export interface MorphSectionHandle {
     reset: () => void;
     revealExpandedVideo: () => void;
     hideExpandedVideo: () => void;
+    fadeExpandedVideoOut: () => void;
+    fadeExpandedVideoIn: () => void;
     isExpandedVideoVisible: () => boolean;
 }
 
@@ -930,6 +932,47 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     fill: '#66FF66',
                     duration: 0.24,
                 }, 0.08);
+        },
+        fadeExpandedVideoOut() {
+            if (!isExpandedVideoVisibleRef.current) {
+                return;
+            }
+
+            gsap.to(expandedVideoFrameRef.current, {
+                autoAlpha: 0,
+                duration: 0.95,
+                ease: 'sine.out',
+                overwrite: 'auto',
+            });
+            gsap.to(expandedPlayButtonRef.current, {
+                autoAlpha: 0,
+                scale: 0.94,
+                duration: 0.32,
+                ease: 'sine.out',
+                overwrite: 'auto',
+            });
+        },
+        fadeExpandedVideoIn() {
+            if (!isExpandedVideoVisibleRef.current) {
+                return;
+            }
+
+            gsap.to(expandedVideoFrameRef.current, {
+                autoAlpha: 1,
+                filter: 'blur(0px)',
+                scale: 1,
+                duration: 0.95,
+                ease: 'sine.out',
+                overwrite: 'auto',
+            });
+            gsap.to(expandedPlayButtonRef.current, {
+                autoAlpha: isExpandedVideoPlayingRef.current ? 0 : 1,
+                scale: isExpandedVideoPlayingRef.current ? 0.94 : 1,
+                duration: 0.32,
+                delay: 0.42,
+                ease: 'sine.out',
+                overwrite: 'auto',
+            });
         },
         isExpandedVideoVisible() {
             return isExpandedVideoVisibleRef.current;
