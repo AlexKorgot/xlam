@@ -1,7 +1,9 @@
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import type { CinematicSlide } from './types';
 
-const mainVideo = publicAssetPath('/video/timessquarenightwide.mp4');
+const merVideo = publicAssetPath('/video/Mer.mp4');
+const nowVideo = publicAssetPath('/video/now.mp4');
+const voteVideo = publicAssetPath('/video/vote.mp4');
 const mainVideoObjectPosition: [number, number] = [0.5, 0.58];
 const productionDescription =
   'Полный цикл продакшена: разработка концепции, подбор ведущих и гостей, организация съемок, продакшн и пост-продакшн. Мы превращаем идею в полноценный формат, готовый к публикации на YouTube, ТВ или платформах.';
@@ -18,7 +20,7 @@ export const cinematicSlides: CinematicSlide[] = [
     client: 'MER-TV',
     year: '2026',
     accent: '#66ff66',
-    videoSrc: mainVideo,
+    videoSrc: merVideo,
     videoObjectPosition: mainVideoObjectPosition,
     opened: {
       titleLead: 'сериал',
@@ -39,7 +41,7 @@ export const cinematicSlides: CinematicSlide[] = [
     client: 'XLAM',
     year: '2026',
     accent: '#7cff55',
-    videoSrc: mainVideo,
+    videoSrc: nowVideo,
     videoObjectPosition: mainVideoObjectPosition,
     opened: {
       titleLead: 'шоу',
@@ -60,7 +62,7 @@ export const cinematicSlides: CinematicSlide[] = [
     client: 'Агритек БИО',
     year: '2026',
     accent: '#55ff88',
-    videoSrc: mainVideo,
+    videoSrc: voteVideo,
     videoObjectPosition: mainVideoObjectPosition,
     opened: {
       titleLead: 'фирменный стиль',
