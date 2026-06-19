@@ -230,12 +230,40 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
         );
     };
 
-    const queueExpandedPlayButtonHide = (delay = 1500) => {
+    const playExpandedVideo = (video: HTMLVideoElement) => {
+        video.play().catch(() => {});
+        isExpandedVideoPlayingRef.current = true;
+        syncExpandedPlayButtonState();
         clearExpandedPlayButtonTimeout();
-        expandedPlayButtonTimeoutRef.current = window.setTimeout(() => {
-            hideExpandedPlayButton();
-            expandedPlayButtonTimeoutRef.current = null;
-        }, delay);
+        hideExpandedPlayButton();
+    };
+
+    const pauseExpandedVideo = (video: HTMLVideoElement) => {
+        video.pause();
+        isExpandedVideoPlayingRef.current = false;
+        syncExpandedPlayButtonState();
+        clearExpandedPlayButtonTimeout();
+        showExpandedPlayButton();
+    };
+
+    const resetExpandedVideoPlayback = () => {
+        const video = expandedVideoRef.current;
+
+        if (video) {
+            video.pause();
+
+            if (video.currentTime !== 0) {
+                video.currentTime = 0;
+            }
+        }
+
+        isExpandedVideoPlayingRef.current = false;
+        syncExpandedPlayButtonState();
+        clearExpandedPlayButtonTimeout();
+        gsap.set(expandedPlayButtonRef.current, {
+            autoAlpha: 1,
+            scale: 1,
+        });
     };
 
     const handleExpandedVideoPlay = () => {
@@ -245,19 +273,12 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
             return;
         }
 
-        if (isExpandedVideoPlayingRef.current) {
-            video.pause();
-            isExpandedVideoPlayingRef.current = false;
-            syncExpandedPlayButtonState();
-            clearExpandedPlayButtonTimeout();
-            showExpandedPlayButton();
+        if (!video.paused) {
+            pauseExpandedVideo(video);
             return;
         }
 
-        video.play().catch(() => {});
-        isExpandedVideoPlayingRef.current = true;
-        syncExpandedPlayButtonState();
-        queueExpandedPlayButtonHide(0);
+        playExpandedVideo(video);
     };
 
     const handleExpandedPlayButtonPointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
@@ -298,6 +319,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
             return;
         }
 
+        event.stopPropagation();
         handleExpandedVideoPlay();
     };
 
@@ -314,21 +336,29 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
         showExpandedPlayButton();
     };
 
-    const handleExpandedVideoPointerMove = () => {
-        const video = expandedVideoRef.current;
+    const handleExpandedVideoFrameClick = (event: ReactMouseEvent<HTMLDivElement>) => {
+        event.preventDefault();
 
-        if (!video || video.paused) {
+        if ((event.target as HTMLElement | null)?.closest('button')) {
             return;
         }
 
-        showExpandedPlayButton();
-        queueExpandedPlayButtonHide();
+        const video = expandedVideoRef.current;
+
+        if (!video) {
+            return;
+        }
+
+        if (video.paused) {
+            playExpandedVideo(video);
+            return;
+        }
+
+        pauseExpandedVideo(video);
     };
 
     const handleExpandedPlayButtonPointerLeave = () => {
-        const video = expandedVideoRef.current;
-
-        if (!video || video.paused) {
+        if (!isExpandedVideoPlayingRef.current) {
             return;
         }
 
@@ -943,6 +973,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 duration: 0.95,
                 ease: 'sine.out',
                 overwrite: 'auto',
+                onComplete: resetExpandedVideoPlayback,
             });
             gsap.to(expandedPlayButtonRef.current, {
                 autoAlpha: 0,
@@ -991,7 +1022,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
             <div
                 ref={expandedVideoFrameRef}
                 className="absolute inset-x-6 top-[calc(var(--header-offset)+1rem)] z-0 h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-2rem)] overflow-hidden bg-black opacity-0 md:inset-x-10"
-                onPointerMove={handleExpandedVideoPointerMove}
+                onClick={handleExpandedVideoFrameClick}
             >
                 <video
                     ref={expandedVideoRef}
@@ -1012,6 +1043,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     onPointerMove={handleExpandedPlayButtonPointerMove}
                     onPointerCancel={handleExpandedPlayButtonPointerCancel}
                     onPointerLeave={handleExpandedPlayButtonPointerLeave}
+                    onMouseLeave={handleExpandedPlayButtonPointerLeave}
                 >
                     <span
                         aria-hidden="true"
