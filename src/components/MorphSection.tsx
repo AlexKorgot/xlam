@@ -1,6 +1,10 @@
 'use client';
 
 import {forwardRef, useId, useImperativeHandle, useRef} from 'react';
+import type {
+    MouseEvent as ReactMouseEvent,
+    PointerEvent as ReactPointerEvent,
+} from 'react';
 import gsap from 'gsap';
 import {useGSAP} from '@gsap/react';
 
@@ -8,6 +12,9 @@ export interface MorphSectionHandle {
     playForward: () => void;
     playReverse: () => void;
     reset: () => void;
+    revealExpandedVideo: () => void;
+    hideExpandedVideo: () => void;
+    isExpandedVideoVisible: () => boolean;
 }
 
 type MorphSectionProps = {
@@ -20,6 +27,16 @@ type MorphSectionProps = {
 
 const TOP_START_RIGHT_X = 234.5;
 const BOTTOM_START_LEFT_X = 0;
+const TOP_FLICKER_START = 1.18;
+const BOTTOM_FLICKER_START = 1.3;
+const M_ACTIVATION_START = TOP_FLICKER_START;
+const M_REVEAL_START = 3.48;
+const M_REVEAL_DURATION = 1.05;
+const VIDEO_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION * 0.5;
+const TOP_VIDEO_REVEAL_START = M_REVEAL_START;
+const OUTLINE_TO_WHITE_START = VIDEO_REVEAL_START + 0.05;
+const TEXT_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION * 0.72;
+const EXPANDED_PLAY_BUTTON_TAP_THRESHOLD = 10;
 
 function buildMPathRight(rightX: number) {
     return `
@@ -80,6 +97,15 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     const topRowRef = useRef<HTMLDivElement | null>(null);
     const bottomRowRef = useRef<HTMLDivElement | null>(null);
     const timelineRef = useRef<gsap.core.Timeline | null>(null);
+    const expandedVideoTimelineRef = useRef<gsap.core.Timeline | null>(null);
+    const expandedVideoFrameRef = useRef<HTMLDivElement | null>(null);
+    const expandedVideoRef = useRef<HTMLVideoElement | null>(null);
+    const expandedPlayButtonRef = useRef<HTMLButtonElement | null>(null);
+    const expandedPlayButtonTimeoutRef = useRef<number | null>(null);
+    const expandedPlayButtonPointerStartRef = useRef<{x: number; y: number} | null>(null);
+    const shouldSuppressExpandedPlayClickRef = useRef(false);
+    const isExpandedVideoVisibleRef = useRef(false);
+    const isExpandedVideoPlayingRef = useRef(false);
 
     const topVideoRef = useRef<HTMLVideoElement | null>(null);
     const topClipPathRef = useRef<SVGPathElement | null>(null);
@@ -119,6 +145,193 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     const pauseVideos = (reset = false) => {
         pauseVideo(topVideoRef.current, reset);
         pauseVideo(bottomVideoRef.current, reset);
+        pauseVideo(expandedVideoRef.current, reset);
+    };
+
+    const playLetterVideos = (reset = false) => {
+        [topVideoRef.current, bottomVideoRef.current].forEach((video) => {
+            if (!video) {
+                return;
+            }
+
+            if (reset) {
+                video.currentTime = 0;
+            }
+
+            video.play().catch(() => {});
+        });
+    };
+
+    const syncVideoTime = (video: HTMLVideoElement, currentTime: number) => {
+        const seek = () => {
+            video.currentTime = currentTime;
+        };
+
+        if (video.readyState >= 1) {
+            seek();
+            return;
+        }
+
+        video.addEventListener('loadedmetadata', seek, {once: true});
+    };
+
+    const clearExpandedPlayButtonTimeout = () => {
+        if (expandedPlayButtonTimeoutRef.current === null) {
+            return;
+        }
+
+        window.clearTimeout(expandedPlayButtonTimeoutRef.current);
+        expandedPlayButtonTimeoutRef.current = null;
+    };
+
+    const showExpandedPlayButton = () => {
+        const button = expandedPlayButtonRef.current;
+
+        if (!button) {
+            return;
+        }
+
+        gsap.to(button, {
+            autoAlpha: 1,
+            scale: 1,
+            duration: 0.28,
+            ease: 'power2.out',
+        });
+    };
+
+    const hideExpandedPlayButton = () => {
+        const button = expandedPlayButtonRef.current;
+
+        if (!button) {
+            return;
+        }
+
+        gsap.to(button, {
+            autoAlpha: 0,
+            scale: 0.94,
+            duration: 0.38,
+            ease: 'sine.out',
+        });
+    };
+
+    const syncExpandedPlayButtonState = () => {
+        const button = expandedPlayButtonRef.current;
+
+        if (!button) {
+            return;
+        }
+
+        button.dataset.playing = isExpandedVideoPlayingRef.current ? 'true' : 'false';
+        button.setAttribute(
+            'aria-label',
+            isExpandedVideoPlayingRef.current ? 'Pause video' : 'Play video',
+        );
+    };
+
+    const queueExpandedPlayButtonHide = (delay = 1500) => {
+        clearExpandedPlayButtonTimeout();
+        expandedPlayButtonTimeoutRef.current = window.setTimeout(() => {
+            hideExpandedPlayButton();
+            expandedPlayButtonTimeoutRef.current = null;
+        }, delay);
+    };
+
+    const handleExpandedVideoPlay = () => {
+        const video = expandedVideoRef.current;
+
+        if (!video) {
+            return;
+        }
+
+        if (isExpandedVideoPlayingRef.current) {
+            video.pause();
+            isExpandedVideoPlayingRef.current = false;
+            syncExpandedPlayButtonState();
+            clearExpandedPlayButtonTimeout();
+            showExpandedPlayButton();
+            return;
+        }
+
+        video.play().catch(() => {});
+        isExpandedVideoPlayingRef.current = true;
+        syncExpandedPlayButtonState();
+        queueExpandedPlayButtonHide(0);
+    };
+
+    const handleExpandedPlayButtonPointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
+        expandedPlayButtonPointerStartRef.current = {
+            x: event.clientX,
+            y: event.clientY,
+        };
+        shouldSuppressExpandedPlayClickRef.current = false;
+    };
+
+    const handleExpandedPlayButtonPointerMove = (event: ReactPointerEvent<HTMLButtonElement>) => {
+        const start = expandedPlayButtonPointerStartRef.current;
+
+        if (!start) {
+            return;
+        }
+
+        const deltaX = event.clientX - start.x;
+        const deltaY = event.clientY - start.y;
+
+        if (Math.hypot(deltaX, deltaY) > EXPANDED_PLAY_BUTTON_TAP_THRESHOLD) {
+            shouldSuppressExpandedPlayClickRef.current = true;
+        }
+    };
+
+    const handleExpandedPlayButtonPointerCancel = () => {
+        expandedPlayButtonPointerStartRef.current = null;
+        shouldSuppressExpandedPlayClickRef.current = false;
+    };
+
+    const handleExpandedPlayButtonClick = (event: ReactMouseEvent<HTMLButtonElement>) => {
+        expandedPlayButtonPointerStartRef.current = null;
+
+        if (shouldSuppressExpandedPlayClickRef.current) {
+            event.preventDefault();
+            event.stopPropagation();
+            shouldSuppressExpandedPlayClickRef.current = false;
+            return;
+        }
+
+        handleExpandedVideoPlay();
+    };
+
+    const handleExpandedVideoEnded = () => {
+        const video = expandedVideoRef.current;
+
+        if (video) {
+            video.currentTime = 0;
+        }
+
+        isExpandedVideoPlayingRef.current = false;
+        syncExpandedPlayButtonState();
+        clearExpandedPlayButtonTimeout();
+        showExpandedPlayButton();
+    };
+
+    const handleExpandedVideoPointerMove = () => {
+        const video = expandedVideoRef.current;
+
+        if (!video || video.paused) {
+            return;
+        }
+
+        showExpandedPlayButton();
+        queueExpandedPlayButtonHide();
+    };
+
+    const handleExpandedPlayButtonPointerLeave = () => {
+        const video = expandedVideoRef.current;
+
+        if (!video || video.paused) {
+            return;
+        }
+
+        clearExpandedPlayButtonTimeout();
+        hideExpandedPlayButton();
     };
 
 
@@ -208,128 +421,26 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
         return tl;
     };
 
-    const buildMActivation = (
+    const buildSyncedMActivation = (
         outlineTargets: SVGPathElement[],
         overlayTargets: SVGPathElement[],
         startAt: number,
-        doubleFlicker = false
     ) => {
         const tl = gsap.timeline();
 
-        outlineTargets.forEach((outlineTarget, i) => {
-            const overlayTarget = overlayTargets[i];
-            const delay = startAt + i * 0.04;
+        tl.to(outlineTargets, {
+            stroke: '#ffffff',
+            filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
+            duration: 0.34,
+            ease: 'power2.out',
+        }, startAt);
 
-            if (doubleFlicker) {
-                tl.to(
-                    outlineTarget,
-                    {
-                        stroke: '#0f0f0f',
-                        filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
-                        duration: 0.05,
-                        ease: 'none',
-                    },
-                    delay
-                )
-                    // 1-е включение
-                    .set(
-                        outlineTarget,
-                        {
-                            stroke: '#66FF66',
-                            filter: 'drop-shadow(0 0 18px rgba(102,255,102,0.65))',
-                        },
-                        '>'
-                    )
-                    .to(
-                        outlineTarget,
-                        {
-                            filter: 'drop-shadow(0 0 24px rgba(102,255,102,0.85))',
-                            duration: 0.1,
-                            ease: 'power1.out',
-                        },
-                        '>'
-                    )
-
-                    // короткое погасание
-                    .to(
-                        outlineTarget,
-                        {
-                            stroke: '#111111',
-                            filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
-                            duration: 0.06,
-                            ease: 'none',
-                        },
-                        '>'
-                    )
-
-                    // 2-е включение
-                    .set(
-                        outlineTarget,
-                        {
-                            stroke: '#66FF66',
-                            filter: 'drop-shadow(0 0 18px rgba(102,255,102,0.7))',
-                        },
-                        '>'
-                    )
-                    .to(
-                        outlineTarget,
-                        {
-                            filter: 'drop-shadow(0 0 26px rgba(102,255,102,0.9))',
-                            duration: 0.16,
-                            ease: 'power1.out',
-                        },
-                        '>'
-                    );
-
-                if (overlayTarget) {
-                    tl.set(
-                        overlayTarget,
-                        {
-                            opacity: 1,
-                        },
-                        delay + 0.42
-                    );
-                }
-            } else {
-                tl.to(
-                    outlineTarget,
-                    {
-                        stroke: '#0f0f0f',
-                        filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
-                        duration: 0.06,
-                        ease: 'none',
-                    },
-                    delay
-                )
-                    .set(
-                        outlineTarget,
-                        {
-                            stroke: '#66FF66',
-                            filter: 'drop-shadow(0 0 18px rgba(102,255,102,0.65))',
-                        },
-                        '>'
-                    )
-                    .to(
-                        outlineTarget,
-                        {
-                            filter: 'drop-shadow(0 0 26px rgba(102,255,102,0.9))',
-                            duration: 0.18,
-                            ease: 'power1.out',
-                        },
-                        '>'
-                    );
-
-                if (overlayTarget) {
-                    tl.set(
-                        overlayTarget,
-                        {
-                            opacity: 1,
-                        },
-                        delay + 0.32
-                    );
-                }
-            }
-        });
+        tl.to(overlayTargets, {
+            opacity: 1,
+            fill: '#ffffff',
+            duration: 0.28,
+            ease: 'sine.out',
+        }, startAt + 0.08);
 
         return tl;
     };
@@ -356,32 +467,6 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
 
     useGSAP(
         () => {
-            const TOP_FLICKER_START = 1.18;
-            const BOTTOM_FLICKER_START = 1.3;
-
-// после того как остальные буквы уже почти домигали
-            const M_ACTIVATION_START = 2.75;
-
-// старт роста М
-            const M_REVEAL_START = 3.48;
-            const M_REVEAL_DURATION = 1.05;
-            const BOTTOM_M_ACTIVATION_START = M_ACTIVATION_START + 0.04;
-            const BOTTOM_VIDEO_PLAY_START = BOTTOM_M_ACTIVATION_START + 0.32;
-
-// зелёный слой держится дольше;
-// исчезновение и видео стартуют примерно с середины расширения
-            const TOP_VIDEO_DURATION = 1.0;
-            const VIDEO_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION * 0.5;
-            const TOP_VIDEO_REVEAL_START = M_REVEAL_START;
-
-// контур тоже начинаем уводить в белый примерно с середины
-            const OUTLINE_TO_WHITE_START = VIDEO_REVEAL_START + 0.05;
-
-            const BOTTOM_VOLTAGE_START =
-                TOP_VIDEO_REVEAL_START + TOP_VIDEO_DURATION + 1 + 0.08;
-
-            const TEXT_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION * 0.72;
-
             const topRow = topRowRef.current;
             const bottomRow = bottomRowRef.current;
 
@@ -474,6 +559,19 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 filter: 'blur(8px)',
             });
 
+            gsap.set(expandedVideoFrameRef.current, {
+                autoAlpha: 0,
+                scale: 1.025,
+                filter: 'blur(14px)',
+                transformOrigin: 'center center',
+            });
+
+            gsap.set(expandedPlayButtonRef.current, {
+                autoAlpha: 0,
+                scale: 0.94,
+                transformOrigin: 'center center',
+            });
+
             renderTop();
             renderBottom();
 
@@ -504,7 +602,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 const currentTime = tl.time();
 
                 resetIfBeforeThreshold(topVideoRef.current, VIDEO_REVEAL_START, currentTime);
-                resetIfBeforeThreshold(bottomVideoRef.current, BOTTOM_VIDEO_PLAY_START, currentTime);
+                resetIfBeforeThreshold(bottomVideoRef.current, VIDEO_REVEAL_START, currentTime);
             });
 
             tl.eventCallback('onReverseComplete', () => {
@@ -557,23 +655,12 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 0
             );
 
-// 3. M не мигают — они отдельно "включаются"
+// 3. M синхронно заполняются белым во время фликера остальных букв.
             tl.add(
-                buildMActivation(
-                    [topOutlinePath],
-                    [topOverlayPath],
+                buildSyncedMActivation(
+                    [topOutlinePath, bottomOutlinePath],
+                    [topOverlayPath, bottomOverlayPath],
                     M_ACTIVATION_START,
-                    true,
-                ),
-                0
-            );
-
-            tl.add(
-                buildMActivation(
-                    [bottomOutlinePath],
-                    [bottomOverlayPath],
-                    M_ACTIVATION_START + 0.04,
-                    false
                 ),
                 0
             );
@@ -602,24 +689,16 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
 
                 .call(
                     () => {
-                        topVideo.currentTime = 0;
-                        topVideo.play().catch(() => {});
+                        playLetterVideos(true);
+                        window.setTimeout(() => playLetterVideos(false), 80);
                     },
                     [],
                     VIDEO_REVEAL_START
                 )
 
-                .call(
-                    () => {
-                        bottomVideo.play().catch(() => {});
-                    },
-                    [],
-                    BOTTOM_VIDEO_PLAY_START
-                )
-
-                // зелёный слой исчезает только после полного расширения букв
+                // Белый слой уходит по мере появления видео внутри букв.
                 .to(
-                    topVideo,
+                    [topVideo, bottomVideo],
                     {
                         opacity: 1,
                         scale: 1,
@@ -630,7 +709,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 )
 
                 .to(
-                    topVideo,
+                    [topVideo, bottomVideo],
                     {
                         filter: 'blur(0px)',
                         duration: 0.82,
@@ -640,7 +719,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 )
 
                 .to(
-                    topOverlayPath,
+                    [topOverlayPath, bottomOverlayPath],
                     {
                         opacity: 0,
                         duration: 0.78,
@@ -648,144 +727,12 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     },
                     TOP_VIDEO_REVEAL_START + 0.06
                 )
-                // нижняя M: voltage reveal после завершения расширения
-                .call(
-                    () => {
-                        bottomVideo.play().catch(() => {});
-                    },
-                    [],
-                    BOTTOM_VOLTAGE_START - 0.04
-                )
 
-                .set(
-                    bottomVideo,
-                    {
-                        opacity: 0,
-                        scale: 1.015,
-                        filter: 'blur(4px)',
-                    },
-                    BOTTOM_VOLTAGE_START
-                )
-
-                .set(
-                    bottomOverlayPath,
-                    {
-                        opacity: 1,
-                    },
-                    BOTTOM_VOLTAGE_START
-                )
-
-                // 1-й скачок: видео резко проступает
-                .to(
-                    bottomVideo,
-                    {
-                        opacity: 0.75,
-                        filter: 'blur(1.5px)',
-                        duration: 0.08,
-                        ease: 'none',
-                    },
-                    BOTTOM_VOLTAGE_START
-                )
-                .to(
-                    bottomOverlayPath,
-                    {
-                        opacity: 0.35,
-                        duration: 0.08,
-                        ease: 'none',
-                    },
-                    BOTTOM_VOLTAGE_START
-                )
-
-                // откат обратно в зелёный
-                .to(
-                    bottomVideo,
-                    {
-                        opacity: 0.18,
-                        filter: 'blur(3px)',
-                        duration: 0.06,
-                        ease: 'none',
-                    },
-                    '>'
-                )
-                .to(
-                    bottomOverlayPath,
-                    {
-                        opacity: 0.9,
-                        duration: 0.06,
-                        ease: 'none',
-                    },
-                    '<'
-                )
-
-                // 2-й скачок сильнее
-                .to(
-                    bottomVideo,
-                    {
-                        opacity: 1,
-                        filter: 'blur(0.8px)',
-                        duration: 0.09,
-                        ease: 'none',
-                    },
-                    '>'
-                )
-                .to(
-                    bottomOverlayPath,
-                    {
-                        opacity: 0.2,
-                        duration: 0.09,
-                        ease: 'none',
-                    },
-                    '<'
-                )
-
-                // ещё один микро-провал
-                .to(
-                    bottomVideo,
-                    {
-                        opacity: 0.55,
-                        filter: 'blur(2px)',
-                        duration: 0.05,
-                        ease: 'none',
-                    },
-                    '>'
-                )
-                .to(
-                    bottomOverlayPath,
-                    {
-                        opacity: 0.55,
-                        duration: 0.05,
-                        ease: 'none',
-                    },
-                    '<'
-                )
-
-                // финальное закрепление: остаётся видео
-                .to(
-                    bottomVideo,
-                    {
-                        opacity: 1,
-                        scale: 1,
-                        filter: 'blur(0px)',
-                        duration: 0.22,
-                        ease: 'power1.out',
-                    },
-                    '>'
-                )
-                .to(
-                    bottomOverlayPath,
-                    {
-                        opacity: 0,
-                        duration: 0.22,
-                        ease: 'power1.out',
-                    },
-                    '<'
-                )
-
-                // уже с середины расширения glow начинает ослабляться
+                // Уже с середины расширения контур остается нейтрально белым.
                 .to(
                     [topOutlinePath, bottomOutlinePath],
                     {
-                        filter: 'drop-shadow(0 0 8px rgba(102,255,102,0.22))',
+                        filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
                         duration: 0.32,
                         ease: 'power1.out',
                     },
@@ -814,9 +761,12 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
             }
 
             return () => {
+                clearExpandedPlayButtonTimeout();
                 pauseVideos(true);
                 timelineRef.current?.kill();
+                expandedVideoTimelineRef.current?.kill();
                 timelineRef.current = null;
+                expandedVideoTimelineRef.current = null;
             };
         },
         {scope: rootRef, dependencies: [autoPlayTimeline, topEndWidth, bottomLeftX]}
@@ -832,6 +782,11 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
 
             timeline.timeScale(1);
             timeline.play();
+
+            if (timeline.time() >= VIDEO_REVEAL_START) {
+                playLetterVideos(false);
+                window.setTimeout(() => playLetterVideos(false), 80);
+            }
         },
         playReverse() {
             const timeline = timelineRef.current;
@@ -847,6 +802,137 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
         reset() {
             pauseVideos(true);
             timelineRef.current?.pause(0);
+            expandedVideoTimelineRef.current?.kill();
+            expandedVideoTimelineRef.current = null;
+            isExpandedVideoVisibleRef.current = false;
+            isExpandedVideoPlayingRef.current = false;
+            syncExpandedPlayButtonState();
+        },
+        revealExpandedVideo() {
+            const expandedFrame = expandedVideoFrameRef.current;
+            const expandedVideo = expandedVideoRef.current;
+
+            if (!expandedFrame || !expandedVideo || isExpandedVideoVisibleRef.current) {
+                return;
+            }
+
+            if (!expandedVideo.getAttribute('src')) {
+                expandedVideo.src = videoSrc;
+                expandedVideo.load();
+            }
+
+            syncVideoTime(expandedVideo, topVideoRef.current?.currentTime ?? 0);
+            expandedVideo.pause();
+            isExpandedVideoVisibleRef.current = true;
+            isExpandedVideoPlayingRef.current = false;
+            syncExpandedPlayButtonState();
+            clearExpandedPlayButtonTimeout();
+
+            expandedVideoTimelineRef.current?.kill();
+            expandedVideoTimelineRef.current = gsap.timeline({
+                defaults: {
+                    ease: 'sine.out',
+                },
+            });
+
+            expandedVideoTimelineRef.current
+                .to([
+                    topOverlayPathRef.current,
+                    bottomOverlayPathRef.current,
+                ].filter(Boolean), {
+                    autoAlpha: 1,
+                    fill: '#ffffff',
+                    duration: 0.42,
+                    ease: 'sine.out',
+                }, 0)
+                .to([
+                    topOutlinePathRef.current,
+                    bottomOutlinePathRef.current,
+                ].filter(Boolean), {
+                    stroke: '#ffffff',
+                    filter: 'drop-shadow(0 0 0px rgba(102,255,102,0))',
+                    duration: 0.42,
+                    ease: 'sine.out',
+                }, 0)
+                .to([
+                    topRowRef.current,
+                    bottomRowRef.current,
+                    textRef.current,
+                ].filter(Boolean), {
+                    autoAlpha: 0,
+                    filter: 'blur(14px)',
+                    scale: 0.98,
+                    duration: 0.72,
+                    stagger: 0.04,
+                    transformOrigin: 'center center',
+                }, 0)
+                .to(expandedFrame, {
+                    autoAlpha: 1,
+                    filter: 'blur(0px)',
+                    scale: 1,
+                    duration: 0.92,
+                    ease: 'power2.out',
+                }, 0.16);
+            expandedVideoTimelineRef.current.to(expandedPlayButtonRef.current, {
+                autoAlpha: 1,
+                scale: 1,
+                duration: 0.42,
+                ease: 'power2.out',
+            }, 0.48);
+        },
+        hideExpandedVideo() {
+            const expandedFrame = expandedVideoFrameRef.current;
+            const expandedVideo = expandedVideoRef.current;
+
+            expandedVideoTimelineRef.current?.kill();
+            clearExpandedPlayButtonTimeout();
+            isExpandedVideoVisibleRef.current = false;
+            isExpandedVideoPlayingRef.current = false;
+            syncExpandedPlayButtonState();
+
+            gsap.timeline({
+                defaults: {
+                    ease: 'sine.out',
+                },
+                onComplete: () => {
+                    expandedVideo?.pause();
+                    expandedVideo?.removeAttribute('src');
+                    expandedVideo?.load();
+                },
+            })
+                .to(expandedFrame, {
+                    autoAlpha: 0,
+                    filter: 'blur(12px)',
+                    scale: 1.025,
+                    duration: 0.36,
+                }, 0)
+                .to(expandedPlayButtonRef.current, {
+                    autoAlpha: 0,
+                    scale: 0.94,
+                    duration: 0.2,
+                }, 0)
+                .to([
+                    topRowRef.current,
+                    bottomRowRef.current,
+                    textRef.current,
+                ].filter(Boolean), {
+                    autoAlpha: 1,
+                    filter: 'blur(0px)',
+                    scale: 1,
+                    duration: 0.42,
+                    clearProps: 'visibility,opacity,filter,scale',
+                }, 0.08)
+                .to([
+                    topOverlayPathRef.current,
+                    bottomOverlayPathRef.current,
+                ].filter(Boolean), {
+                    autoAlpha: 0,
+                    fill: '#66FF66',
+                    duration: 0.24,
+                }, 0.08);
+        },
+        isExpandedVideoVisible() {
+            return isExpandedVideoVisibleRef.current;
         },
     }));
 
@@ -854,12 +940,51 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
         <section
             ref={rootRef}
             className={[
-                'flex h-full min-h-0 w-full justify-center overflow-hidden px-6 py-[clamp(1rem,4vh,2.5rem)] md:px-10',
+                'relative flex h-full min-h-0 w-full justify-center overflow-hidden px-6 py-[clamp(1rem,4vh,2.5rem)] md:px-10',
                 className,
             ].join(' ')}
         >
             {/* Верхняя строка */}
-            <div ref={topRowRef} className="flex gap-[36px]">
+            <div
+                ref={expandedVideoFrameRef}
+                className="absolute inset-x-6 top-[calc(var(--header-offset)+1rem)] z-0 h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-2rem)] overflow-hidden bg-black opacity-0 md:inset-x-10"
+                onPointerMove={handleExpandedVideoPointerMove}
+            >
+                <video
+                    ref={expandedVideoRef}
+                    muted
+                    playsInline
+                    preload="none"
+                    className="h-full w-full object-cover"
+                    onEnded={handleExpandedVideoEnded}
+                />
+                <button
+                    ref={expandedPlayButtonRef}
+                    type="button"
+                    data-playing="false"
+                    className="group absolute left-1/2 top-1/2 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#66ff66] text-black opacity-0 shadow-[0_0_44px_rgba(102,255,102,0.42)] transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#66ff66]"
+                    aria-label="Play video"
+                    onClick={handleExpandedPlayButtonClick}
+                    onPointerDown={handleExpandedPlayButtonPointerDown}
+                    onPointerMove={handleExpandedPlayButtonPointerMove}
+                    onPointerCancel={handleExpandedPlayButtonPointerCancel}
+                    onPointerLeave={handleExpandedPlayButtonPointerLeave}
+                >
+                    <span
+                        aria-hidden="true"
+                        className="absolute ml-1 h-0 w-0 border-y-[13px] border-l-[20px] border-y-transparent border-l-black transition-[opacity,transform] duration-200 group-data-[playing=true]:scale-75 group-data-[playing=true]:opacity-0"
+                    />
+                    <span
+                        aria-hidden="true"
+                        className="absolute h-7 w-2 -translate-x-2 scale-75 bg-black opacity-0 transition-[opacity,transform] duration-200 group-data-[playing=true]:scale-100 group-data-[playing=true]:opacity-100"
+                    />
+                    <span
+                        aria-hidden="true"
+                        className="absolute h-7 w-2 translate-x-2 scale-75 bg-black opacity-0 transition-[opacity,transform] duration-200 group-data-[playing=true]:scale-100 group-data-[playing=true]:opacity-100"
+                    />
+                </button>
+            </div>
+            <div ref={topRowRef} className="relative z-10 flex gap-[36px]">
                 <svg
                     width="214"
                     height="248"
@@ -932,7 +1057,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                                 src={videoSrc}
                                 muted
                                 playsInline
-                                preload="metadata"
+                                preload="auto"
                                 className="h-full w-full object-cover"
                             />
                         </div>
@@ -955,7 +1080,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
             </div>
 
             {/* Нижняя строка */}
-            <div ref={bottomRowRef} className="mt-[clamp(1rem,4vh,2.5rem)] flex gap-[36px]">
+            <div ref={bottomRowRef} className="relative z-10 mt-[clamp(1rem,4vh,2.5rem)] flex gap-[36px]">
                 <svg
                     width={bottomSvgWidth}
                     height={bottomSvgHeight}
@@ -983,7 +1108,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                                 src={videoSrc}
                                 muted
                                 playsInline
-                                preload="metadata"
+                                preload="auto"
                                 className="h-full w-full object-cover"
                             />
                         </div>
@@ -1065,7 +1190,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 </svg>
             </div>
 
-            <div className="text-center">
+            <div className="relative z-10 text-center">
                 <p  ref={textRef} className="mt-[clamp(1rem,4vh,3.125rem)] text-[clamp(1.5rem,4.5vw,2.5rem)] font-bold uppercase leading-[1.14] text-white">
                     Мы делаем шоу для платформ, рекламу для брендов и <br/> контент для бизнеса. Такие дела.
                 </p>

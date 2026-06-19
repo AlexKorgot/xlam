@@ -52,6 +52,29 @@ export const MainScene = () => {
   return (
     <div className="">
       <FullPageScroll
+        beforeTransitionCallback={(startIndex, targetIndex) => {
+          if (
+            startIndex === MORPH_SECTION_INDEX &&
+            targetIndex === SECOND_SECTION_INDEX &&
+            isDesktopMorphViewport() &&
+            morphSectionRef.current?.isExpandedVideoVisible()
+          ) {
+            morphSectionRef.current?.hideExpandedVideo();
+            return false;
+          }
+
+          if (
+            startIndex === MORPH_SECTION_INDEX &&
+            targetIndex > MORPH_SECTION_INDEX &&
+            isDesktopMorphViewport() &&
+            !morphSectionRef.current?.isExpandedVideoVisible()
+          ) {
+            morphSectionRef.current?.revealExpandedVideo();
+            return false;
+          }
+
+          return true;
+        }}
         progressCallback={(progress) => {
           setHeaderProgress(progress);
           secondSectionRef.current?.setProgress(progress);
@@ -83,7 +106,16 @@ export const MainScene = () => {
             targetIndex === SECOND_SECTION_INDEX &&
             isDesktopMorphViewport()
           ) {
+            morphSectionRef.current?.hideExpandedVideo();
             morphSectionRef.current?.playReverse();
+          }
+
+          if (
+            startIndex === MORPH_SECTION_INDEX &&
+            targetIndex > MORPH_SECTION_INDEX &&
+            isDesktopMorphViewport()
+          ) {
+            morphSectionRef.current?.hideExpandedVideo();
           }
         }}
       >

@@ -24,6 +24,7 @@ type ScrollRequestDetail = {
 interface FullPageScrollProps {
   children: ReactNode;
   animationDuration?: number;
+  beforeTransitionCallback?: (startIndex: number, targetIndex: number) => boolean | void;
   progressCallback?: (value: number) => void;
   sectionChangeCallback?: (index: number) => void;
   transitionStartCallback?: (startIndex: number, targetIndex: number) => void;
@@ -33,6 +34,7 @@ interface FullPageScrollProps {
 export default function FullPageScroll({
   children,
   animationDuration = 0.95,
+  beforeTransitionCallback,
   progressCallback,
   sectionChangeCallback,
   transitionStartCallback,
@@ -116,6 +118,12 @@ export default function FullPageScroll({
     const nextReveal = getRevealElements(nextSection);
 
     animationRef.current?.kill();
+
+    if (beforeTransitionCallback?.(startIndex, index) === false) {
+      isScrollingRef.current = false;
+      return;
+    }
+
     transitionStartCallback?.(startIndex, index);
 
     if (nextReveal.length > 0) {
@@ -177,7 +185,14 @@ export default function FullPageScroll({
         );
       }
     },
-    [animationDuration, getViewportHeight, sectionChangeCallback, syncProgress, transitionStartCallback],
+    [
+      animationDuration,
+      beforeTransitionCallback,
+      getViewportHeight,
+      sectionChangeCallback,
+      syncProgress,
+      transitionStartCallback,
+    ],
   );
 
   const handleScrollDown = useCallback(() => {
