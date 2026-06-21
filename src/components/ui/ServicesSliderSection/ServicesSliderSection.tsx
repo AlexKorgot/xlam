@@ -202,9 +202,22 @@ export function ServicesSliderSection({
       id: 'show',
       title: 'ШОУ ПОД КЛЮЧ',
       description:
-        'ОТ ИДЕИ ДО ПРЕМЬЕРЫ: РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР.',
+        'ОТ ИДЕИ ДО ПРЕМЬЕРЫ: РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР',
       modal: showModalContent,
-      videoSrc: publicAssetPath('/video/services/1.mp4'),
+      videoSrc: publicAssetPath('/video/services/3.mp4'),
+      videoRefConfig: {
+        ref: useRef<HTMLVideoElement | null>(null),
+        handleMouseLeave: (ref) => handleLeave(ref),
+        handleMouseEnter: (ref) => handleEnter(ref),
+      },
+    },
+    {
+      id: 'b2b',
+      title: 'B2B ПРОДУКТ',
+      description:
+          'ПРОИЗВОДИМ СИСТЕМНЫЙ КОНТЕНТ: ИМИДЖ, ПРОДУКТ, КОММУНИКАЦИИ',
+      modal: b2bModalContent,
+      videoSrc: publicAssetPath('/video/services/2.mp4'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -215,22 +228,9 @@ export function ServicesSliderSection({
       id: 'ads',
       title: 'РЕКЛАМА',
       description:
-        'РАЗРАБАТЫВАЕМ РЕКЛАМНЫЕ ВИДЕО, УСИЛИВАЕМ БРЕНД И ПРИВОДИМ К РЕЗУЛЬТАТУ.',
+        'ДЕЛАЕМ РЕКЛАМУ, КОТОРУЮ ПЕРЕСЫЛАЮТ ДРУЗЬЯМ',
       modal: adsModalContent,
-      videoSrc: publicAssetPath('/video/services/2.mp4'),
-      videoRefConfig: {
-        ref: useRef<HTMLVideoElement | null>(null),
-        handleMouseLeave: (ref) => handleLeave(ref),
-        handleMouseEnter: (ref) => handleEnter(ref),
-      },
-    },
-    {
-      id: 'b2b',
-      title: 'B2B КОНТЕНТ',
-      description:
-        'ПРОИЗВОДИМ СИСТЕМНЫЙ КОНТЕНТ ДЛЯ БИЗНЕСА: ИМИДЖ, ПРОДУКТ, КОММУНИКАЦИИ.',
-      modal: b2bModalContent,
-      videoSrc: publicAssetPath('/video/services/3.mp4'),
+      videoSrc: publicAssetPath('/video/services/4.mp4'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -239,63 +239,11 @@ export function ServicesSliderSection({
     },
     {
       id: 'branding',
-      title: 'БРЕНДИНГ',
+      title: 'AI КОНТЕНТ',
       description:
-        'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ.',
+        'СОЗДАЕМ ВИЗУАЛ НОВОГО ПОКОЛЕНИЯ С ПОМОЩЬЮ ИИ',
       modal: brandingModalContent,
-      videoSrc: publicAssetPath('/video/services/4.mp4'),
-      videoRefConfig: {
-        ref: useRef<HTMLVideoElement | null>(null),
-        handleMouseLeave: (ref) => handleLeave(ref),
-        handleMouseEnter: (ref) => handleEnter(ref),
-      },
-    },
-    {
-      id: 'show1',
-      title: 'ШОУ ПОД КЛЮЧ',
-      description:
-        'ОТ ИДЕИ ДО ПРЕМЬЕРЫ: РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР.',
-      modal: showModalContent,
       videoSrc: publicAssetPath('/video/services/1.mp4'),
-      videoRefConfig: {
-        ref: useRef<HTMLVideoElement | null>(null),
-        handleMouseLeave: (ref) => handleLeave(ref),
-        handleMouseEnter: (ref) => handleEnter(ref),
-      },
-    },
-    {
-      id: 'ads2',
-      title: 'РЕКЛАМА',
-      description:
-        'РАЗРАБАТЫВАЕМ РЕКЛАМНЫЕ ВИДЕО, УСИЛИВАЕМ БРЕНД И ПРИВОДИМ К РЕЗУЛЬТАТУ.',
-      modal: adsModalContent,
-      videoSrc: publicAssetPath('/video/services/2.mp4'),
-      videoRefConfig: {
-        ref: useRef<HTMLVideoElement | null>(null),
-        handleMouseLeave: (ref) => handleLeave(ref),
-        handleMouseEnter: (ref) => handleEnter(ref),
-      },
-    },
-    {
-      id: 'b2b3',
-      title: 'B2B КОНТЕНТ',
-      description:
-        'ПРОИЗВОДИМ СИСТЕМНЫЙ КОНТЕНТ ДЛЯ БИЗНЕСА: ИМИДЖ, ПРОДУКТ, КОММУНИКАЦИИ.',
-      modal: b2bModalContent,
-      videoSrc: publicAssetPath('/video/services/3.mp4'),
-      videoRefConfig: {
-        ref: useRef<HTMLVideoElement | null>(null),
-        handleMouseLeave: (ref) => handleLeave(ref),
-        handleMouseEnter: (ref) => handleEnter(ref),
-      },
-    },
-    {
-      id: 'branding4',
-      title: 'БРЕНДИНГ',
-      description:
-        'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ.',
-      modal: brandingModalContent,
-      videoSrc: publicAssetPath('/video/services/4.mp4'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -633,8 +581,8 @@ export function ServicesSliderSection({
                           preloadedSlideIndexes.has(index) ? 'metadata' : 'none'
                         }
                       />
-                      <div className="pointer-events-none absolute bottom-0 px-1.5 text-center">
-                        <p className="hidden text-[12px] min-[1000px]:block">{slide.description}</p>
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex w-full flex-col items-center px-1.5 text-center">
+                        <p className="hidden max-w-[250px] text-[12px] leading-[1.12] min-[1000px]:block">{slide.description}</p>
                         <h4 className="text-[30px] font-black text-[#63ff45]">
                           {slide.title}
                         </h4>
@@ -646,8 +594,8 @@ export function ServicesSliderSection({
             </div>
           </div>
           <div className="min-h-0 text-center" data-reveal>
-            <p className="text-[clamp(0.875rem,2.2vw,1.5625rem)] font-bold uppercase leading-[1.14] text-white">
-              ЗАНИМАЕМСЯ ВСЕМИ ЭТАПАМИ СОЗДАНИЯ ПРОДУКТА: ПИШЕМ СЦЕНАРИИ, ОРГАНИЗУЕМ СЪЕМКИ, ВИДЕОСЪЕМКИ, МОНТАЖ, САУНД ДИЗАЙН, И СОЗДАЕМ ВСЕ АНИМАЦИИ
+            <p className="max-w-[1000px] m-auto text-[clamp(0.875rem,2.2vw,1.5625rem)] font-bold uppercase leading-[1.14] text-white mb-4">
+              берем на себя все этапы создания продукта: сценарий, съемка, монтаж, саунд-дизайн и графика
             </p>
             <p className="whitespace-nowrap text-[clamp(2.75rem,9vw,9.8125rem)] font-black uppercase leading-[0.99] tracking-[0.04em] text-white sm:tracking-[0.08em]">
               ХЛАМ MEDI<span className="text-[#63ff45]">A</span>
