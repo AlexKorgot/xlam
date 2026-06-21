@@ -4,8 +4,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 import { useContactModal } from '@/src/components/ui/contact-modal';
+import { FULLPAGE_SCROLL_EVENT } from '@/src/components/ui/FullPageScroll';
 
 const OVERLAY_TRANSITION_DURATION = 500;
+
+const mobileMenu = [
+    { label: 'Услуги', targetId: 'services' },
+    { label: 'Проекты', targetId: 'projects' },
+    { label: 'Команда', targetId: 'about' },
+    { label: 'О нас', targetId: 'why' },
+    { label: 'Контакты', targetId: 'text-section' },
+] as const;
 
 type CloseMenuOptions = {
     immediate?: boolean;
@@ -73,6 +82,19 @@ export default function BurgerButton() {
         closeMenu({ immediate: true });
         toggleButtonRef.current?.focus();
         openContactModal();
+    };
+
+    const handleSectionClick = (targetId: string) => {
+        closeMenu({ immediate: true });
+        toggleButtonRef.current?.focus();
+        window.dispatchEvent(
+            new CustomEvent(FULLPAGE_SCROLL_EVENT, {
+                detail: {
+                    behavior: 'instant',
+                    targetId,
+                },
+            }),
+        );
     };
 
     useEffect(() => {
@@ -199,21 +221,16 @@ export default function BurgerButton() {
                             : 'translate-y-[12px] opacity-0 pointer-events-none',
                     )}
                 >
-                    <div className="border-t border-black px-[31px] py-[14px] text-[18px] uppercase text-black">
-                        Услуги
-                    </div>
-                    <div className="border-t border-black px-[31px] py-[14px] text-[18px] uppercase text-black">
-                        Проекты
-                    </div>
-                    <div className="border-t border-black px-[31px] py-[14px] text-[18px] uppercase text-black">
-                        Команда
-                    </div>
-                    <div className="border-t border-black px-[31px] py-[14px] text-[18px] uppercase text-black">
-                        О нас
-                    </div>
-                    <div className="border-t border-black px-[31px] py-[14px] text-[18px] uppercase text-black">
-                        Контакты
-                    </div>
+                    {mobileMenu.map((item) => (
+                        <button
+                            key={item.targetId}
+                            type="button"
+                            className="w-full border-t border-black px-[31px] py-[14px] text-left text-[18px] uppercase text-black"
+                            onClick={() => handleSectionClick(item.targetId)}
+                        >
+                            {item.label}
+                        </button>
+                    ))}
                     <button
                         type="button"
                         className="w-full border-y border-black px-[31px] py-[14px] text-left text-[18px] font-semibold uppercase text-black"

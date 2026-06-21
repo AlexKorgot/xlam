@@ -6,8 +6,8 @@ import { useGSAP } from '@gsap/react';
 import { AnimatedLogoNew, type AnimatedLogoHandle } from '@/src/components/ui/AnimatedLogoNew';
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
 import type { HeaderHandle } from '@/src/components/ui/Header/types';
-import Link from "next/link";
 import { useContactModal } from '@/src/components/ui/contact-modal';
+import { FULLPAGE_SCROLL_EVENT } from '@/src/components/ui/FullPageScroll';
 
 gsap.registerPlugin(useGSAP);
 
@@ -26,10 +26,30 @@ const getInitialMenuStyle = (progress: number): CSSProperties =>
         transform: 'translateY(0)',
       };
 
-const desktopMenu = {
-  left: [{ elem: <Link href={'/about'}>Услуги</Link>, key: 'about'}, {elem: <Link href={'/contacts'}>Портфолио</Link>, key: 'contacts'}],
-  right: ['Контакты'],
+const desktopMenu: Record<'left' | 'right', Array<{
+  key: string;
+  label: string;
+  targetId: string;
+}>> = {
+  left: [
+    { key: 'services', label: 'Услуги', targetId: 'services' },
+    { key: 'projects', label: 'Портфолио', targetId: 'projects' },
+  ],
+  right: [
+    { key: 'contacts', label: 'Контакты', targetId: 'text-section' },
+  ],
 } as const;
+
+const jumpToFullPageSection = (targetId: string) => {
+  window.dispatchEvent(
+    new CustomEvent(FULLPAGE_SCROLL_EVENT, {
+      detail: {
+        behavior: 'instant',
+        targetId,
+      },
+    }),
+  );
+};
 
 interface HeaderDesktopProps {
   initialProgress?: number;
@@ -123,9 +143,16 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
             style={initialMenuStyle}
           >
             {desktopMenu.left.map((item) => (
-              <GlitchText key={item.key} size={MENU_ITEM_SIZE}>
-                {item.elem}
-              </GlitchText>
+              <button
+                key={item.key}
+                type="button"
+                className="uppercase"
+                onClick={() => jumpToFullPageSection(item.targetId)}
+              >
+                <GlitchText size={MENU_ITEM_SIZE}>
+                  {item.label}
+                </GlitchText>
+              </button>
             ))}
           </div>
 
@@ -143,19 +170,26 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
             style={initialMenuStyle}
           >
             {desktopMenu.right.map((item) => (
-              <GlitchText key={item} size={MENU_ITEM_SIZE}>
-                {item}
-              </GlitchText>
-            ))}
-            <GlitchText size={MENU_ITEM_SIZE}>
               <button
+                key={item.key}
                 type="button"
                 className="uppercase"
-                onClick={openContactModal}
+                onClick={() => jumpToFullPageSection(item.targetId)}
               >
-                Связаться с нами
+                <GlitchText size={MENU_ITEM_SIZE}>
+                  {item.label}
+                </GlitchText>
               </button>
-            </GlitchText>
+            ))}
+            <button
+              type="button"
+              className="pointer-events-auto uppercase"
+              onClick={openContactModal}
+            >
+              <GlitchText size={MENU_ITEM_SIZE}>
+                Связаться с нами
+              </GlitchText>
+            </button>
           </div>
         </header>
       </div>

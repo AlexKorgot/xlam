@@ -130,13 +130,18 @@ export default function GlitchText({ children, size }: {
     );
 
     const fontSize = `${size || 16}px`;
+    const restartGlitch = () => tlRef.current?.restart();
 
     return (
-        <div ref={rootRef}>
+        <div
+            ref={rootRef}
+            className="pointer-events-auto"
+            onMouseEnter={restartGlitch}
+            onPointerEnter={restartGlitch}
+        >
             <div
                 ref={textRef}
-                onMouseEnter={() => tlRef.current?.restart()}
-                className="relative"
+                className="pointer-events-auto relative"
             >
                 <span
                     className={clsx('invisible')}

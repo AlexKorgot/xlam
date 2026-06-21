@@ -18,7 +18,10 @@ export const getFullPageSwipeDirection = (deltaY: number) =>
   deltaY < 0 ? 'down' : 'up';
 
 type ScrollRequestDetail = {
-  direction: 'up' | 'down';
+  behavior?: 'smooth' | 'instant';
+  direction?: 'up' | 'down';
+  targetId?: string;
+  targetIndex?: number;
 };
 
 interface FullPageScrollProps {
@@ -100,6 +103,10 @@ export default function FullPageScroll({
 
     const isMovingForward = targetIndex > startIndex;
     progressCallback(isMovingForward ? tweenProgress : 1 - tweenProgress);
+  }, [progressCallback]);
+
+  const syncProgressForIndex = useCallback((index: number) => {
+    progressCallback?.(index > 0 ? 1 : 0);
   }, [progressCallback]);
 
   const scrollToSection = useCallback(
@@ -193,6 +200,49 @@ export default function FullPageScroll({
       syncProgress,
       transitionStartCallback,
     ],
+  );
+
+  const jumpToSection = useCallback(
+    (index: number) => {
+      if (!containerRef.current || !sectionsRef.current[index]) {
+        return;
+      }
+
+      animationRef.current?.kill();
+      isScrollingRef.current = false;
+
+      sectionsRef.current.forEach((section, sectionIndex) => {
+        const reveal = getRevealElements(section);
+
+        if (reveal.length === 0) {
+          return;
+        }
+
+        if (sectionIndex === index) {
+          gsap.set(reveal, {
+            autoAlpha: 1,
+            y: 0,
+            clearProps: 'transform',
+          });
+
+          return;
+        }
+
+        gsap.set(reveal, {
+          autoAlpha: 0,
+          y: 64,
+        });
+      });
+
+      gsap.set(containerRef.current, {
+        y: -index * (fullPageHeightRef.current || getViewportHeight()),
+      });
+
+      currentIndexRef.current = index;
+      sectionChangeCallback?.(index);
+      syncProgressForIndex(index);
+    },
+    [getViewportHeight, sectionChangeCallback, syncProgressForIndex],
   );
 
   const handleScrollDown = useCallback(() => {
@@ -364,6 +414,30 @@ export default function FullPageScroll({
   useEffect(() => {
     const handler = (event: Event) => {
       const customEvent = event as CustomEvent<ScrollRequestDetail>;
+      const targetIndexFromId =
+        typeof customEvent.detail?.targetId === 'string'
+          ? sectionsRef.current.findIndex(
+              (section) => section.id === customEvent.detail?.targetId,
+            )
+          : -1;
+      const targetIndex =
+        typeof customEvent.detail?.targetIndex === 'number'
+          ? customEvent.detail.targetIndex
+          : targetIndexFromId;
+
+      if (
+        targetIndex >= 0 &&
+        targetIndex < sectionsRef.current.length
+      ) {
+        if (customEvent.detail?.behavior === 'instant') {
+          jumpToSection(targetIndex);
+        } else {
+          scrollToSection(targetIndex);
+        }
+
+        return;
+      }
+
       if (customEvent.detail?.direction === 'down') {
         handleScrollDown();
       } else if (customEvent.detail?.direction === 'up') {
@@ -375,7 +449,7 @@ export default function FullPageScroll({
     return () => {
       window.removeEventListener(FULLPAGE_SCROLL_EVENT, handler as EventListener);
     };
-  }, [handleScrollDown, handleScrollUp]);
+  }, [handleScrollDown, handleScrollUp, jumpToSection, scrollToSection]);
 
   return (
     <div

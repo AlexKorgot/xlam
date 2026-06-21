@@ -926,11 +926,11 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
               aria-label={lines.join(' ')}
               className="text-[clamp(2rem,3.125vw,3.75rem)] font-bold uppercase leading-[1.21] text-white"
             >
-              {lines.map((line) => (
-                <span key={line} className="block">
-                  {line}
-                </span>
-              ))}
+              <span className="block">{lines[0]}</span>
+              <span className="block">
+                С <span className="text-[#66FF66]">ИДЕЙ</span>, КОТОРЫЕ ДРУГИЕ БЫ
+              </span>
+              <span className="block">{lines[2]}</span>
             </h2>
           </div>
         </section>
