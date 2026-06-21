@@ -1,3 +1,5 @@
+import type { StaticImageData } from 'next/image';
+
 export type CinematicOverlayState = 'slider' | 'sliding' | 'opening' | 'opened' | 'openedSliding' | 'closing';
 
 export type CinematicSlide = {
@@ -17,6 +19,10 @@ export type CinematicSlide = {
     body: string;
     secondaryBody?: string;
     services: string[];
+    previews?: {
+      src: string | StaticImageData;
+      alt: string;
+    }[];
     navLabel: string;
     thumbnailCount: number;
   };

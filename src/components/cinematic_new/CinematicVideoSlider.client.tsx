@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
+import type { CSSProperties, PointerEvent as ReactPointerEvent, RefObject } from 'react';
+import Image from 'next/image';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
@@ -48,50 +49,107 @@ const getFocusableElements = (container: HTMLElement) =>
     ),
   ).filter((element) => !element.hasAttribute('disabled') && !element.getAttribute('aria-hidden'));
 
-function OpenedSheetBody({ slide }: { slide: CinematicSlide }) {
+function OpenedSheetBody({
+  slide,
+  titleRef,
+  titleId,
+}: {
+  slide: CinematicSlide;
+  titleRef?: RefObject<HTMLHeadingElement | null>;
+  titleId?: string;
+}) {
+  const previews = slide.opened.previews?.slice(0, 2) ?? [];
+  const previewPlaceholderCount = Math.max(1, Math.min(slide.opened.thumbnailCount, 2));
+  const visibleServices = slide.opened.services.slice(0, 8);
+  const primaryServices = visibleServices.slice(0, 3);
+  const secondaryServices = visibleServices.slice(3, 8);
+
   return (
-    <>
-      <div className="grid gap-6 lg:grid-cols-[minmax(28rem,0.98fr)_minmax(22rem,0.44fr)] lg:items-start lg:gap-12 xl:grid-cols-[minmax(34rem,1fr)_minmax(26rem,0.42fr)] xl:gap-20">
-        <div data-case-content className="opacity-0 lg:self-start">
-          <p className="max-w-[64rem] text-[15px] font-medium leading-[1.18] text-white/92 transition-[color] duration-300 sm:text-[18px] lg:max-w-[68vw] lg:text-[clamp(1.35rem,1.65vw,2rem)] xl:max-w-[62vw]">
-            {slide.opened.body}
+    <div className="grid gap-7 lg:grid-cols-[minmax(24rem,0.86fr)_minmax(24rem,0.74fr)] lg:items-start lg:gap-x-[clamp(1.5rem,3vw,4rem)] lg:gap-y-10 2xl:grid-cols-[minmax(34rem,0.9fr)_minmax(38rem,0.78fr)] 2xl:gap-x-[clamp(2rem,4vw,5rem)]">
+      <div className="min-w-0">
+        <div data-case-heading className="opacity-0">
+          <p className="mb-2 text-[10px] font-black uppercase leading-none tracking-[0.24em] text-white/58 lg:mb-3 lg:text-[clamp(2rem,3vw,4.1rem)] lg:tracking-normal lg:text-white lg:drop-shadow-[0_4px_20px_rgba(0,0,0,0.65)]">
+            {slide.opened.titleLead}
           </p>
+          <h3
+            ref={titleRef}
+            id={titleId}
+            tabIndex={titleRef ? -1 : undefined}
+            className="max-w-[18ch] text-[2.1rem] font-black uppercase leading-[0.88] text-[#66ff66] outline-none drop-shadow-[0_18px_48px_rgba(0,0,0,0.74)] sm:text-[3.3rem] lg:max-w-none lg:text-[clamp(4rem,6vw,8.45rem)]"
+          >
+            {slide.opened.titleAccent}
+          </h3>
         </div>
 
-        <div data-case-content className="opacity-0 lg:self-start lg:justify-self-end">
-          <div className="grid grid-cols-2 gap-x-2 gap-y-[11px] sm:grid-cols-3 lg:w-[min(42vw,46rem)] lg:grid-cols-5">
-            {[...slide.opened.services, ...slide.opened.services].map((service, index) => (
-              <span
-                key={`${service}-${index}`}
-                className="flex h-7 min-w-0 items-center justify-center border border-white/50 px-2 text-center text-[9px] font-black uppercase leading-none text-white shadow-[0_4px_18px_rgba(0,0,0,0.38)] transition-colors duration-300 sm:text-[10px] lg:h-8 lg:bg-black/16 lg:backdrop-blur-[2px]"
-              >
-                {service}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
+        <p
+          data-case-content
+          className="mt-6 max-w-[64rem] text-[15px] font-black leading-[1.08] text-white opacity-0 drop-shadow-[0_4px_20px_rgba(0,0,0,0.45)] transition-[color] duration-300 sm:text-[18px] lg:mt-8 lg:max-w-[52rem] lg:text-[clamp(1.1rem,1.28vw,1.5rem)]"
+        >
+          {slide.opened.body}
+        </p>
 
-      <div className="mt-7 grid gap-5 lg:mt-[clamp(2rem,5.6vh,4.75rem)] lg:grid-cols-[minmax(20rem,0.34fr)_minmax(0,0.66fr)] lg:items-start lg:gap-12 xl:grid-cols-[minmax(24rem,0.32fr)_minmax(0,0.68fr)] xl:gap-20">
         {slide.opened.secondaryBody ? (
           <p
             data-case-content
-            className="max-w-[30rem] text-[15px] font-medium leading-[1.18] text-white/84 opacity-0 transition-[color] duration-300 sm:text-[18px] lg:max-w-[34rem] lg:text-[clamp(1.05rem,1.25vw,1.45rem)]"
+            className="mt-7 max-w-[30rem] text-[15px] font-medium leading-[1.18] text-white/84 opacity-0 transition-[color] duration-300 sm:text-[18px] lg:mt-[clamp(2.2rem,5vh,4.5rem)] lg:max-w-[52rem] lg:text-[clamp(1.02rem,1.15vw,1.38rem)]"
           >
             {slide.opened.secondaryBody}
           </p>
-        ) : (
-          <div />
-        )}
+        ) : null}
+      </div>
+
+      <div className="grid min-w-0 gap-7 lg:pt-[clamp(7.25rem,22.5vh,15rem)]">
+        <div data-case-content className="opacity-0">
+          <div className="grid gap-y-[11px] lg:w-[min(100%,844px)] lg:gap-y-3">
+            <div className="grid grid-cols-2 gap-x-2 gap-y-[11px] sm:grid-cols-3 lg:grid-cols-3 lg:gap-x-5 lg:gap-y-0">
+              {primaryServices.map((service, index) => (
+                <span
+                  key={`${service}-${index}`}
+                  className="flex min-h-7 min-w-0 items-center justify-center border border-white/60 px-2 py-1 text-center text-[9px] font-black uppercase leading-[1.05] text-white shadow-[0_4px_18px_rgba(0,0,0,0.38)] transition-colors duration-300 sm:text-[10px] lg:h-7 lg:min-h-0 lg:bg-transparent lg:px-3 lg:text-[12px] lg:backdrop-blur-[1px]"
+                >
+                  <span className="line-clamp-2 min-w-0 break-words">
+                    {service}
+                  </span>
+                </span>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-2 gap-y-[11px] sm:grid-cols-3 lg:grid-cols-5 lg:gap-x-3 lg:gap-y-0">
+              {secondaryServices.map((service, index) => (
+              <span
+                key={`${service}-${index + primaryServices.length}`}
+                className="flex min-h-7 min-w-0 items-center justify-center border border-white/60 px-2 py-1 text-center text-[9px] font-black uppercase leading-[1.05] text-white shadow-[0_4px_18px_rgba(0,0,0,0.38)] transition-colors duration-300 sm:text-[10px] lg:h-7 lg:min-h-0 lg:bg-transparent lg:px-3 lg:text-[12px] lg:backdrop-blur-[1px]"
+              >
+                <span className="line-clamp-2 min-w-0 break-words">
+                  {service}
+                </span>
+              </span>
+              ))}
+            </div>
+          </div>
+        </div>
 
         <div
           data-case-content
-          className="grid grid-cols-2 justify-items-stretch gap-3 opacity-0 sm:grid-cols-4 sm:gap-4 lg:w-full lg:self-start lg:justify-self-end lg:gap-3 xl:gap-4"
+          className="grid grid-cols-2 justify-items-stretch gap-3 opacity-0 sm:gap-4 lg:w-full lg:grid-cols-[repeat(2,412px)] lg:gap-5"
         >
-          {Array.from({ length: 4 }).map((_, index) => (
+          {previews.length > 0 ? previews.map((preview) => (
+            <div
+              key={typeof preview.src === 'string' ? preview.src : preview.src.src}
+              className="relative h-[232px] w-full max-w-[412px] overflow-hidden rounded-[6px] lg:w-[412px]"
+            >
+              <Image
+                src={preview.src}
+                alt={preview.alt}
+                fill
+                sizes="(max-width: 1023px) 50vw, 24vw"
+                className="scale-[1.12] object-cover"
+              />
+            </div>
+          )) : Array.from({ length: previewPlaceholderCount }).map((_, index) => (
             <div
               key={index}
-              className="relative aspect-[412/208] w-full max-w-[412px] overflow-hidden rounded-[6px] bg-black/45 shadow-[0_18px_46px_rgba(0,0,0,0.42)] lg:max-w-none"
+              className="relative h-[232px] w-full max-w-[412px] overflow-hidden rounded-[6px] bg-black/45 lg:w-[412px]"
             >
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_36%,rgba(102,255,102,0.3),rgba(102,255,102,0)_28%),linear-gradient(112deg,rgba(22,121,132,0.78),rgba(8,12,13,0.44)_44%,rgba(176,116,70,0.58))]" />
               <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.12),rgba(255,255,255,0)_34%,rgba(0,0,0,0.28))]" />
@@ -99,7 +157,7 @@ function OpenedSheetBody({ slide }: { slide: CinematicSlide }) {
           ))}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -865,26 +923,11 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             <div ref={sheetContentRef} className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
               <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-white/28 lg:hidden" aria-hidden="true" />
 
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 border-b border-white/10 px-5 pb-4 pt-4 sm:px-7 lg:border-b-0 lg:px-0 lg:pb-8 lg:pt-0">
-                <div data-case-heading className="min-w-0 opacity-0">
-                  <p className="mb-2 text-[10px] font-black uppercase leading-none tracking-[0.24em] text-white/58">
-                    {activeSlide.eyebrow}
-                  </p>
-                  <h3
-                    ref={sheetTitleRef}
-                    id="cinematic-project-title"
-                    tabIndex={-1}
-                    className="max-w-[18ch] text-[2.1rem] font-black uppercase leading-[0.88] outline-none drop-shadow-[0_18px_48px_rgba(0,0,0,0.74)] sm:text-[3.3rem] lg:max-w-none lg:text-[clamp(3.6rem,6.4vw,7.8rem)]"
-                  >
-                    <span className="block text-[0.56em]">{activeSlide.opened.titleLead}</span>
-                    <span className="block text-[#66ff66]">{activeSlide.opened.titleAccent}</span>
-                  </h3>
-                </div>
-
+              <div className="z-40 flex justify-end border-b border-white/10 px-5 pb-4 pt-4 sm:px-7 lg:pointer-events-none lg:absolute lg:right-0 lg:top-0 lg:border-b-0 lg:p-0">
                 <button
                   ref={closeButtonRef}
                   type="button"
-                  className="flex h-10 shrink-0 items-center justify-center border border-white/24 bg-black/52 px-4 font-black uppercase leading-none text-white/78 transition-colors hover:border-[#66ff66]/65 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-11 md:px-5 lg:bg-black/24 lg:backdrop-blur-sm"
+                  className="pointer-events-auto flex h-10 shrink-0 items-center justify-center border border-white/24 bg-black/52 px-4 font-black uppercase leading-none text-white/78 transition-colors hover:border-[#66ff66]/65 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-11 md:px-5 lg:bg-black/24 lg:backdrop-blur-sm"
                   onClick={handleClose}
                   aria-label="Close project"
                 >
@@ -898,8 +941,8 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
                 ref={sheetScrollRef}
                 className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 [scrollbar-width:none] sm:px-7 lg:max-w-none lg:px-0 lg:py-0 [&::-webkit-scrollbar]:hidden"
               >
-                <div className="lg:flex lg:min-h-full lg:flex-col lg:justify-end">
-                  <OpenedSheetBody slide={activeSlide} />
+                <div className="lg:flex lg:min-h-full lg:flex-col lg:justify-end lg:pb-[30px]">
+                  <OpenedSheetBody slide={activeSlide} titleRef={sheetTitleRef} titleId="cinematic-project-title" />
                 </div>
               </div>
             </div>
@@ -943,22 +986,12 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             >
               <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-white/28 lg:hidden" aria-hidden="true" />
 
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 border-b border-white/10 px-5 pb-4 pt-4 sm:px-7 lg:border-b-0 lg:px-0 lg:pb-8 lg:pt-0">
-                <div className="min-w-0">
-                  <p className="mb-2 text-[10px] font-black uppercase leading-none tracking-[0.24em] text-white/58">
-                    {pendingOpenedSlide.eyebrow}
-                  </p>
-                  <h3 className="max-w-[18ch] text-[2.1rem] font-black uppercase leading-[0.88] outline-none drop-shadow-[0_18px_48px_rgba(0,0,0,0.74)] sm:text-[3.3rem] lg:max-w-none lg:text-[clamp(3.6rem,6.4vw,7.8rem)]">
-                    <span className="block text-[0.56em]">{pendingOpenedSlide.opened.titleLead}</span>
-                    <span className="block text-[#66ff66]">{pendingOpenedSlide.opened.titleAccent}</span>
-                  </h3>
-                </div>
-
+              <div className="z-40 flex justify-end border-b border-white/10 px-5 pb-4 pt-4 sm:px-7 lg:pointer-events-none lg:absolute lg:right-0 lg:top-0 lg:border-b-0 lg:p-0">
                 <div className="h-10 shrink-0 border border-white/24 bg-black/52 px-4 md:h-11 md:px-5 lg:bg-black/24 lg:backdrop-blur-sm" />
               </div>
 
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 [scrollbar-width:none] sm:px-7 lg:max-w-none lg:px-0 lg:py-0 [&::-webkit-scrollbar]:hidden">
-                <div className="lg:flex lg:min-h-full lg:flex-col lg:justify-end">
+                <div className="lg:flex lg:min-h-full lg:flex-col lg:justify-end lg:pb-[30px]">
                   <OpenedSheetBody slide={pendingOpenedSlide} />
                 </div>
               </div>
