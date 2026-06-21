@@ -312,7 +312,7 @@ export function BaseModal({
                     'h-[min(92svh,calc(100svh-1rem))] max-w-none rounded-t-lg border border-b-0 border-white/18 bg-[#050909]/88 shadow-[0_-28px_90px_rgba(0,0,0,0.76)] backdrop-blur-lg transition-[opacity,transform] duration-[620ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:bg-[#050909]/94 sm:backdrop-blur-xl lg:h-[min(829px,calc(100svh-4rem))] lg:max-w-[min(1756px,calc(100vw-4rem))] lg:rounded-lg lg:border-b lg:shadow-[0_30px_100px_rgba(0,0,0,0.78)]',
                     isVisible
                       ? 'translate-y-0 scale-100 opacity-100'
-                      : 'translate-y-full opacity-0 lg:translate-y-5 lg:scale-[0.99]',
+                      : 'translate-y-full opacity-0 lg:translate-y-0 lg:scale-100',
                   ].join(' ')
                 : 'h-[calc(100svh-128px)] min-h-[620px] max-w-[1756px] lg:h-[min(829px,calc(100svh-251px))]',
             ].join(' ')}

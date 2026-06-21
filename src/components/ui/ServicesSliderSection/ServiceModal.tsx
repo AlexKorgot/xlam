@@ -1,7 +1,7 @@
 'use client';
 
 import Image, { type StaticImageData } from 'next/image';
-import { useId, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
 import { BaseModal } from '@/src/components/ui/modal';
 import { useContactModal } from '@/src/components/ui/contact-modal';
@@ -33,6 +33,15 @@ type ServiceModalProps = {
   onAfterClose?: () => void;
 };
 
+type DisplayedModalState = {
+  content: ServiceModalContent;
+  previousLabel: string;
+  currentLabel: string;
+  nextLabel: string;
+};
+
+const contentSwitchExitDuration = 180;
+
 export function ServiceModal({
   isOpen,
   content,
@@ -47,6 +56,79 @@ export function ServiceModal({
   const { openContactModal } = useContactModal();
   const titleId = useId();
   const descriptionId = useId();
+  const nextDisplayedState = useMemo<DisplayedModalState>(
+    () => ({
+      content,
+      previousLabel,
+      currentLabel,
+      nextLabel,
+    }),
+    [content, currentLabel, nextLabel, previousLabel],
+  );
+  const [displayedState, setDisplayedState] =
+    useState<DisplayedModalState>(nextDisplayedState);
+  const displayedStateRef = useRef(nextDisplayedState);
+  const [isContentVisible, setIsContentVisible] = useState(true);
+  const contentSwitchTimeoutRef = useRef<number | null>(null);
+  const contentSwitchFrameRef = useRef<number | null>(null);
+
+  const clearContentSwitchTimers = () => {
+    if (contentSwitchTimeoutRef.current !== null) {
+      window.clearTimeout(contentSwitchTimeoutRef.current);
+      contentSwitchTimeoutRef.current = null;
+    }
+
+    if (contentSwitchFrameRef.current !== null) {
+      window.cancelAnimationFrame(contentSwitchFrameRef.current);
+      contentSwitchFrameRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      clearContentSwitchTimers();
+      return;
+    }
+
+    if (displayedStateRef.current.content === content) {
+      return;
+    }
+
+    clearContentSwitchTimers();
+
+    contentSwitchFrameRef.current = window.requestAnimationFrame(() => {
+      contentSwitchFrameRef.current = null;
+      setIsContentVisible(false);
+
+      contentSwitchTimeoutRef.current = window.setTimeout(() => {
+        displayedStateRef.current = nextDisplayedState;
+        setDisplayedState(nextDisplayedState);
+
+        contentSwitchFrameRef.current = window.requestAnimationFrame(() => {
+          contentSwitchFrameRef.current = null;
+          setIsContentVisible(true);
+        });
+
+        contentSwitchTimeoutRef.current = null;
+      }, contentSwitchExitDuration);
+    });
+  }, [content, isOpen, nextDisplayedState]);
+
+  useEffect(
+    () => () => {
+      clearContentSwitchTimers();
+    },
+    [],
+  );
+
+  const contentTransitionClass = [
+    'transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+    isContentVisible ? 'opacity-100' : 'opacity-0',
+  ].join(' ');
+  const backgroundTransitionClass = [
+    'pointer-events-none absolute inset-0 transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+    isContentVisible ? 'opacity-[0.82] lg:opacity-100' : 'opacity-0',
+  ].join(' ');
 
   const footer: ReactNode = (
     <footer className="relative z-10 grid h-[64px] w-full shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-white/[0.12] bg-black/[0.42] px-5 text-[11px] font-medium leading-none backdrop-blur-sm sm:px-7 sm:text-sm lg:h-[72px] lg:px-10">
@@ -57,11 +139,11 @@ export function ServiceModal({
         onClick={onPrevious}
       >
         <span className="text-4xl leading-none text-[#63ff45]" aria-hidden="true">‹</span>
-        <span className="hidden min-w-0 truncate sm:inline">{previousLabel}</span>
+        <span className="hidden min-w-0 truncate sm:inline">{displayedState.previousLabel}</span>
       </button>
 
       <p className="min-w-0 truncate text-center text-[14px] font-black uppercase leading-none text-[#63ff45] sm:text-[22px] lg:text-[28px]">
-        {currentLabel}
+        {displayedState.currentLabel}
       </p>
 
       <button
@@ -70,7 +152,7 @@ export function ServiceModal({
         aria-label="Show next service"
         onClick={onNext}
       >
-        <span className="hidden min-w-0 truncate sm:inline">{nextLabel}</span>
+        <span className="hidden min-w-0 truncate sm:inline">{displayedState.nextLabel}</span>
         <span className="text-4xl leading-none text-[#63ff45]" aria-hidden="true">›</span>
       </button>
     </footer>
@@ -95,9 +177,9 @@ export function ServiceModal({
       animationDuration={620}
       variant="sheet"
     >
-      <div className="pointer-events-none absolute inset-0 opacity-[0.82]">
+      <div className={backgroundTransitionClass}>
         <Image
-          src={content.backgroundImage}
+          src={displayedState.content.backgroundImage}
           alt=""
           fill
           loading="eager"
@@ -105,12 +187,12 @@ export function ServiceModal({
           className="object-cover"
         />
       </div>
-      <div className="pointer-events-none absolute inset-0 bg-black/28" />
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-full bg-gradient-to-r from-black/90 via-black/50 to-black/[0.12] lg:w-[74%]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[72%] bg-gradient-to-t from-black/[0.92] via-black/[0.46] to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/[0.46] to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-black/28 lg:bg-black/30" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-full bg-gradient-to-r from-black/90 via-black/50 to-black/[0.12] lg:hidden" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[72%] bg-gradient-to-t from-black/[0.92] via-black/[0.46] to-transparent lg:hidden" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/[0.46] to-transparent lg:hidden" />
 
-      <div className="relative z-10 flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain px-5 pb-6 pt-4 [scrollbar-color:#63ff45_rgba(255,255,255,0.16)] [scrollbar-width:thin] sm:px-8 lg:overflow-hidden lg:px-12 lg:pb-10 lg:pt-12 xl:px-[54px]">
+      <div className={`relative z-10 flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain px-5 pb-6 pt-4 [scrollbar-color:#63ff45_rgba(255,255,255,0.16)] [scrollbar-width:thin] sm:px-8 lg:overflow-hidden lg:px-12 lg:pb-10 lg:pt-12 xl:px-[54px] ${contentTransitionClass}`}>
         <div className="mx-auto mb-5 h-1 w-14 shrink-0 rounded-full bg-white/28 lg:hidden" aria-hidden="true" />
 
         <header className="max-w-[40rem] pr-20 sm:pr-24 lg:max-w-[58rem] lg:pr-0">
@@ -119,15 +201,15 @@ export function ServiceModal({
             tabIndex={-1}
             className="max-w-[11ch] text-[3.35rem] font-black uppercase leading-[0.84] text-[#63ff45] outline-none sm:text-[4.9rem] lg:max-w-[12ch] lg:text-[clamp(5.75rem,7.45vw,9rem)]"
           >
-            {content.title}
+            {displayedState.content.title}
           </h2>
 
           <div id={descriptionId} className="mt-7 max-w-[31rem] lg:mt-12">
             <p className="text-[15px] font-black uppercase leading-[1.03] text-white sm:text-[18px] lg:text-[20px]">
-              {content.subtitle}
+              {displayedState.content.subtitle}
             </p>
             <p className="mt-3 max-w-[29rem] text-[14px] leading-[1.08] text-white sm:text-[16px] lg:text-[17px]">
-              {content.description}
+              {displayedState.content.description}
             </p>
           </div>
         </header>
@@ -135,19 +217,19 @@ export function ServiceModal({
         <div className="mt-auto grid min-h-0 gap-8 pt-10 lg:grid-cols-[330px_minmax(0,1fr)] lg:items-end lg:gap-14 lg:pt-8 xl:grid-cols-[360px_minmax(0,1fr)] xl:gap-16">
           <div className="max-w-[24rem] xl:max-w-[27rem]">
             <p className="text-center text-[20px] font-black uppercase leading-[1.08] text-[#dedcd3] sm:text-[25px] lg:text-[28px]">
-              {content.ctaIntro}
+              {displayedState.content.ctaIntro}
             </p>
             <button
               type="button"
               className="mt-3 flex min-h-[52px] w-full items-center justify-center border border-white/68 bg-white/10 px-4 text-center text-[20px] font-bold uppercase leading-none text-white shadow-[inset_0_0_38px_rgba(255,255,255,0.08)] backdrop-blur-[1px] transition hover:border-[#63ff45] hover:bg-white/15 hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:min-h-[58px] sm:text-[23px] lg:min-h-[58px] lg:whitespace-nowrap lg:text-[23px]"
               onClick={openContactModal}
             >
-              {content.ctaLabel}
+              {displayedState.content.ctaLabel}
             </button>
           </div>
 
           <div className="grid min-w-0 grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-4 lg:gap-x-8 xl:gap-x-11">
-            {content.features.map((feature) => (
+            {displayedState.content.features.map((feature) => (
               <div
                 key={feature.title}
                 className="min-w-0"
