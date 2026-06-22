@@ -131,25 +131,25 @@ function OpenedSheetBody({
 
         <div
           data-case-content
-          className="grid grid-cols-2 justify-items-stretch gap-3 opacity-0 sm:gap-4 lg:w-full lg:grid-cols-[repeat(2,412px)] lg:gap-5"
+          className="grid grid-cols-1 justify-items-stretch gap-3 opacity-0 sm:grid-cols-2 sm:gap-4 lg:w-full lg:grid-cols-[repeat(2,412px)] lg:gap-5"
         >
           {previews.length > 0 ? previews.map((preview) => (
             <div
               key={typeof preview.src === 'string' ? preview.src : preview.src.src}
-              className="relative h-[232px] w-full max-w-[412px] overflow-hidden rounded-[6px] lg:w-[412px]"
+              className="relative min-h-[220px] w-full max-w-[412px] overflow-hidden rounded-[6px] aspect-[16/10] sm:h-[232px] sm:aspect-auto lg:w-[412px]"
             >
               <Image
                 src={preview.src}
                 alt={preview.alt}
                 fill
-                sizes="(max-width: 1023px) 50vw, 24vw"
-                className="scale-[1.12] object-cover"
+                sizes="(max-width: 639px) calc(100vw - 40px), (max-width: 1023px) 50vw, 412px"
+                className="scale-[1.12] object-cover object-center"
               />
             </div>
           )) : Array.from({ length: previewPlaceholderCount }).map((_, index) => (
             <div
               key={index}
-              className="relative h-[232px] w-full max-w-[412px] overflow-hidden rounded-[6px] bg-black/45 lg:w-[412px]"
+              className="relative min-h-[220px] w-full max-w-[412px] overflow-hidden rounded-[6px] bg-black/45 aspect-[16/10] sm:h-[232px] sm:aspect-auto lg:w-[412px]"
             >
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_36%,rgba(102,255,102,0.3),rgba(102,255,102,0)_28%),linear-gradient(112deg,rgba(22,121,132,0.78),rgba(8,12,13,0.44)_44%,rgba(176,116,70,0.58))]" />
               <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.12),rgba(255,255,255,0)_34%,rgba(0,0,0,0.28))]" />
