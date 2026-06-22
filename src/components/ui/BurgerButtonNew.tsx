@@ -13,7 +13,7 @@ const mobileMenu = [
     { label: 'Проекты', targetId: 'projects' },
     { label: 'Команда', targetId: 'about' },
     { label: 'О нас', targetId: 'why' },
-    { label: 'Контакты', targetId: 'text-section' },
+    { label: 'Контакты', targetId: 'final-contact' },
 ] as const;
 
 type CloseMenuOptions = {

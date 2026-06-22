@@ -36,7 +36,7 @@ const desktopMenu: Record<'left' | 'right', Array<{
     { key: 'projects', label: 'Портфолио', targetId: 'projects' },
   ],
   right: [
-    { key: 'contacts', label: 'Контакты', targetId: 'text-section' },
+    { key: 'contacts', label: 'Контакты', targetId: 'final-contact' },
   ],
 } as const;
 

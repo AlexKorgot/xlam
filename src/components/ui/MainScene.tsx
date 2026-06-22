@@ -20,6 +20,7 @@ import { TextSection } from '@/src/components/textSection';
 import { MobileXHeroSection } from '@/src/components/ui/MobileXHeroSection';
 import {WhyUsSection} from "@/src/components/ui/WhyUsSection";
 import {TeamSection} from "@/src/components/ui/TeamSection";
+import { FinalContactSection } from '@/src/components/ui/FinalContactSection/FinalContactSection';
 
 const SECOND_SECTION_INDEX = 1;
 const MORPH_SECTION_INDEX = 2;
@@ -159,6 +160,8 @@ export const MainScene = () => {
         <FullPageSection id="about" fullBleed className="items-stretch bg-black">
           <TeamSection />
         </FullPageSection>
+
+        <FinalContactSection />
 
       </FullPageScroll>
     </div>
