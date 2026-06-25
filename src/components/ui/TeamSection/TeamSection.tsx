@@ -121,7 +121,7 @@ export function TeamSection() {
       aria-labelledby="team-heading"
     >
       <div className="mx-auto flex min-h-[100svh] w-full max-w-[1920px] flex-col px-[18px] pb-8 pt-0 sm:px-8 lg:px-[92px] lg:pb-0">
-        <div className="relative mx-auto flex w-full flex-1 flex-col pt-[210px] sm:pt-24 lg:max-w-[1740px] lg:justify-center lg:pt-0">
+        <div className="relative mx-auto flex min-h-0 w-full flex-1 flex-col pt-[132px] sm:pt-24 lg:max-w-[1740px] lg:justify-center lg:pt-0">
           <div className="relative z-50 max-w-[740px]">
             <h2
               id="team-heading"
@@ -159,7 +159,7 @@ export function TeamSection() {
             )}
           </div>
 
-          <ul className="relative z-30 mt-[20px] w-full lg:mt-[17px]">
+          <ul className="relative z-30 mt-[20px] min-h-0 w-full flex-1 overflow-y-auto overscroll-contain pr-1 lg:mt-[17px] lg:flex-none lg:overflow-visible lg:pr-0">
             {teamItems.map((item) => (
               <TeamRow
                 key={item.id}

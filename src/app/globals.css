@@ -8,6 +8,7 @@
   --border: rgba(255, 255, 255, 0.12);
   --muted: rgba(245, 241, 232, 0.68);
   --accent: #b8ff2c;
+  /* Reserved space for the fixed global header. The header itself is out of flow. */
   --header-offset: 5.5rem;
 }
 

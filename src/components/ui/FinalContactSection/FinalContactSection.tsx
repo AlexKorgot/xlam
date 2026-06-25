@@ -15,7 +15,7 @@ const socialItems = ['Youtube', 'Rutube', 'Вконтакте', 'Max'];
 
 export function FinalContactSection() {
   return (
-    <FullPageSection id="final-contact" fullBleed className="items-stretch bg-black">
+    <FullPageSection id="final-contact" fullBleed reserveHeader className="items-stretch bg-black">
       <div className="relative isolate h-full w-full overflow-hidden bg-black font-normalidad text-white">
         <Image
           src={teleImage}
@@ -26,7 +26,7 @@ export function FinalContactSection() {
           aria-hidden="true"
         />
 
-        <div className="relative z-40 mx-auto flex h-full w-full max-w-[1740px] flex-col px-[14px] pb-[max(18px,env(safe-area-inset-bottom))] pt-[calc(var(--header-offset)+16px)] sm:px-5 lg:px-[18px] lg:pb-0 lg:pt-[calc(var(--header-offset)+56px)] xl:px-[50px] min-[1830px]:px-0">
+        <div className="relative z-40 mx-auto flex h-full w-full max-w-[1740px] flex-col px-[14px] pb-[max(18px,env(safe-area-inset-bottom))] pt-4 sm:px-5 lg:px-[18px] lg:pb-0 lg:pt-14 xl:px-[50px] min-[1830px]:px-0">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1048px)_minmax(280px,1fr)] lg:gap-0">
             <nav aria-label="Навигация по секциям">
               <ul className="max-w-[560px] lg:max-w-none">

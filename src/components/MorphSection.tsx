@@ -1111,7 +1111,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     viewBox={`0 0 ${topSvgWidth} ${topSvgHeight}`}
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
-                    className="shrink-0 overflow-visible"
+                    className="-ml-6 shrink-0 overflow-visible"
                 >
                     <defs>
                         <clipPath id={topClipId} clipPathUnits="userSpaceOnUse">
@@ -1155,7 +1155,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
             </div>
 
             {/* Нижняя строка */}
-            <div ref={bottomRowRef} className="relative z-10 mt-[clamp(1rem,4vh,2.5rem)] flex gap-[36px]">
+            <div ref={bottomRowRef} className="relative z-10 mt-[clamp(1rem,4vh,2.5rem)] flex translate-x-[24px] gap-[36px]">
                 <svg
                     width={bottomSvgWidth}
                     height={bottomSvgHeight}
@@ -1210,7 +1210,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     viewBox="0 0 168 248"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
-                    className="shrink-0"
+                    className="-ml-4 shrink-0"
                 >
                     <path
                         ref={(el) => setBottomLetterRef(el, 0)}

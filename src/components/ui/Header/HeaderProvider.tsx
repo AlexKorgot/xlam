@@ -25,7 +25,7 @@ export function HeaderProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const initialProgress = getInitialHeaderProgress(pathname);
   const isImmersiveRoute = initialProgress === 0;
-  const contentStyle = isImmersiveRoute
+  const contentShellStyle = isImmersiveRoute
     ? undefined
     : ({ paddingTop: 'var(--header-offset)' } satisfies CSSProperties);
   const headerRef = useRef<HeaderHandle>(null);
@@ -42,7 +42,9 @@ export function HeaderProvider({ children }: { children: ReactNode }) {
     <HeaderProgressContext.Provider value={setHeaderProgress}>
       <Header ref={headerRef} initialProgress={initialProgress} />
       <RouteNoiseOverlay />
-      <div style={contentStyle}>{children}</div>
+      <main data-header-content-shell style={contentShellStyle}>
+        {children}
+      </main>
     </HeaderProgressContext.Provider>
   );
 }

@@ -8,6 +8,7 @@ interface FullPageSectionProps {
   className?: string;
   fullBleed?: boolean;
   id?: string;
+  reserveHeader?: boolean;
 }
 
 export default function FullPageSection({
@@ -15,11 +16,12 @@ export default function FullPageSection({
   className = '',
   fullBleed = false,
   id,
+  reserveHeader = false,
 }: FullPageSectionProps) {
   return (
     <section
       id={id}
-      className={`flex w-full items-center justify-center overflow-hidden ${fullBleed ? '[&>*]:w-full' : ''} ${className}`}
+      className={`flex w-full items-center justify-center overflow-hidden ${reserveHeader ? 'pt-[var(--header-offset)]' : ''} ${fullBleed ? '[&>*]:w-full' : ''} ${className}`}
       style={{ height: 'var(--fullpage-height, 100svh)' } as CSSProperties}
     >
       {children}

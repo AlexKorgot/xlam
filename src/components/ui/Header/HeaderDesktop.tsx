@@ -3,6 +3,7 @@
 import { forwardRef, useImperativeHandle, useRef, type CSSProperties } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { usePathname, useRouter } from 'next/navigation';
 import { AnimatedLogoNew, type AnimatedLogoHandle } from '@/src/components/ui/AnimatedLogoNew';
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
 import type { HeaderHandle } from '@/src/components/ui/Header/types';
@@ -40,17 +41,6 @@ const desktopMenu: Record<'left' | 'right', Array<{
   ],
 } as const;
 
-const jumpToFullPageSection = (targetId: string) => {
-  window.dispatchEvent(
-    new CustomEvent(FULLPAGE_SCROLL_EVENT, {
-      detail: {
-        behavior: 'instant',
-        targetId,
-      },
-    }),
-  );
-};
-
 interface HeaderDesktopProps {
   initialProgress?: number;
 }
@@ -60,6 +50,9 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
   ref,
 ) {
   const { openContactModal } = useContactModal();
+  const pathname = usePathname();
+  const router = useRouter();
+  const isImmersiveRoute = pathname === '/' || pathname === '/main';
   const initialProgressValue = gsap.utils.clamp(0, 1, initialProgress);
   const headerRef = useRef<HTMLElement>(null);
   const leftRef = useRef<HTMLDivElement>(null);
@@ -125,6 +118,22 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
     },
   }));
 
+  const jumpToSection = (targetId: string) => {
+    if (!isImmersiveRoute) {
+      router.push(`/#${targetId}`);
+      return;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent(FULLPAGE_SCROLL_EVENT, {
+        detail: {
+          behavior: 'instant',
+          targetId,
+        },
+      }),
+    );
+  };
+
   return (
     <div className="pointer-events-none fixed inset-x-0 top-0 z-50 hidden px-4 pt-5 sm:px-8 sm:pt-7 min-[1000px]:block">
       <div
@@ -147,7 +156,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
                 key={item.key}
                 type="button"
                 className="uppercase"
-                onClick={() => jumpToFullPageSection(item.targetId)}
+                onClick={() => jumpToSection(item.targetId)}
               >
                 <GlitchText size={MENU_ITEM_SIZE}>
                   {item.label}
@@ -174,7 +183,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
                 key={item.key}
                 type="button"
                 className="uppercase"
-                onClick={() => jumpToFullPageSection(item.targetId)}
+                onClick={() => jumpToSection(item.targetId)}
               >
                 <GlitchText size={MENU_ITEM_SIZE}>
                   {item.label}
@@ -183,7 +192,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
             ))}
             <button
               type="button"
-              className="pointer-events-auto uppercase"
+              className="pointer-events-auto inline-flex min-h-[42px] items-center justify-center border border-white/90 bg-[linear-gradient(155.051deg,rgba(238,238,238,0.3)_7.5265%,rgba(112,112,112,0.3)_47.838%,rgba(255,255,255,0.3)_95.294%)] px-[28px] py-[9px] uppercase text-white shadow-[0_242.942px_67.889px_rgba(0,0,0,0),0_155.416px_62.279px_rgba(0,0,0,0.01),0_87.527px_52.74px_rgba(0,0,0,0.05),0_38.714px_38.714px_rgba(0,0,0,0.09),0_9.538px_21.321px_rgba(0,0,0,0.1)] backdrop-blur-[5.05px] transition-[border-color,background,opacity] duration-200 hover:border-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/80"
               onClick={openContactModal}
             >
               <GlitchText size={MENU_ITEM_SIZE}>
