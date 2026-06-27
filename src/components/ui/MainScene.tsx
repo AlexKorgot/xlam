@@ -17,7 +17,10 @@ import { useHeaderProgress } from '@/src/components/ui/Header/HeaderProvider';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import { CinematicVideoSlider } from '@/src/components/cinematic_new';
 import { TextSection } from '@/src/components/textSection';
-import { MobileXHeroSection } from '@/src/components/ui/MobileXHeroSection';
+import {
+  MobileXHeroSection,
+  type MobileXHeroSectionHandle,
+} from '@/src/components/ui/MobileXHeroSection';
 import {WhyUsSection} from "@/src/components/ui/WhyUsSection";
 import {TeamSection} from "@/src/components/ui/TeamSection";
 import { FinalContactSection } from '@/src/components/ui/FinalContactSection/FinalContactSection';
@@ -28,10 +31,14 @@ const MORPH_SECTION_INDEX = 2;
 const isDesktopMorphViewport = () =>
   typeof window !== 'undefined' && window.matchMedia('(min-width: 1000px)').matches;
 
+const isMobileHeroViewport = () =>
+  typeof window !== 'undefined' && window.matchMedia('(max-width: 999.98px)').matches;
+
 export const MainScene = () => {
   const setHeaderProgress = useHeaderProgress();
   const secondSectionRef = useRef<SecondSectionDesignHandle>(null);
   const morphSectionRef = useRef<MorphSectionHandle>(null);
+  const mobileHeroRef = useRef<MobileXHeroSectionHandle>(null);
   const morphStartTimeoutRef = useRef<number | null>(null);
 
   const clearMorphStartTimeout = () => {
@@ -54,6 +61,26 @@ export const MainScene = () => {
     <div className="">
       <FullPageScroll
         beforeTransitionCallback={(startIndex, targetIndex) => {
+          if (
+            startIndex === MORPH_SECTION_INDEX &&
+            targetIndex === SECOND_SECTION_INDEX &&
+            isMobileHeroViewport() &&
+            mobileHeroRef.current?.isExpandedVideoVisible()
+          ) {
+            mobileHeroRef.current?.hideExpandedVideo();
+            return false;
+          }
+
+          if (
+            startIndex === MORPH_SECTION_INDEX &&
+            targetIndex > MORPH_SECTION_INDEX &&
+            isMobileHeroViewport() &&
+            !mobileHeroRef.current?.isExpandedVideoVisible()
+          ) {
+            mobileHeroRef.current?.revealExpandedVideo();
+            return false;
+          }
+
           if (
             startIndex === MORPH_SECTION_INDEX &&
             targetIndex === SECOND_SECTION_INDEX &&
@@ -120,11 +147,27 @@ export const MainScene = () => {
           }
 
           if (
+            startIndex === MORPH_SECTION_INDEX &&
+            targetIndex > MORPH_SECTION_INDEX &&
+            isMobileHeroViewport()
+          ) {
+            mobileHeroRef.current?.fadeExpandedVideoOut();
+          }
+
+          if (
             startIndex > MORPH_SECTION_INDEX &&
             targetIndex === MORPH_SECTION_INDEX &&
             isDesktopMorphViewport()
           ) {
             morphSectionRef.current?.fadeExpandedVideoIn();
+          }
+
+          if (
+            startIndex > MORPH_SECTION_INDEX &&
+            targetIndex === MORPH_SECTION_INDEX &&
+            isMobileHeroViewport()
+          ) {
+            mobileHeroRef.current?.fadeExpandedVideoIn();
           }
 
         }}
@@ -136,7 +179,7 @@ export const MainScene = () => {
         <SecondSectionDesign ref={secondSectionRef} />
 
         <FullPageSection id="next" className="items-stretch bg-black">
-          <MobileXHeroSection />
+          <MobileXHeroSection ref={mobileHeroRef} />
           <MorphSection
               ref={morphSectionRef}
               className={'hidden flex-col items-center min-[1000px]:flex'}

@@ -220,8 +220,8 @@ export function ServiceModal({
           </div>
         </header>
 
-        <div className="mt-auto grid min-h-0 gap-8 pt-10 lg:grid-cols-[330px_minmax(0,1fr)] lg:items-end lg:gap-14 lg:pt-8 xl:grid-cols-[360px_minmax(0,1fr)] xl:gap-16">
-          <div className="max-w-[24rem] xl:max-w-[27rem]">
+        <div className="mt-auto grid min-h-0 gap-8 pt-4 lg:grid-cols-[390px_minmax(0,1fr)] lg:items-end lg:gap-14 lg:pt-8 xl:grid-cols-[430px_minmax(0,1fr)] xl:gap-16">
+          <div className="max-w-[29rem] xl:max-w-[31rem]">
             <p className="text-center text-[20px] font-black uppercase leading-[1.08] text-[#dedcd3] sm:text-[25px] lg:text-[28px]">
               {displayedState.content.ctaIntro}
             </p>

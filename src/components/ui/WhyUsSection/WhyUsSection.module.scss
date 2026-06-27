@@ -1,0 +1,110 @@
+.featureList {
+  display: grid;
+  width: 100%;
+  gap: 12px;
+  justify-items: center;
+}
+
+.featureBlock {
+  position: relative;
+  display: flex;
+  min-height: 49px;
+  width: 100%;
+  max-width: 425.862px;
+  align-items: center;
+  justify-content: center;
+  border: 1.346px solid #fff;
+  padding: 10px 18px;
+  color: #fff;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+@media (min-width: 768px) {
+  .featureList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+}
+
+@media (min-width: 1000px) {
+  .featureList {
+    --gap-x: 16px;
+    --col: calc((100% - (var(--gap-x) * 3)) / 4);
+
+    position: relative;
+    display: block;
+    height: 177px;
+  }
+
+  .featureBlock {
+    position: absolute;
+    max-width: none;
+    font-size: 18px;
+  }
+
+  .cardEquipment {
+    top: 0;
+    left: 0;
+    width: var(--col);
+    height: 49px;
+  }
+
+  .cardFormat {
+    top: 64px;
+    left: 0;
+    width: var(--col);
+    height: 49px;
+  }
+
+  .cardWorlds {
+    top: 128px;
+    left: 0;
+    width: calc((var(--col) * 2) + var(--gap-x));
+    height: 49px;
+  }
+
+  .cardContractor {
+    top: 0;
+    left: calc(var(--col) + var(--gap-x));
+    width: var(--col);
+    height: 113px;
+  }
+
+  .cardSenior {
+    top: 0;
+    left: calc((var(--col) + var(--gap-x)) * 2);
+    width: var(--col);
+    height: 81px;
+  }
+
+  .cardPlatforms {
+    top: 96px;
+    left: calc((var(--col) + var(--gap-x)) * 2);
+    width: var(--col);
+    height: 81px;
+  }
+
+  .cardAi {
+    top: 0;
+    left: calc((var(--col) + var(--gap-x)) * 3);
+    width: var(--col);
+    height: 49px;
+  }
+
+  .cardScale {
+    top: 64px;
+    left: calc((var(--col) + var(--gap-x)) * 3);
+    width: var(--col);
+    height: 49px;
+  }
+
+  .cardCycle {
+    top: 128px;
+    left: calc((var(--col) + var(--gap-x)) * 3);
+    width: var(--col);
+    height: 49px;
+  }
+}

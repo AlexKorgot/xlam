@@ -570,22 +570,36 @@ export function ServicesSliderSection({
                       onMouseEnter={slide.videoRefConfig.handleMouseEnter(slide.videoRefConfig.ref)}
                       onMouseLeave={slide.videoRefConfig.handleMouseLeave(slide.videoRefConfig.ref)}
                     >
-                      <video
-                        ref={slide.videoRefConfig.ref}
-                        className="pointer-events-none h-full w-full object-cover"
-                        src={slide.videoSrc}
-                        playsInline
-                        loop
-                        muted
-                        preload={
-                          preloadedSlideIndexes.has(index) ? 'metadata' : 'none'
-                        }
-                      />
-                      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex w-full flex-col items-center px-1.5 text-center">
-                        <p className="hidden max-w-[250px] text-[12px] leading-[1.12] min-[1000px]:block">{slide.description}</p>
-                        <h4 className="text-[30px] font-black text-[#63ff45]">
-                          {slide.title}
-                        </h4>
+                      <div className="relative h-full w-full overflow-hidden">
+                        <video
+                          ref={slide.videoRefConfig.ref}
+                          className="pointer-events-none h-full w-full object-cover"
+                          src={slide.videoSrc}
+                          playsInline
+                          loop
+                          muted
+                          preload={
+                            preloadedSlideIndexes.has(index) ? 'metadata' : 'none'
+                          }
+                        />
+                        <div
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[118px] backdrop-blur-[34px] min-[1000px]:h-[174px]"
+                          style={{
+                            background:
+                              'linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.16) 34%, rgba(0, 0, 0, 0.52) 66%, rgba(0, 0, 0, 0.86) 100%)',
+                            WebkitMaskImage:
+                              'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.14) 24%, rgba(0, 0, 0, 0.62) 48%, #000 82%, #000 100%)',
+                            maskImage:
+                              'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.14) 24%, rgba(0, 0, 0, 0.62) 48%, #000 82%, #000 100%)',
+                          }}
+                        />
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex w-full flex-col items-center px-1.5 text-center min-[1000px]:pb-[25px]">
+                          <p className="hidden max-w-[250px] text-[12px] leading-[1.12] min-[1000px]:block">{slide.description}</p>
+                          <h4 className="text-[22px] font-black leading-none text-[#63ff45] [text-shadow:-4px_5px_18px_rgba(0,0,0,0.82)] min-[1000px]:text-[30px]">
+                            {slide.title}
+                          </h4>
+                        </div>
                       </div>
                     </button>
                   ))}
