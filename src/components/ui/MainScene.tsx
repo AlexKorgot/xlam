@@ -142,8 +142,8 @@ export const MainScene = () => {
               className={'hidden flex-col items-center min-[1000px]:flex'}
               videoSrc={publicAssetPath('/video/3_slider_content_video.mov')}
               autoPlayTimeline={false}
-              topEndWidth={990}
-              bottomLeftX={-745}
+              topEndWidth={1040}
+              bottomLeftX={-795}
           />
         </FullPageSection>
 

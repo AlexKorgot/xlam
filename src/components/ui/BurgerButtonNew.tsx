@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
+import { BrandXIcon } from '@/src/components/ui/BrandXIcon';
 import { useContactModal } from '@/src/components/ui/contact-modal';
 import { FULLPAGE_SCROLL_EVENT } from '@/src/components/ui/FullPageScroll';
 
@@ -195,22 +196,13 @@ export default function BurgerButton() {
             />
           </span>
 
-                    <svg
+                    <BrandXIcon
                         className={clsx(
                             'pointer-events-none absolute inset-0 m-auto transition-all duration-200 ease-out',
                             isOpen ? 'scale-100 opacity-100 delay-100' : 'scale-90 opacity-0',
                         )}
-                        width="24"
-                        height="21"
-                        viewBox="0 0 24 21"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <path
-                            d="M1.83588e-06 -2.09815e-06L8.0472 11.3435L3.0708 21L9.10329 21L12 16.9166L14.8967 21L20.9292 21L15.9528 11.3435L24 0L13.8917 -8.83697e-07L12 3.67024L10.1083 -1.21445e-06L1.83588e-06 -2.09815e-06Z"
-                            fill="black"
-                        />
-                    </svg>
+                        fill="black"
+                    />
                 </button>
 
                 <div

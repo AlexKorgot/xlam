@@ -2,6 +2,7 @@
 
 import Image, { type StaticImageData } from 'next/image';
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { GlitchBrandXIcon } from '@/src/components/ui/GlitchBrandXIcon';
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
 import { BaseModal } from '@/src/components/ui/modal';
 import { useContactModal } from '@/src/components/ui/contact-modal';
@@ -134,26 +135,34 @@ export function ServiceModal({
     <footer className="relative z-10 grid h-[64px] w-full shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-white/[0.12] bg-black/[0.42] px-5 text-[11px] font-medium leading-none backdrop-blur-sm sm:px-7 sm:text-sm lg:h-[72px] lg:px-10">
       <button
         type="button"
-        className="flex h-12 min-w-0 items-center gap-3 text-left uppercase text-white transition hover:text-[#63ff45] focus-visible:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45]"
+        className="flex h-12 min-w-0 cursor-pointer items-center gap-3 text-left uppercase text-white transition hover:text-[#63ff45] focus-visible:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45]"
         aria-label="Show previous service"
         onClick={onPrevious}
       >
-        <span className="text-4xl leading-none text-[#63ff45]" aria-hidden="true">‹</span>
-        <span className="hidden min-w-0 truncate sm:inline">{displayedState.previousLabel}</span>
+        <span className="cursor-pointer text-4xl leading-none text-[#63ff45]" aria-hidden="true">
+          <GlitchText size="36">‹</GlitchText>
+        </span>
+        <span className="hidden min-w-0 cursor-pointer truncate sm:inline">
+          <GlitchText size="14">{displayedState.previousLabel}</GlitchText>
+        </span>
       </button>
 
-      <p className="min-w-0 truncate text-center text-[14px] font-black uppercase leading-none text-[#63ff45] sm:text-[22px] lg:text-[28px]">
-        {displayedState.currentLabel}
+      <p className="min-w-0 cursor-pointer truncate text-center text-[14px] font-black uppercase leading-none text-[#63ff45] sm:text-[22px] lg:text-[28px]">
+        <GlitchText size="28">{displayedState.currentLabel}</GlitchText>
       </p>
 
       <button
         type="button"
-        className="flex h-12 min-w-0 items-center justify-end gap-3 text-right uppercase text-white transition hover:text-[#63ff45] focus-visible:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45]"
+        className="flex h-12 min-w-0 cursor-pointer items-center justify-end gap-3 text-right uppercase text-white transition hover:text-[#63ff45] focus-visible:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45]"
         aria-label="Show next service"
         onClick={onNext}
       >
-        <span className="hidden min-w-0 truncate sm:inline">{displayedState.nextLabel}</span>
-        <span className="text-4xl leading-none text-[#63ff45]" aria-hidden="true">›</span>
+        <span className="hidden min-w-0 cursor-pointer truncate sm:inline">
+          <GlitchText size="14">{displayedState.nextLabel}</GlitchText>
+        </span>
+        <span className="cursor-pointer text-4xl leading-none text-[#63ff45]" aria-hidden="true">
+          <GlitchText size="36">›</GlitchText>
+        </span>
       </button>
     </footer>
   );
@@ -169,11 +178,8 @@ export function ServiceModal({
       onNext={onNext}
       onAfterClose={onAfterClose}
       closeLabel="Close service modal"
-      closeText={
-        <span className="flex h-full items-center justify-center leading-none [&>div>div]:flex [&>div>div]:items-center [&>div>div]:leading-none">
-          <GlitchText size="11">Закрыть</GlitchText>
-        </span>
-      }
+      closeText={<GlitchBrandXIcon className="cursor-pointer" fill="white" />}
+      showCloseButtonBorder={false}
       animationDuration={620}
       variant="sheet"
     >
@@ -221,10 +227,12 @@ export function ServiceModal({
             </p>
             <button
               type="button"
-              className="mt-3 flex min-h-[52px] w-full items-center justify-center border border-white/68 bg-white/10 px-4 text-center text-[20px] font-bold uppercase leading-none text-white shadow-[inset_0_0_38px_rgba(255,255,255,0.08)] backdrop-blur-[1px] transition hover:border-[#63ff45] hover:bg-white/15 hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:min-h-[58px] sm:text-[23px] lg:min-h-[58px] lg:whitespace-nowrap lg:text-[23px]"
+              className="mt-3 flex min-h-[52px] w-full cursor-pointer items-center justify-center border border-white/68 bg-white/10 px-4 text-center text-[20px] font-bold uppercase leading-none text-white shadow-[inset_0_0_38px_rgba(255,255,255,0.08)] backdrop-blur-[1px] transition hover:border-[#63ff45] hover:bg-white/15 hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:min-h-[58px] sm:text-[23px] lg:min-h-[58px] lg:whitespace-nowrap lg:text-[23px]"
               onClick={openContactModal}
             >
-              {displayedState.content.ctaLabel}
+              <span className="cursor-pointer">
+                <GlitchText size="23">{displayedState.content.ctaLabel}</GlitchText>
+              </span>
             </button>
           </div>
 

@@ -24,6 +24,7 @@ type BaseModalProps = {
   closeLabel?: string;
   closeText?: ReactNode;
   showCloseButton?: boolean;
+  showCloseButtonBorder?: boolean;
   animationDuration?: number;
   closeOnBackdropClick?: boolean;
   closeOnEscape?: boolean;
@@ -54,6 +55,7 @@ export function BaseModal({
   closeLabel = 'Close modal',
   closeText,
   showCloseButton = true,
+  showCloseButtonBorder = true,
   animationDuration = defaultAnimationDuration,
   closeOnBackdropClick = true,
   closeOnEscape = true,
@@ -322,9 +324,13 @@ export function BaseModal({
                 ref={closeButtonRef}
                 type="button"
                 className={[
-                  'absolute z-20 flex items-center justify-center border bg-black/50 font-black uppercase leading-none text-white transition hover:border-[#63ff45] hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45]',
+                  'absolute z-20 flex items-center justify-center bg-black/50 font-black uppercase leading-none text-white transition hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45]',
+                  showCloseButtonBorder ? 'border hover:border-[#63ff45]' : 'border-0',
                   isSheet
-                    ? 'right-5 top-4 h-10 px-4 border-white/55 sm:right-7 lg:right-9'
+                    ? [
+                        'right-5 top-4 h-10 px-4 sm:right-7 lg:right-9',
+                        showCloseButtonBorder ? 'border-white/55' : '',
+                      ].join(' ')
                     : 'right-5 top-5 h-11 w-11 text-[30px]',
                 ].join(' ')}
                 aria-label={closeLabel}
