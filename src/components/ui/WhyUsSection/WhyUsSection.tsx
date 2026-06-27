@@ -1,41 +1,48 @@
 import { Container } from "@/src/components/ui/grid/Container";
 import { publicAssetPath } from "@/src/lib/publicAssetPath";
+import styles from "./WhyUsSection.module.scss";
 
 type FeatureBlockData = {
-  label: string[];
+  label: string;
   className?: string;
 };
 
 const featureBlocks: FeatureBlockData[] = [
   {
-    label: ["Собственный парк оборудования"],
+    label: "Собственный парк оборудования",
+    className: styles.cardEquipment,
   },
   {
-    label: ["Гибкость и масштабируемость"],
+    label: "Без рамок по формату",
+    className: styles.cardFormat,
   },
   {
-    label: ["Senior-специалисты под каждую задачу"],
-
+    label: "Создаём визуальные миры через брендинг, CGI и моушн",
+    className: styles.cardWorlds,
   },
   {
-    label: ["Актуальные Ai инструменты"],
-
+    label: "Генеральный медиаподрядчик, а не аутсорс-лотерея",
+    className: styles.cardContractor,
   },
   {
-    label: ["Медиа контент без аутсорс-лотереи"],
-
+    label: "Senior-специалисты под каждую задачу",
+    className: styles.cardSenior,
   },
   {
-    label: ["Любые ниши, любой формат"],
-
+    label: "Работаем со всеми платформами и соцсетями",
+    className: styles.cardPlatforms,
   },
   {
-    label: ["Работаем со всеми платформами и соцсетями"],
-
+    label: "Актуальные AI-инструменты",
+    className: styles.cardAi,
   },
   {
-    label: ["Полный цикл медиа услуг"],
-
+    label: "Гибкость под любой масштаб и бюджет",
+    className: styles.cardScale,
+  },
+  {
+    label: "Полный цикл медиауслуг",
+    className: styles.cardCycle,
   },
 ];
 
@@ -66,11 +73,11 @@ export function WhyUsSection() {
 
           <ul
             aria-label="Преимущества"
-            className="mt-8 grid md:grid-cols-2 lg:grid-cols-4 gap-4 w-full  justify-items-center "
+            className={`${styles.featureList} mt-7`}
           >
             {featureBlocks.map((feature, index) => (
               <FeatureBlock
-                key={`${feature.label.join("-")}-${index}`}
+                key={`${feature.label}-${index}`}
                 label={feature.label}
                 className={feature.className}
               />
@@ -86,20 +93,14 @@ function FeatureBlock({
   label,
   className,
 }: {
-  label: string[];
+  label: string;
   className?: string;
 }) {
   return (
     <li
-      className={`flex min-h-[54px] w-full max-w-[366px] items-center justify-center border border-white px-6 py-[14px] text-center text-[14px] font-medium uppercase leading-[1.12] text-white sm:px-7 lg:max-w-none  ${className ?? ""}`}
+      className={`${styles.featureBlock} ${className ?? ""}`}
     >
-      <span className="text-balance">
-        {label.map((line) => (
-          <span key={line} className="block">
-            {line}
-          </span>
-        ))}
-      </span>
+      <span className="text-balance">{label}</span>
     </li>
   );
 }

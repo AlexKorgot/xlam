@@ -136,7 +136,7 @@ function OpenedSheetBody({
           {previews.length > 0 ? previews.map((preview) => (
             <div
               key={typeof preview.src === 'string' ? preview.src : preview.src.src}
-              className="relative min-h-[220px] w-full max-w-[412px] overflow-hidden rounded-[6px] aspect-[16/10] sm:h-[232px] sm:aspect-auto lg:max-w-none"
+              className="relative min-h-[220px] w-full max-w-[412px] overflow-hidden rounded-[6px] aspect-[16/10] sm:h-[232px] sm:aspect-auto lg:h-[clamp(260px,22vw,430px)] lg:max-w-none"
             >
               <Image
                 src={preview.src}
@@ -149,7 +149,7 @@ function OpenedSheetBody({
           )) : Array.from({ length: previewPlaceholderCount }).map((_, index) => (
             <div
               key={index}
-              className="relative min-h-[220px] w-full max-w-[412px] overflow-hidden rounded-[6px] bg-transparent aspect-[16/10] sm:h-[232px] sm:aspect-auto lg:max-w-none"
+              className="relative min-h-[220px] w-full max-w-[412px] overflow-hidden rounded-[6px] bg-transparent aspect-[16/10] sm:h-[232px] sm:aspect-auto lg:h-[clamp(260px,22vw,430px)] lg:max-w-none"
             >
             </div>
           ))}
