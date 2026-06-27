@@ -147,9 +147,9 @@ export function ServiceModal({
         </span>
       </button>
 
-      <p className="min-w-0 cursor-pointer truncate text-center text-[14px] font-black uppercase leading-none text-[#63ff45] sm:text-[22px] lg:text-[28px]">
+      <div className="min-w-0 cursor-pointer truncate text-center text-[14px] font-black uppercase leading-none text-[#63ff45] sm:text-[22px] lg:text-[28px]">
         <GlitchText size="28">{displayedState.currentLabel}</GlitchText>
-      </p>
+      </div>
 
       <button
         type="button"

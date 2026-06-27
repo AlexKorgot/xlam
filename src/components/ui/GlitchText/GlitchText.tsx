@@ -12,8 +12,8 @@ export default function GlitchText({ children, size }: {
     children: ReactNode;
     size?: string;
 }) {
-    const rootRef = useRef<HTMLDivElement>(null);
-    const textRef = useRef<HTMLDivElement>(null);
+    const rootRef = useRef<HTMLSpanElement>(null);
+    const textRef = useRef<HTMLSpanElement>(null);
     const tlRef = useRef<gsap.core.Timeline | null>(null);
 
     useGSAP(
@@ -133,15 +133,15 @@ export default function GlitchText({ children, size }: {
     const restartGlitch = () => tlRef.current?.restart();
 
     return (
-        <div
+        <span
             ref={rootRef}
-            className="pointer-events-auto"
+            className="pointer-events-auto inline-block"
             onMouseEnter={restartGlitch}
             onPointerEnter={restartGlitch}
         >
-            <div
+            <span
                 ref={textRef}
-                className="pointer-events-auto relative"
+                className="pointer-events-auto relative inline-block"
             >
                 <span
                     className={clsx('invisible')}
@@ -163,7 +163,7 @@ export default function GlitchText({ children, size }: {
                 >
           {children}
         </span>
-            </div>
-        </div>
+            </span>
+        </span>
     );
 }

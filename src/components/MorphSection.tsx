@@ -1,6 +1,6 @@
 'use client';
 
-import {forwardRef, useId, useImperativeHandle, useRef} from 'react';
+import {forwardRef, useEffect, useId, useImperativeHandle, useRef, useState} from 'react';
 import type {
     MouseEvent as ReactMouseEvent,
     PointerEvent as ReactPointerEvent,
@@ -39,6 +39,10 @@ const TOP_VIDEO_REVEAL_START = VIDEO_REVEAL_START;
 const OUTLINE_TO_WHITE_START = VIDEO_REVEAL_START + 0.05;
 const TEXT_REVEAL_START = M_REVEAL_START + M_REVEAL_DURATION * 0.72;
 const EXPANDED_PLAY_BUTTON_TAP_THRESHOLD = 10;
+const DESKTOP_LETTERS_DESIGN_WIDTH = 1860;
+const DESKTOP_LETTERS_HORIZONTAL_GUTTER = 80;
+const DESKTOP_LETTERS_MIN_SCALE = 0.49;
+const DESKTOP_LETTERS_FULL_SCALE_WIDTH = 1800;
 
 function buildMPathRight(rightX: number) {
     return `
@@ -96,6 +100,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     bottomLeftX = -585,
 }: MorphSectionProps, ref) {
     const rootRef = useRef<HTMLDivElement | null>(null);
+    const lettersScaleContentRef = useRef<HTMLDivElement | null>(null);
     const topRowRef = useRef<HTMLDivElement | null>(null);
     const bottomRowRef = useRef<HTMLDivElement | null>(null);
     const timelineRef = useRef<gsap.core.Timeline | null>(null);
@@ -108,6 +113,8 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     const shouldSuppressExpandedPlayClickRef = useRef(false);
     const isExpandedVideoVisibleRef = useRef(false);
     const isExpandedVideoPlayingRef = useRef(false);
+    const [lettersScale, setLettersScale] = useState(1);
+    const [lettersScaledHeight, setLettersScaledHeight] = useState<number | null>(null);
 
     const topVideoRef = useRef<HTMLVideoElement | null>(null);
     const topClipPathRef = useRef<SVGPathElement | null>(null);
@@ -131,6 +138,65 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     const setBottomLetterRef = (el: SVGPathElement | null, index: number) => {
         if (el) bottomLetterRefs.current[index] = el;
     };
+
+    useEffect(() => {
+        const updateLettersScale = () => {
+            const viewportWidth = window.innerWidth;
+
+            if (viewportWidth >= DESKTOP_LETTERS_FULL_SCALE_WIDTH) {
+                setLettersScale(1);
+                return;
+            }
+
+            const availableWidth = Math.max(
+                0,
+                viewportWidth - DESKTOP_LETTERS_HORIZONTAL_GUTTER,
+            );
+            const nextScale = gsap.utils.clamp(
+                DESKTOP_LETTERS_MIN_SCALE,
+                1,
+                availableWidth / DESKTOP_LETTERS_DESIGN_WIDTH,
+            );
+
+            setLettersScale(nextScale);
+        };
+
+        updateLettersScale();
+        window.addEventListener('resize', updateLettersScale);
+
+        return () => {
+            window.removeEventListener('resize', updateLettersScale);
+        };
+    }, []);
+
+    useEffect(() => {
+        const content = lettersScaleContentRef.current;
+
+        if (!content) {
+            return;
+        }
+
+        const updateLettersHeight = () => {
+            setLettersScaledHeight(content.offsetHeight * lettersScale);
+        };
+
+        updateLettersHeight();
+
+        if (typeof ResizeObserver === 'undefined') {
+            window.addEventListener('resize', updateLettersHeight);
+
+            return () => {
+                window.removeEventListener('resize', updateLettersHeight);
+            };
+        }
+
+        const observer = new ResizeObserver(updateLettersHeight);
+        observer.observe(content);
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [lettersScale]);
 
     const pauseVideo = (video: HTMLVideoElement | null, reset = false) => {
         if (!video) {
@@ -376,6 +442,16 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     const bottomSvgX = bottomLeftX;
     const bottomSvgWidth = 234.5 - bottomLeftX + 6;
     const bottomSvgHeight = 248;
+    const lettersScaleFrameStyle = {
+        width: `${DESKTOP_LETTERS_DESIGN_WIDTH * lettersScale}px`,
+        height: lettersScaledHeight === null ? undefined : `${lettersScaledHeight}px`,
+        maxWidth: '100%',
+    };
+    const lettersScaleContentStyle = {
+        width: `${DESKTOP_LETTERS_DESIGN_WIDTH}px`,
+        transform: `translateX(-50%) scale(${lettersScale})`,
+        transformOrigin: 'top center',
+    };
 
     const neonPulse = (
         target: SVGPathElement,
@@ -1059,6 +1135,15 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     />
                 </button>
             </div>
+            <div
+                className="relative z-10 shrink-0 overflow-visible"
+                style={lettersScaleFrameStyle}
+            >
+                <div
+                    ref={lettersScaleContentRef}
+                    className="absolute left-1/2 top-0 flex flex-col items-center"
+                    style={lettersScaleContentStyle}
+                >
             <div ref={topRowRef} className="relative z-10 flex gap-[36px]">
                 <svg
                     width="214"
@@ -1264,9 +1349,11 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     />
                 </svg>
             </div>
+                </div>
+            </div>
 
-            <div className="relative z-10 text-center">
-                <p  ref={textRef} className="mt-[clamp(1rem,4vh,3.125rem)] text-[clamp(1.5rem,4.5vw,2.5rem)] font-bold uppercase leading-[1.14] text-white">
+            <div className="relative z-10 max-w-[min(92vw,1500px)] text-center">
+                <p ref={textRef} className="mt-[clamp(0.875rem,3vh,3.125rem)] text-[clamp(1.15rem,2.4vw,2.5rem)] font-bold uppercase leading-[1.14] text-white">
                     Мы делаем шоу для платформ, рекламу для брендов и <br/> контент для бизнеса. Такие дела.
                 </p>
             </div>
