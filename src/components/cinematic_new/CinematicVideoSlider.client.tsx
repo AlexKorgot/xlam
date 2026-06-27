@@ -100,8 +100,8 @@ function OpenedSheetBody({
 
       <div className="grid min-w-0 gap-7 min-[1920px]:pt-[clamp(7.25rem,22.5vh,15rem)]">
         <div data-case-content className="opacity-0">
-          <div className="grid w-full max-w-[844px] gap-y-[11px] lg:gap-y-3">
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,9.5rem),1fr))] gap-x-2 gap-y-[11px] lg:gap-x-5 lg:gap-y-3">
+          <div className="grid w-full gap-y-[11px] lg:gap-y-3">
+            <div className="grid grid-cols-3 gap-x-2 gap-y-[11px] lg:gap-x-5 lg:gap-y-3">
               {primaryServices.map((service, index) => (
                 <span
                   key={`${service}-${index}`}
