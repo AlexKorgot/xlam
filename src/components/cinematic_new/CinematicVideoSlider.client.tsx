@@ -5,6 +5,7 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent, RefObject } from
 import Image from 'next/image';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { GlitchBrandXIcon } from '@/src/components/ui/GlitchBrandXIcon';
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
 import {
   FULLPAGE_SCROLL_EVENT,
@@ -31,7 +32,6 @@ const headingAccent = '\u041f\u0420\u041e\u0415\u041a\u0422\u042b';
 const openLabel = '\u0421\u043c\u043e\u0442\u0440\u0435\u0442\u044c';
 const previousGlyph = '\u2039';
 const nextGlyph = '\u203a';
-const closeLabel = '\u0417\u0430\u043a\u0440\u044b\u0442\u044c';
 const sectionScrollThreshold = 48;
 const sectionScrollUnlockDelay = 700;
 const openedSlideTransitionDuration = 0.96;
@@ -65,7 +65,7 @@ function OpenedSheetBody({
   const secondaryServices = visibleServices.slice(3, 8);
 
   return (
-    <div className="grid gap-7 lg:grid-cols-[minmax(24rem,0.86fr)_minmax(24rem,0.74fr)] lg:items-start lg:gap-x-[clamp(1.5rem,3vw,4rem)] lg:gap-y-10 2xl:grid-cols-[minmax(34rem,0.9fr)_minmax(38rem,0.78fr)] 2xl:gap-x-[clamp(2rem,4vw,5rem)]">
+    <div className="grid min-w-0 gap-7 lg:gap-y-10 min-[1920px]:grid-cols-[minmax(0,0.9fr)_minmax(0,0.78fr)] min-[1920px]:items-start min-[1920px]:gap-x-[clamp(1.25rem,2vw,3rem)]">
       <div className="min-w-0">
         <div data-case-heading className="opacity-0">
           <p className="mb-2 text-[10px] font-black uppercase leading-none tracking-[0.24em] text-white/58 lg:mb-3 lg:text-[clamp(2rem,3vw,4.1rem)] lg:tracking-normal lg:text-white lg:drop-shadow-[0_4px_20px_rgba(0,0,0,0.65)]">
@@ -98,14 +98,14 @@ function OpenedSheetBody({
         ) : null}
       </div>
 
-      <div className="grid min-w-0 gap-7 lg:pt-[clamp(7.25rem,22.5vh,15rem)]">
+      <div className="grid min-w-0 gap-7 min-[1920px]:pt-[clamp(7.25rem,22.5vh,15rem)]">
         <div data-case-content className="opacity-0">
-          <div className="grid gap-y-[11px] lg:w-[min(100%,844px)] lg:gap-y-3">
-            <div className="grid grid-cols-2 gap-x-2 gap-y-[11px] sm:grid-cols-3 lg:grid-cols-3 lg:gap-x-5 lg:gap-y-0">
+          <div className="grid w-full max-w-[844px] gap-y-[11px] lg:gap-y-3">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,9.5rem),1fr))] gap-x-2 gap-y-[11px] lg:gap-x-5 lg:gap-y-3">
               {primaryServices.map((service, index) => (
                 <span
                   key={`${service}-${index}`}
-                  className="flex min-h-7 min-w-0 items-center justify-center border border-white/60 px-2 py-1 text-center text-[9px] font-black uppercase leading-[1.05] text-white shadow-[0_4px_18px_rgba(0,0,0,0.38)] transition-colors duration-300 sm:text-[10px] lg:h-7 lg:min-h-0 lg:bg-transparent lg:px-3 lg:text-[12px] lg:backdrop-blur-[1px]"
+                  className="flex min-h-7 min-w-0 items-center justify-center border border-white/60 px-2 py-1 text-center text-[9px] font-black uppercase leading-[1.05] text-white shadow-[0_4px_18px_rgba(0,0,0,0.38)] transition-colors duration-300 sm:text-[10px] lg:bg-transparent lg:px-3 lg:text-[12px] lg:backdrop-blur-[1px]"
                 >
                   <span className="line-clamp-2 min-w-0 break-words">
                     {service}
@@ -114,11 +114,11 @@ function OpenedSheetBody({
               ))}
             </div>
 
-            <div className="grid grid-cols-2 gap-x-2 gap-y-[11px] sm:grid-cols-3 lg:grid-cols-5 lg:gap-x-3 lg:gap-y-0">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))] gap-x-2 gap-y-[11px] min-[1920px]:gap-x-3 min-[1920px]:gap-y-3">
               {secondaryServices.map((service, index) => (
               <span
                 key={`${service}-${index + primaryServices.length}`}
-                className="flex min-h-7 min-w-0 items-center justify-center border border-white/60 px-2 py-1 text-center text-[9px] font-black uppercase leading-[1.05] text-white shadow-[0_4px_18px_rgba(0,0,0,0.38)] transition-colors duration-300 sm:text-[10px] lg:h-7 lg:min-h-0 lg:bg-transparent lg:px-3 lg:text-[12px] lg:backdrop-blur-[1px]"
+                className="flex min-h-7 min-w-0 items-center justify-center border border-white/60 px-2 py-1 text-center text-[9px] font-black uppercase leading-[1.05] text-white shadow-[0_4px_18px_rgba(0,0,0,0.38)] transition-colors duration-300 sm:text-[10px] lg:bg-transparent lg:px-3 lg:text-[12px] lg:backdrop-blur-[1px]"
               >
                 <span className="line-clamp-2 min-w-0 break-words">
                   {service}
@@ -131,28 +131,26 @@ function OpenedSheetBody({
 
         <div
           data-case-content
-          className="grid grid-cols-1 justify-items-stretch gap-3 opacity-0 sm:grid-cols-2 sm:gap-4 lg:w-full lg:grid-cols-[repeat(2,412px)] lg:gap-5"
+          className="grid grid-cols-1 justify-items-stretch gap-3 opacity-0 sm:grid-cols-2 sm:gap-4 lg:w-full lg:grid-cols-2 lg:gap-5"
         >
           {previews.length > 0 ? previews.map((preview) => (
             <div
               key={typeof preview.src === 'string' ? preview.src : preview.src.src}
-              className="relative min-h-[220px] w-full max-w-[412px] overflow-hidden rounded-[6px] aspect-[16/10] sm:h-[232px] sm:aspect-auto lg:w-[412px]"
+              className="relative min-h-[220px] w-full max-w-[412px] overflow-hidden rounded-[6px] aspect-[16/10] sm:h-[232px] sm:aspect-auto lg:max-w-none"
             >
               <Image
                 src={preview.src}
                 alt={preview.alt}
                 fill
-                sizes="(max-width: 639px) calc(100vw - 40px), (max-width: 1023px) 50vw, 412px"
+                sizes="(max-width: 639px) calc(100vw - 40px), (max-width: 1023px) 50vw, 45vw"
                 className="scale-[1.12] object-cover object-center"
               />
             </div>
           )) : Array.from({ length: previewPlaceholderCount }).map((_, index) => (
             <div
               key={index}
-              className="relative min-h-[220px] w-full max-w-[412px] overflow-hidden rounded-[6px] bg-black/45 aspect-[16/10] sm:h-[232px] sm:aspect-auto lg:w-[412px]"
+              className="relative min-h-[220px] w-full max-w-[412px] overflow-hidden rounded-[6px] bg-transparent aspect-[16/10] sm:h-[232px] sm:aspect-auto lg:max-w-none"
             >
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_36%,rgba(102,255,102,0.3),rgba(102,255,102,0)_28%),linear-gradient(112deg,rgba(22,121,132,0.78),rgba(8,12,13,0.44)_44%,rgba(176,116,70,0.58))]" />
-              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.12),rgba(255,255,255,0)_34%,rgba(0,0,0,0.28))]" />
             </div>
           ))}
         </div>
@@ -867,7 +865,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             onClick={handlePrevious}
             aria-label="Previous project"
           >
-            {previousGlyph}
+            <GlitchText size="18">{previousGlyph}</GlitchText>
           </button>
           <button
             type="button"
@@ -884,7 +882,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             onClick={handleNext}
             aria-label="Next project"
           >
-            {nextGlyph}
+            <GlitchText size="18">{nextGlyph}</GlitchText>
           </button>
         </div>
       </div>
@@ -904,7 +902,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
           tabIndex={-1}
         />
 
-        <div className="absolute inset-x-0 bottom-0 top-[calc(var(--header-offset)+0.5rem)] z-30 flex max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-0.5rem)] items-start justify-center px-3 pb-3 sm:px-5 sm:pb-5 lg:inset-0 lg:max-h-[var(--fullpage-height,100svh)] lg:items-stretch lg:px-10 lg:pb-8 lg:pt-[calc(var(--header-offset)+0.75rem)] xl:px-14">
+        <div className="absolute inset-x-0 bottom-0 top-[calc(var(--header-offset)+0.5rem)] z-30 flex max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-0.5rem)] items-start justify-center px-3 pb-3 sm:px-5 sm:pb-5 lg:inset-0 lg:max-h-[var(--fullpage-height,100svh)] lg:items-stretch lg:px-6 lg:pb-5 lg:pt-[calc(var(--header-offset)+0.5rem)] xl:px-8">
           <div
             ref={sheetRef}
             role="dialog"
@@ -927,13 +925,11 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
                 <button
                   ref={closeButtonRef}
                   type="button"
-                  className="pointer-events-auto flex h-10 shrink-0 items-center justify-center border border-white/24 bg-black/52 px-4 font-black uppercase leading-none text-white/78 transition-colors hover:border-[#66ff66]/65 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-11 md:px-5 lg:bg-black/24 lg:backdrop-blur-sm"
+                  className="pointer-events-auto flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center border border-white/24 bg-black/52 font-black uppercase leading-none text-white/78 transition-colors hover:border-[#66ff66]/65 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-11 md:w-11 lg:bg-black/24 lg:backdrop-blur-sm"
                   onClick={handleClose}
                   aria-label="Close project"
                 >
-                  <span className="flex h-full items-center justify-center leading-none [&>div>div]:flex [&>div>div]:items-center [&>div>div]:leading-none">
-                    <GlitchText size="11">{closeLabel}</GlitchText>
-                  </span>
+                  <GlitchBrandXIcon className="cursor-pointer" fill="white" />
                 </button>
               </div>
 
@@ -941,7 +937,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
                 ref={sheetScrollRef}
                 className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 [scrollbar-width:none] sm:px-7 lg:max-w-none lg:px-0 lg:py-0 [&::-webkit-scrollbar]:hidden"
               >
-                <div className="lg:flex lg:min-h-full lg:flex-col lg:justify-end lg:pb-[30px]">
+                <div className="lg:flex lg:min-h-full lg:flex-col lg:justify-end lg:pb-5 2xl:pb-[30px]">
                   <OpenedSheetBody slide={activeSlide} titleRef={sheetTitleRef} titleId="cinematic-project-title" />
                 </div>
               </div>
@@ -958,12 +954,18 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
                 onClick={handleOpenedPrevious}
                 disabled={overlayState === 'openedSliding'}
               >
-                <span className="text-4xl leading-none text-[#66ff66]">{previousGlyph}</span>
-                <span className="min-w-0 truncate leading-none">{previousSlide.opened.navLabel}</span>
+                <span className="text-4xl leading-none text-[#66ff66]">
+                  <GlitchText size="36">{previousGlyph}</GlitchText>
+                </span>
+                <span className="min-w-0 truncate leading-none">
+                  <GlitchText size="14">{previousSlide.opened.navLabel}</GlitchText>
+                </span>
               </button>
 
               <div className="flex h-14 min-w-0 items-center justify-center bg-black/20 px-4 text-center text-[14px] font-medium leading-none text-[#66ff66] backdrop-blur-sm sm:text-[22px] lg:bg-transparent lg:px-0 lg:backdrop-blur-none">
-                <span className="min-w-0 truncate leading-none">{activeSlide.opened.navLabel}</span>
+                <span className="min-w-0 truncate leading-none">
+                  <GlitchText size="22">{activeSlide.opened.navLabel}</GlitchText>
+                </span>
               </div>
 
               <button
@@ -972,8 +974,12 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
                 onClick={handleOpenedNext}
                 disabled={overlayState === 'openedSliding'}
               >
-                <span className="min-w-0 truncate leading-none">{nextSlide.opened.navLabel}</span>
-                <span className="text-4xl leading-none text-[#66ff66]">{nextGlyph}</span>
+                <span className="min-w-0 truncate leading-none">
+                  <GlitchText size="14">{nextSlide.opened.navLabel}</GlitchText>
+                </span>
+                <span className="text-4xl leading-none text-[#66ff66]">
+                  <GlitchText size="36">{nextGlyph}</GlitchText>
+                </span>
               </button>
             </nav>
           </div>
@@ -982,7 +988,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             <div
               ref={measureSheetContentRef}
               aria-hidden="true"
-              className="pointer-events-none invisible absolute inset-x-3 top-[calc(var(--header-offset)+0.5rem)] flex max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1rem)] max-w-[94rem] flex-col overflow-hidden text-white sm:inset-x-5 sm:max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1.5rem)] lg:inset-x-10 lg:top-[calc(var(--header-offset)+0.75rem)] lg:mx-auto lg:h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-2.75rem)] lg:max-h-none lg:max-w-full xl:inset-x-14"
+              className="pointer-events-none invisible absolute inset-x-3 top-[calc(var(--header-offset)+0.5rem)] flex max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1rem)] max-w-[94rem] flex-col overflow-hidden text-white sm:inset-x-5 sm:max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1.5rem)] lg:inset-x-6 lg:top-[calc(var(--header-offset)+0.5rem)] lg:mx-auto lg:h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-2rem)] lg:max-h-none lg:max-w-full xl:inset-x-8"
             >
               <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-white/28 lg:hidden" aria-hidden="true" />
 
@@ -991,7 +997,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
               </div>
 
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 [scrollbar-width:none] sm:px-7 lg:max-w-none lg:px-0 lg:py-0 [&::-webkit-scrollbar]:hidden">
-                <div className="lg:flex lg:min-h-full lg:flex-col lg:justify-end lg:pb-[30px]">
+                <div className="lg:flex lg:min-h-full lg:flex-col lg:justify-end lg:pb-5 2xl:pb-[30px]">
                   <OpenedSheetBody slide={pendingOpenedSlide} />
                 </div>
               </div>
