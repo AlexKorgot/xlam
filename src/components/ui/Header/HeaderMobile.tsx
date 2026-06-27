@@ -98,6 +98,16 @@ const HeaderMobile = forwardRef<HeaderHandle, HeaderMobileProps>(function Header
   return (
     <div className="pointer-events-none fixed inset-x-0 top-0 z-50 px-4 pt-5 sm:px-8 sm:pt-7 min-[1000px]:hidden">
       <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-[calc(var(--header-offset)+4rem)] bg-transparent backdrop-blur-[22px]"
+        style={{
+          WebkitMaskImage:
+            'linear-gradient(to bottom, #000 0%, #000 35%, rgba(0, 0, 0, 0.55) 58%, rgba(0, 0, 0, 0.16) 78%, transparent 100%)',
+          maskImage:
+            'linear-gradient(to bottom, #000 0%, #000 35%, rgba(0, 0, 0, 0.55) 58%, rgba(0, 0, 0, 0.16) 78%, transparent 100%)',
+        }}
+      />
+      <div
         data-header-fill
         aria-hidden="true"
         className="absolute inset-x-0 top-0 h-[var(--header-offset)] origin-left bg-[var(--accent)] opacity-0 shadow-[0_18px_54px_rgba(184,255,44,0.2)] [transform:scaleX(0)] transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
