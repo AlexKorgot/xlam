@@ -14,7 +14,6 @@ import MorphSection, {
   type MorphSectionHandle,
 } from '@/src/components/MorphSection';
 import { useHeaderProgress } from '@/src/components/ui/Header/HeaderProvider';
-import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import { CinematicVideoSlider } from '@/src/components/cinematic_new';
 import { TextSection } from '@/src/components/textSection';
 import {
@@ -183,7 +182,7 @@ export const MainScene = () => {
           <MorphSection
               ref={morphSectionRef}
               className={'hidden flex-col items-center min-[1000px]:flex'}
-              videoSrc={publicAssetPath('/video/only_bg.mp4')}
+              videoSrc="https://www.dropbox.com/scl/fi/urqmhglifumcmig7xwhu4/3-4-.-1.mp4?rlkey=krl52r8p9i7w2znikdylxuuwt&st=spfi2yd3&raw=1"
               autoPlayTimeline={false}
               topEndWidth={1040}
               bottomLeftX={-795}

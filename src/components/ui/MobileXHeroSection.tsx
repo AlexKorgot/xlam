@@ -7,12 +7,11 @@ import type {
 } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { publicAssetPath } from '@/src/lib/publicAssetPath';
 
 const TAGLINE =
   'Создаем видео, шоу, рекламу и бренды, которые звучат дольше, чем длятся';
 
-const onlyBgVideo = publicAssetPath('/video/only_bg.mp4');
+const onlyBgVideo = 'https://www.dropbox.com/scl/fi/urqmhglifumcmig7xwhu4/3-4-.-1.mp4?rlkey=krl52r8p9i7w2znikdylxuuwt&st=spfi2yd3&raw=1';
 const EXPANDED_PLAY_BUTTON_TAP_THRESHOLD = 10;
 
 gsap.registerPlugin(useGSAP);

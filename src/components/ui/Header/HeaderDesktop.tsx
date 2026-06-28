@@ -138,12 +138,22 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
     <div className="pointer-events-none fixed inset-x-0 top-0 z-50 hidden px-4 pt-5 sm:px-8 sm:pt-7 min-[1000px]:block">
       <div
         aria-hidden="true"
-        className="absolute inset-x-0 top-0 h-[calc(var(--header-offset)+4rem)] bg-transparent backdrop-blur-[22px]"
+        className="absolute inset-x-0 top-0 h-[calc(var(--header-offset)+4rem)] bg-transparent backdrop-blur-[8px]"
         style={{
           WebkitMaskImage:
             'linear-gradient(to bottom, #000 0%, #000 35%, rgba(0, 0, 0, 0.55) 58%, rgba(0, 0, 0, 0.16) 78%, transparent 100%)',
           maskImage:
             'linear-gradient(to bottom, #000 0%, #000 35%, rgba(0, 0, 0, 0.55) 58%, rgba(0, 0, 0, 0.16) 78%, transparent 100%)',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-[calc(var(--header-offset)-0.5rem)] h-24 bg-transparent opacity-20 backdrop-blur-[30px]"
+        style={{
+          WebkitMaskImage:
+            'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 18%, rgba(0,0,0,0.5) 58%, transparent 100%)',
+          maskImage:
+            'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 18%, rgba(0,0,0,0.5) 58%, transparent 100%)',
         }}
       />
       <div
@@ -165,7 +175,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
               <button
                 key={item.key}
                 type="button"
-                className="uppercase"
+                className="cursor-pointer uppercase"
                 onClick={() => jumpToSection(item.targetId)}
               >
                 <GlitchText size={MENU_ITEM_SIZE}>
@@ -192,7 +202,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
               <button
                 key={item.key}
                 type="button"
-                className="uppercase"
+                className="cursor-pointer uppercase"
                 onClick={() => jumpToSection(item.targetId)}
               >
                 <GlitchText size={MENU_ITEM_SIZE}>
@@ -202,7 +212,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
             ))}
             <button
               type="button"
-              className="pointer-events-auto inline-flex min-h-[42px] items-center justify-center border border-white/90 bg-[linear-gradient(155.051deg,rgba(238,238,238,0.3)_7.5265%,rgba(112,112,112,0.3)_47.838%,rgba(255,255,255,0.3)_95.294%)] px-[28px] py-[9px] uppercase text-white shadow-[0_242.942px_67.889px_rgba(0,0,0,0),0_155.416px_62.279px_rgba(0,0,0,0.01),0_87.527px_52.74px_rgba(0,0,0,0.05),0_38.714px_38.714px_rgba(0,0,0,0.09),0_9.538px_21.321px_rgba(0,0,0,0.1)] backdrop-blur-[5.05px] transition-[border-color,background,opacity] duration-200 hover:border-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/80"
+              className="pointer-events-auto inline-flex min-h-[42px] cursor-pointer items-center justify-center border border-white/90 bg-[linear-gradient(155.051deg,rgba(238,238,238,0.3)_7.5265%,rgba(112,112,112,0.3)_47.838%,rgba(255,255,255,0.3)_95.294%)] px-[28px] py-[9px] uppercase text-white shadow-[0_242.942px_67.889px_rgba(0,0,0,0),0_155.416px_62.279px_rgba(0,0,0,0.01),0_87.527px_52.74px_rgba(0,0,0,0.05),0_38.714px_38.714px_rgba(0,0,0,0.09),0_9.538px_21.321px_rgba(0,0,0,0.1)] backdrop-blur-[5.05px] transition-[border-color,background,opacity] duration-200 hover:border-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/80"
               onClick={openContactModal}
             >
               <GlitchText size={MENU_ITEM_SIZE}>
