@@ -669,6 +669,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
 
             gsap.set(expandedVideoFrameRef.current, {
                 autoAlpha: 0,
+                pointerEvents: 'none',
                 scale: 1.025,
                 filter: 'blur(14px)',
                 transformOrigin: 'center center',
@@ -930,10 +931,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
             }
 
             syncVideoTime(expandedVideo, topVideoRef.current?.currentTime ?? 0);
-            expandedVideo.pause();
             isExpandedVideoVisibleRef.current = true;
-            isExpandedVideoPlayingRef.current = false;
-            syncExpandedPlayButtonState();
             clearExpandedPlayButtonTimeout();
 
             expandedVideoTimelineRef.current?.kill();
@@ -941,6 +939,10 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 defaults: {
                     ease: 'sine.out',
                 },
+            });
+
+            gsap.set(expandedFrame, {
+                pointerEvents: 'auto',
             });
 
             expandedVideoTimelineRef.current
@@ -982,11 +984,12 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     ease: 'power2.out',
                 }, 0.16);
             expandedVideoTimelineRef.current.to(expandedPlayButtonRef.current, {
-                autoAlpha: 1,
-                scale: 1,
-                duration: 0.42,
+                autoAlpha: 0,
+                scale: 0.94,
+                duration: 0.2,
                 ease: 'power2.out',
             }, 0.48);
+            playExpandedVideo(expandedVideo);
         },
         hideExpandedVideo() {
             const expandedFrame = expandedVideoFrameRef.current;
@@ -1006,6 +1009,9 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     expandedVideo?.pause();
                     expandedVideo?.removeAttribute('src');
                     expandedVideo?.load();
+                    gsap.set(expandedFrame, {
+                        pointerEvents: 'none',
+                    });
                 },
             })
                 .to(expandedFrame, {
@@ -1046,6 +1052,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
 
             gsap.to(expandedVideoFrameRef.current, {
                 autoAlpha: 0,
+                pointerEvents: 'none',
                 duration: 0.95,
                 ease: 'sine.out',
                 overwrite: 'auto',
@@ -1066,6 +1073,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
 
             gsap.to(expandedVideoFrameRef.current, {
                 autoAlpha: 1,
+                pointerEvents: 'auto',
                 filter: 'blur(0px)',
                 scale: 1,
                 duration: 0.95,
@@ -1097,7 +1105,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
             {/* Верхняя строка */}
             <div
                 ref={expandedVideoFrameRef}
-                className="absolute inset-x-6 top-[calc(var(--header-offset)+1rem)] z-0 h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-2rem)] overflow-hidden bg-black opacity-0 md:inset-x-10"
+                className="pointer-events-none absolute inset-x-6 top-[calc(var(--header-offset)+1rem)] z-20 h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-2rem)] overflow-hidden bg-black opacity-0 md:inset-x-10"
                 onClick={handleExpandedVideoFrameClick}
             >
                 <video

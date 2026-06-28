@@ -7,6 +7,7 @@ import {
   type FormEvent,
   type MouseEvent,
 } from 'react';
+import { GlitchBrandXIcon } from '@/src/components/ui/GlitchBrandXIcon';
 import { BaseModal } from '@/src/components/ui/modal';
 import blueBottomImage from '@/src/components/textSection/assets/img/modal_bottom.png';
 
@@ -63,21 +64,21 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
       >
         <section className="relative flex h-[min(626px,calc(100svh-80px))] w-[min(378px,calc(100vw-40px))] flex-col overflow-hidden bg-white text-black shadow-[0_30px_100px_rgba(0,0,0,0.55)]">
           <header className="relative z-20 flex h-[58px] shrink-0 items-center justify-end border-b border-black/10 px-[21px]">
-          <button
-            type="button"
-            className="text-[12px] font-black uppercase leading-none text-black transition hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
-            aria-label="Закрыть форму связи"
-            onClick={onClose}
-          >
-            Закрыть
-          </button>
+            <button
+              type="button"
+              className="flex h-9 w-9 items-center justify-center text-black transition hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
+              aria-label="Закрыть форму связи"
+              onClick={onClose}
+            >
+              <GlitchBrandXIcon className="cursor-pointer" fill="currentColor" />
+            </button>
           </header>
 
           <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-[21px] pb-0 pt-[18px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <h2
               id={titleId}
               tabIndex={-1}
-              className="max-w-[336px] text-[clamp(2.15rem,9vw,2.36rem)] font-black uppercase leading-[0.86] tracking-0 text-black outline-none"
+              className="max-w-[336px] text-[clamp(2.15rem,9vw,32px)] font-black uppercase leading-[0.86] tracking-0 text-black outline-none"
             >
               Поговорим о вашей идее?
             </h2>

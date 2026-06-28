@@ -260,9 +260,6 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
       }
 
       isExpandedVideoVisibleRef.current = true;
-      expandedVideo.pause();
-      isExpandedVideoPlayingRef.current = false;
-      syncExpandedPlayButtonState();
       clearExpandedPlayButtonTimeout();
       expandedTimelineRef.current?.kill();
       expandedTimelineRef.current = gsap.timeline({
@@ -287,11 +284,12 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
           duration: 0.92,
         }, 0.08);
       expandedTimelineRef.current.to(expandedPlayButtonRef.current, {
-        autoAlpha: 1,
-        scale: 1,
-        duration: 0.34,
+        autoAlpha: 0,
+        scale: 0.94,
+        duration: 0.2,
         ease: 'power2.out',
       }, 0.44);
+      playExpandedVideo(expandedVideo);
     },
     hideExpandedVideo() {
       const expandedFrame = expandedVideoFrameRef.current;
@@ -458,7 +456,7 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
         className="relative z-20 flex h-full w-full flex-col items-center px-[30px] pb-[max(2rem,env(safe-area-inset-bottom))] pt-[calc(var(--header-offset)+0.75rem)]"
       >
         <div className="relative flex min-h-0 flex-1 items-center justify-center self-stretch">
-          <div className="absolute left-1/2 top-1/2 h-[min(45svh,430px)] w-[min(76vw,332px)] -translate-x-1/2 -translate-y-[52%]">
+          <div className="absolute left-1/2 top-1/2 h-[min(50svh,480px)] w-[min(88vw,386px)] -translate-x-1/2 -translate-y-[52%]">
             <svg
               className="absolute inset-0 h-full w-full overflow-visible"
               viewBox="0 0 332 360"
@@ -467,7 +465,7 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
             >
               <defs>
                 <clipPath id="mobile-x-hero-clip" clipPathUnits="userSpaceOnUse">
-                  <path d="M229.8 360 166.4 246.6 103.1 360H0l111.7-181.8L6.7 0h111.8l53.8 101.5L226.1 0H332L226.9 178.2 332 360H229.8Z" />
+                  <path d="M238 360 166.4 240 94 360H-8l113.6-181.6L0 0h126l45.7 92L214 0h126L227.2 178.4 340 360H238Z" />
                 </clipPath>
                 <filter id="mobile-x-hero-grain">
                   <feTurbulence
@@ -505,7 +503,7 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
                 </video>
               </foreignObject>
               <path
-                d="M229.8 360 166.4 246.6 103.1 360H0l111.7-181.8L6.7 0h111.8l53.8 101.5L226.1 0H332L226.9 178.2 332 360H229.8Z"
+                d="M238 360 166.4 240 94 360H-8l113.6-181.6L0 0h126l45.7 92L214 0h126L227.2 178.4 340 360H238Z"
                 filter="url(#mobile-x-hero-grain)"
                 fill="white"
               />

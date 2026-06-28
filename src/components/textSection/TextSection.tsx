@@ -620,6 +620,8 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
       const artEnterDistance = reduceMotion ? 0 : 190;
       const textExitScale = reduceMotion ? 1 : 1.65;
       const textEnterScale = reduceMotion ? 1 : 0.9;
+      const isMobileViewport = window.matchMedia('(max-width: 639.98px)').matches;
+      const textEnterY = reduceMotion ? 0 : isMobileViewport ? 8 : 36;
       const timeline = gsap.timeline({
         defaults: {
           ease: 'power3.inOut',
@@ -632,7 +634,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
 
       gsap.set(incomingTextRef.current, {
         autoAlpha: 0,
-        y: reduceMotion ? 0 : 36,
+        y: textEnterY,
         scale: textEnterScale,
         filter: reduceMotion ? 'none' : 'blur(10px)',
       });
@@ -837,17 +839,19 @@ function SlideArtwork({
         />
       </div>
 
-      <h2
-        ref={textRef}
-        className="absolute left-1/2 top-1/2 z-30 w-[min(88vw,1381px)] -translate-x-1/2 -translate-y-1/2 text-center text-[clamp(1.85rem,5.6vw,3.75rem)] font-black uppercase leading-[1.12] text-black sm:leading-[1.16] lg:leading-[1.21]"
-        style={{ willChange: 'transform, opacity, filter' }}
-      >
-        {slide.lines.map((line) => (
-          <span key={line} className="block">
-            {line}
-          </span>
-        ))}
-      </h2>
+      <div className="absolute left-1/2 top-1/2 z-30 w-[min(88vw,1381px)] -translate-x-1/2 -translate-y-1/2 text-center">
+        <h2
+          ref={textRef}
+          className="text-[clamp(1.85rem,5.6vw,3.75rem)] font-black uppercase leading-[1.12] text-black sm:leading-[1.16] lg:leading-[1.21]"
+          style={{ willChange: 'transform, opacity, filter' }}
+        >
+          {slide.lines.map((line) => (
+            <span key={line} className="block">
+              {line}
+            </span>
+          ))}
+        </h2>
+      </div>
     </div>
   );
 }

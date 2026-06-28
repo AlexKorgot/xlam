@@ -1,31 +1,151 @@
 .featureList {
   display: grid;
   width: 100%;
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
   justify-items: center;
 }
 
 .featureBlock {
+  --feature-delay: 0ms;
+
   position: relative;
   display: flex;
-  min-height: 49px;
+  min-height: 44px;
   width: 100%;
   max-width: 425.862px;
   align-items: center;
   justify-content: center;
   border: 1.346px solid #fff;
-  padding: 10px 18px;
+  padding: 8px 10px;
   color: #fff;
   text-align: center;
-  font-size: 16px;
+  font-size: 11px;
   font-weight: 400;
   line-height: 1;
+  background: rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transform: translateY(18px) scale(0.96);
+  animation: featureBlockReveal 540ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(720ms + var(--feature-delay));
+}
+
+.featureBlock:nth-child(1) {
+  --feature-delay: 0ms;
+}
+
+.featureBlock:nth-child(2) {
+  --feature-delay: 95ms;
+}
+
+.featureBlock:nth-child(3) {
+  --feature-delay: 190ms;
+}
+
+.featureBlock:nth-child(4) {
+  --feature-delay: 285ms;
+}
+
+.featureBlock:nth-child(5) {
+  --feature-delay: 380ms;
+}
+
+.featureBlock:nth-child(6) {
+  --feature-delay: 475ms;
+}
+
+.featureBlock:nth-child(7) {
+  --feature-delay: 570ms;
+}
+
+.featureBlock:nth-child(8) {
+  --feature-delay: 665ms;
+}
+
+.featureBlock:nth-child(9) {
+  --feature-delay: 760ms;
+}
+
+.cardEquipment {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.cardFormat {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.cardWorlds {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+
+.cardContractor {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+.cardSenior {
+  grid-column: 1;
+  grid-row: 4;
+}
+
+.cardPlatforms {
+  grid-column: 2;
+  grid-row: 4;
+}
+
+.cardAi {
+  grid-column: 1 / -1;
+  grid-row: 5;
+}
+
+.cardScale {
+  grid-column: 1 / -1;
+  grid-row: 6;
+}
+
+.cardCycle {
+  grid-column: 1 / -1;
+  grid-row: 7;
+}
+
+@keyframes featureBlockReveal {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @media (min-width: 768px) {
   .featureList {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
+  }
+
+  .featureBlock {
+    min-height: 49px;
+    padding: 10px 18px;
+    font-size: 16px;
+    background: transparent;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .featureBlock {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
+@media (min-width: 1001px) {
+  .featureBlock {
+    opacity: 1;
+    transform: none;
+    animation: none;
   }
 }
 

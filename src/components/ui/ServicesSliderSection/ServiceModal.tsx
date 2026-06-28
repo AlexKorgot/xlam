@@ -199,9 +199,9 @@ export function ServiceModal({
       <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/[0.46] to-transparent lg:hidden" />
 
       <div className={`relative z-10 flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain px-5 pb-6 pt-4 [scrollbar-color:#63ff45_rgba(255,255,255,0.16)] [scrollbar-width:thin] sm:px-8 lg:overflow-hidden lg:px-12 lg:pb-10 lg:pt-12 xl:px-[54px] ${contentTransitionClass}`}>
-        <div className="mx-auto mb-5 h-1 w-14 shrink-0 rounded-full bg-white/28 lg:hidden" aria-hidden="true" />
+        <div className="mx-auto mb-5 h-1 w-14 shrink-0 rounded-full bg-white/28 min-[1000px]:hidden" aria-hidden="true" />
 
-        <header className="max-w-[40rem] pr-20 sm:pr-24 lg:max-w-[58rem] lg:pr-0">
+        <header className="mx-auto mt-auto max-w-[40rem] pr-0 text-center min-[1000px]:mx-0 min-[1000px]:mt-0 min-[1000px]:text-left lg:max-w-[58rem] lg:pr-0">
           <h2
             id={titleId}
             tabIndex={-1}
@@ -210,7 +210,7 @@ export function ServiceModal({
             {displayedState.content.title}
           </h2>
 
-          <div id={descriptionId} className="mt-7 max-w-[31rem] lg:mt-12">
+          <div id={descriptionId} className="mx-auto mt-7 max-w-[31rem] min-[1000px]:mx-0 lg:mt-12">
             <p className="text-[15px] font-black uppercase leading-[1.03] text-white sm:text-[18px] lg:text-[20px]">
               {displayedState.content.subtitle}
             </p>
@@ -221,7 +221,7 @@ export function ServiceModal({
         </header>
 
         <div className="mt-auto grid min-h-0 gap-8 pt-4 lg:grid-cols-[390px_minmax(0,1fr)] lg:items-end lg:gap-14 lg:pt-8 xl:grid-cols-[430px_minmax(0,1fr)] xl:gap-16">
-          <div className="max-w-[29rem] xl:max-w-[31rem]">
+          <div className="mx-auto w-full max-w-[29rem] min-[1000px]:mx-0 xl:max-w-[31rem]">
             <p className="text-center text-[20px] font-black uppercase leading-[1.08] text-[#dedcd3] sm:text-[25px] lg:text-[28px]">
               {displayedState.content.ctaIntro}
             </p>
@@ -236,7 +236,7 @@ export function ServiceModal({
             </button>
           </div>
 
-          <div className="grid min-w-0 grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-4 lg:gap-x-8 xl:gap-x-11">
+          <div className="grid min-w-0 grid-cols-2 gap-x-5 gap-y-5 text-center sm:grid-cols-4 min-[1000px]:text-left lg:gap-x-8 xl:gap-x-11">
             {displayedState.content.features.map((feature) => (
               <div
                 key={feature.title}

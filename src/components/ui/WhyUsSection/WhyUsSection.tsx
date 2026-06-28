@@ -62,6 +62,10 @@ export function WhyUsSection() {
       >
         <source src={publicAssetPath("/video/balls.mp4")} type="video/mp4" />
       </video>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(0,0,0,0.14)_28%,rgba(0,0,0,0.62)_58%,rgba(0,0,0,0.82)_100%)] lg:hidden"
+      />
       <Container>
         <div className="relative z-10 flex min-h-0 flex-col items-center">
           <h2
@@ -73,7 +77,7 @@ export function WhyUsSection() {
 
           <ul
             aria-label="Преимущества"
-            className={`${styles.featureList} mt-7`}
+            className={`${styles.featureList} mt-[clamp(7rem,22svh,12rem)] md:mt-7`}
           >
             {featureBlocks.map((feature, index) => (
               <FeatureBlock

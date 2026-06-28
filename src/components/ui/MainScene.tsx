@@ -183,7 +183,7 @@ export const MainScene = () => {
           <MorphSection
               ref={morphSectionRef}
               className={'hidden flex-col items-center min-[1000px]:flex'}
-              videoSrc={publicAssetPath('/video/3_slider_content_video.mov')}
+              videoSrc={publicAssetPath('/video/only_bg.mp4')}
               autoPlayTimeline={false}
               topEndWidth={1040}
               bottomLeftX={-795}
