@@ -2,7 +2,14 @@
 
 import clsx from 'clsx';
 import Image, { type StaticImageData } from 'next/image';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import {
+  FULLPAGE_SCROLL_EVENT,
+  FULLPAGE_SCROLL_IGNORE_ATTR,
+  FULLPAGE_TOUCH_AXIS_LOCK_RATIO,
+  FULLPAGE_TOUCH_SWIPE_THRESHOLD,
+  getFullPageSwipeDirection,
+} from '@/src/components/ui/FullPageScroll';
 import personImageOne from './assets/07A kopia_13 1.png';
 import personImageTwo from './assets/07A kopia_13 1 (1).png';
 import personImageThree from './assets/07A kopia_13 1 (2).png';
@@ -112,16 +119,101 @@ const teamItems: TeamItem[] = [
 
 export function TeamSection() {
   const [activeId, setActiveId] = useState('valeriya');
+  const listRef = useRef<HTMLUListElement | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const activeItem =
     teamItems.find((item) => item.id === activeId) ?? teamItems[3];
+  const scrollEdgeThreshold = 2;
+
+  const canScrollList = (direction: 'up' | 'down') => {
+    const list = listRef.current;
+
+    if (!list) {
+      return false;
+    }
+
+    if (direction === 'down') {
+      return list.scrollTop + list.clientHeight < list.scrollHeight - scrollEdgeThreshold;
+    }
+
+    return list.scrollTop > scrollEdgeThreshold;
+  };
+
+  const requestFullPageScroll = (direction: 'up' | 'down') => {
+    window.dispatchEvent(
+      new CustomEvent(FULLPAGE_SCROLL_EVENT, {
+        detail: { direction },
+      }),
+    );
+  };
+
+  const handleListWheel = (event: React.WheelEvent<HTMLUListElement>) => {
+    const direction = event.deltaY > 0 ? 'down' : 'up';
+
+    if (canScrollList(direction)) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    requestFullPageScroll(direction);
+  };
+
+  const handleListPointerDown = (event: React.PointerEvent<HTMLUListElement>) => {
+    if (event.pointerType !== 'touch') {
+      return;
+    }
+
+    touchStartRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+    };
+  };
+
+  const handleListPointerUp = (event: React.PointerEvent<HTMLUListElement>) => {
+    if (event.pointerType !== 'touch') {
+      return;
+    }
+
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+
+    if (!start) {
+      return;
+    }
+
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    const isVerticalSwipe =
+      Math.abs(deltaY) > FULLPAGE_TOUCH_SWIPE_THRESHOLD &&
+      Math.abs(deltaY) > Math.abs(deltaX) * FULLPAGE_TOUCH_AXIS_LOCK_RATIO;
+
+    if (!isVerticalSwipe) {
+      return;
+    }
+
+    const direction = getFullPageSwipeDirection(deltaY);
+
+    if (canScrollList(direction)) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    requestFullPageScroll(direction);
+  };
+
+  const handleListPointerCancel = () => {
+    touchStartRef.current = null;
+  };
 
   return (
     <section
-      className="relative isolate min-h-[100svh] overflow-hidden bg-black font-normalidad text-white"
+      className="relative isolate h-full min-h-0 overflow-hidden bg-black font-normalidad text-white"
       aria-labelledby="team-heading"
     >
-      <div className="mx-auto flex min-h-[100svh] w-full max-w-[1920px] flex-col px-[18px] pb-8 pt-0 sm:px-8 lg:px-[92px] lg:pb-0">
-        <div className="relative mx-auto flex min-h-0 w-full flex-1 flex-col pt-[132px] sm:pt-24 lg:max-w-[1740px] lg:justify-center lg:pt-0">
+      <div className="mx-auto flex h-full min-h-0 w-full max-w-[1920px] flex-col px-[18px] pb-8 pt-0 sm:px-8 lg:px-[92px] lg:pb-0">
+        <div className="relative mx-auto flex min-h-0 w-full flex-1 flex-col pt-[clamp(76px,16svh,132px)] sm:pt-24 lg:max-w-[1740px] lg:justify-center lg:pt-0">
           <div className="relative z-50 max-w-[740px]">
             <h2
               id="team-heading"
@@ -159,7 +251,15 @@ export function TeamSection() {
             )}
           </div>
 
-          <ul className="relative z-30 mt-[20px] min-h-0 w-full flex-1 overflow-y-auto overscroll-contain pr-1 lg:mt-[17px] lg:flex-none lg:overflow-visible lg:pr-0">
+          <ul
+            ref={listRef}
+            className="relative z-30 mt-[20px] min-h-0 w-full flex-1 touch-pan-y overflow-y-auto overscroll-contain pr-1 lg:mt-[17px] lg:flex-none lg:overflow-visible lg:pr-0"
+            {...{ [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' }}
+            onWheel={handleListWheel}
+            onPointerDown={handleListPointerDown}
+            onPointerUp={handleListPointerUp}
+            onPointerCancel={handleListPointerCancel}
+          >
             {teamItems.map((item) => (
               <TeamRow
                 key={item.id}
@@ -188,7 +288,6 @@ function TeamRow({
     <li
       className={clsx(
         'border-t border-white/55 last:border-b',
-        item.isMobileVisible === false && 'max-lg:hidden',
       )}
     >
       <button
@@ -199,7 +298,7 @@ function TeamRow({
         onFocus={onActivate}
         onClick={onActivate}
         className={clsx(
-          'group relative flex min-h-[70px] w-full overflow-hidden text-left uppercase transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#66ff66] lg:h-[59px] lg:min-h-[59px]',
+          'group relative flex min-h-[54px] w-full overflow-hidden text-left uppercase transition-colors sm:min-h-[70px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#66ff66] lg:h-[59px] lg:min-h-[59px]',
           isActive ? 'text-black' : 'text-white',
         )}
       >
@@ -210,13 +309,13 @@ function TeamRow({
             isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
           )}
         />
-        <span className="relative flex w-full flex-col items-start gap-[7px] px-[9px] py-2 sm:flex-row sm:items-start sm:gap-4 lg:h-full lg:gap-[28px] lg:px-[10px] lg:py-0 lg:pt-[11px]">
-          <span className="whitespace-nowrap text-[18px] font-medium leading-[0.99] tracking-normal sm:text-[22px] lg:text-[28px] max-[1400px]:text-[24px]">
+        <span className="relative flex w-full flex-col items-start gap-[4px] px-[8px] py-[6px] sm:flex-row sm:items-start sm:gap-4 sm:px-[9px] sm:py-2 lg:h-full lg:gap-[28px] lg:px-[10px] lg:py-0 lg:pt-[11px]">
+          <span className="whitespace-nowrap text-[16px] font-medium leading-[0.99] tracking-normal sm:text-[22px] lg:text-[28px] max-[1400px]:text-[24px]">
             {item.name}
           </span>
           <span
             className={clsx(
-              'inline-flex h-6 w-[210px] items-center justify-center px-3 text-center text-[12px] font-medium leading-none transition-colors sm:min-w-[207px] sm:text-[12px] lg:h-5 lg:min-w-0 lg:text-[16px]',
+              'inline-flex h-5 w-[176px] items-center justify-center px-2.5 text-center text-[10px] font-medium leading-none transition-colors sm:h-6 sm:min-w-[207px] sm:text-[12px] lg:h-5 lg:min-w-0 lg:text-[16px]',
               item.roleClassName,
               isActive
                 ? 'bg-black text-white'

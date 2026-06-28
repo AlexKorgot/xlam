@@ -620,6 +620,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
       const artEnterDistance = reduceMotion ? 0 : 190;
       const textExitScale = reduceMotion ? 1 : 1.65;
       const textEnterScale = reduceMotion ? 1 : 0.9;
+      const artMotionScale = reduceMotion ? 1 : 1.34;
       const isMobileViewport = window.matchMedia('(max-width: 639.98px)').matches;
       const textEnterY = reduceMotion ? 0 : isMobileViewport ? 8 : 36;
       const timeline = gsap.timeline({
@@ -641,13 +642,13 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
       gsap.set(incomingTopRef.current, {
         autoAlpha: 0,
         y: -artEnterDistance,
-        scale: 1,
+        scale: artMotionScale,
         transformOrigin: '50% 100%',
       });
       gsap.set(incomingBottomRef.current, {
         autoAlpha: 0,
         y: artEnterDistance,
-        scale: 1,
+        scale: artMotionScale,
         transformOrigin: '50% 0%',
       });
 
@@ -668,6 +669,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
           {
             autoAlpha: 0,
             y: -artExitDistance,
+            scale: artMotionScale,
             transformOrigin: '50% 100%',
             duration: duration * 1.08,
           },
@@ -678,6 +680,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
           {
             autoAlpha: 0,
             y: artExitDistance,
+            scale: artMotionScale,
             transformOrigin: '50% 0%',
             duration: duration * 1.08,
           },
@@ -692,7 +695,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
             filter: 'none',
             duration: duration * 0.9,
           },
-          0.16,
+          0,
         )
         .to(
           incomingTopRef.current,
@@ -702,7 +705,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
             scale: 1,
             duration: duration * 0.96,
           },
-          0.1,
+          0,
         )
         .to(
           incomingBottomRef.current,
@@ -712,7 +715,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
             scale: 1,
             duration: duration * 0.96,
           },
-          0.1,
+          0,
         );
 
       return () => {
