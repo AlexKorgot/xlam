@@ -152,7 +152,7 @@ const slides: TextSlide[] = [
   },
   {
     id: 'noise',
-    lines: ['Мы не делаем идеально', '- мы делаем интересно'],
+    lines: ['Мы не','Работаем по правилам','индустрии', '- мы пишем новые'],
     topImage: GreenTop,
     bottomImage: GreenBottom,
     imagePosition: {
@@ -208,7 +208,7 @@ const slides: TextSlide[] = [
   },
   {
     id: 'idea',
-    lines: ['Если ваш бренд готов', 'Перестать быть аккуратным', 'и стать настоящим'],
+    lines: ['Если ваш бренд готов', 'Перестать быть аккуратным', 'и стать настоящим', 'Welcome'],
     topImage: GrayTop,
     bottomImage: GrayBottom,
     imagePosition: {
