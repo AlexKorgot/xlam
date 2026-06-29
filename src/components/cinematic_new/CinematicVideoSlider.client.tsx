@@ -837,7 +837,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
         className="pointer-events-none absolute inset-0 z-10"
         style={{ '--cinematic-chrome-opacity': 1 } as CinematicChromeStyle}
       >
-        <div className="absolute left-1/2 top-[9.5svh] z-10 w-full -translate-x-1/2 px-5 text-center opacity-[var(--cinematic-chrome-opacity)] md:top-[10.5svh]">
+        <div className="absolute left-1/2 top-[13svh] z-10 w-full -translate-x-1/2 px-5 text-center opacity-[var(--cinematic-chrome-opacity)] md:top-[10.5svh]">
           <h2 className="text-[2rem] font-black uppercase leading-none drop-shadow-[0_12px_30px_rgba(0,0,0,0.55)] md:text-[2.75rem] xl:text-[3.65rem]">
             {headingLead} <span className="text-[#66ff66]">{headingAccent}</span>
           </h2>
@@ -845,7 +845,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
         <div
           ref={labelRef}
-          className="absolute inset-x-0 bottom-[12svh] z-10 px-6 text-center opacity-[var(--cinematic-chrome-opacity)] md:bottom-[13svh]"
+          className="absolute inset-x-0 bottom-[16svh] z-10 px-6 text-center opacity-[var(--cinematic-chrome-opacity)] md:bottom-[13svh]"
         >
           <p data-slide-label className="mx-auto mb-2 max-w-[28rem] text-[9px] font-black uppercase leading-none text-white/88 drop-shadow-[0_6px_16px_rgba(0,0,0,0.65)] md:text-[10px]">
             {activeSlide.eyebrow}
@@ -858,7 +858,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
           </h3>
         </div>
 
-        <div className="pointer-events-auto absolute bottom-[4.5svh] left-1/2 z-20 flex -translate-x-1/2 items-center gap-5 opacity-[calc(var(--cinematic-chrome-opacity)*0.48)] transition-opacity duration-300 group-hover:opacity-[calc(var(--cinematic-chrome-opacity)*0.9)] focus-within:opacity-[var(--cinematic-chrome-opacity)]">
+        <div className="pointer-events-auto absolute bottom-[7.5svh] left-1/2 z-20 flex -translate-x-1/2 items-center gap-5 opacity-[calc(var(--cinematic-chrome-opacity)*0.48)] transition-opacity duration-300 group-hover:opacity-[calc(var(--cinematic-chrome-opacity)*0.9)] focus-within:opacity-[var(--cinematic-chrome-opacity)]">
           <button
             type="button"
             className="grid h-9 w-9 place-items-center rounded-full border border-white/18 bg-black/35 text-lg font-black text-white/58 backdrop-blur-md transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"

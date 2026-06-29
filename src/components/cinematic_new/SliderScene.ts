@@ -94,8 +94,8 @@ const DESKTOP_FILM_STRIP_LAYOUT: FilmStripLayoutConfig = {
 const MOBILE_FILM_STRIP_LAYOUT: FilmStripLayoutConfig = {
   centerWidthRatio: 0.9,
   centerMaxWidthRatio: 0.94,
-  centerAspect: 16 / 6.2,
-  maxHeightRatio: 0.58,
+  centerAspect: 16 / 7.4,
+  maxHeightRatio: 0.66,
   gap: {
     min: 14,
     max: 28,
