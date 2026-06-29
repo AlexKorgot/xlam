@@ -2,6 +2,7 @@
 
 import {forwardRef, useEffect, useId, useImperativeHandle, useRef, useState} from 'react';
 import type {
+    CSSProperties,
     MouseEvent as ReactMouseEvent,
     PointerEvent as ReactPointerEvent,
 } from 'react';
@@ -43,6 +44,10 @@ const DESKTOP_LETTERS_DESIGN_WIDTH = 1860;
 const DESKTOP_LETTERS_HORIZONTAL_GUTTER = 80;
 const DESKTOP_LETTERS_MIN_SCALE = 0.49;
 const DESKTOP_LETTERS_FULL_SCALE_WIDTH = 1800;
+
+const letterVideoForeignObjectStyle = {
+    overflow: 'hidden',
+} satisfies CSSProperties;
 
 function buildMPathRight(rightX: number) {
     return `
@@ -656,9 +661,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
 
             gsap.set([topVideo, bottomVideo], {
                 opacity: 0,
-                scale: 1.02,
-                filter: 'blur(6px)',
-                transformOrigin: 'center center',
+                willChange: 'opacity',
             });
 
             gsap.set([topOverlayPath, bottomOverlayPath], {
@@ -815,18 +818,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     [topVideo, bottomVideo],
                     {
                         opacity: 1,
-                        scale: 1,
                         duration: 0.92,
-                        ease: 'sine.out',
-                    },
-                    TOP_VIDEO_REVEAL_START
-                )
-
-                .to(
-                    [topVideo, bottomVideo],
-                    {
-                        filter: 'blur(0px)',
-                        duration: 0.82,
                         ease: 'sine.out',
                     },
                     TOP_VIDEO_REVEAL_START
@@ -1223,15 +1215,16 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                         width={topSvgWidth}
                         height={topSvgHeight}
                         clipPath={`url(#${topClipId})`}
+                        style={letterVideoForeignObjectStyle}
                     >
-                        <div className="relative h-full w-full">
+                        <div className="relative h-full w-full overflow-hidden">
                             <video
                                 ref={topVideoRef}
                                 src={videoSrc}
                                 muted
                                 playsInline
                                 preload="auto"
-                                className="h-full w-full object-cover"
+                                className="block h-full w-full object-cover"
                                 onCanPlay={markSectionVideoReady}
                                 onLoadedData={markSectionVideoReady}
                                 onError={markSectionVideoReady}
@@ -1277,15 +1270,16 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                         width={bottomSvgWidth}
                         height={bottomSvgHeight}
                         clipPath={`url(#${bottomClipId})`}
+                        style={letterVideoForeignObjectStyle}
                     >
-                        <div className="relative h-full w-full">
+                        <div className="relative h-full w-full overflow-hidden">
                             <video
                                 ref={bottomVideoRef}
                                 src={videoSrc}
                                 muted
                                 playsInline
                                 preload="auto"
-                                className="h-full w-full object-cover"
+                                className="block h-full w-full object-cover"
                                 onCanPlay={markSectionVideoReady}
                                 onLoadedData={markSectionVideoReady}
                                 onError={markSectionVideoReady}
