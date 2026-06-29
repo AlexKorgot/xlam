@@ -45,9 +45,19 @@ const DESKTOP_LETTERS_HORIZONTAL_GUTTER = 80;
 const DESKTOP_LETTERS_MIN_SCALE = 0.49;
 const DESKTOP_LETTERS_FULL_SCALE_WIDTH = 1800;
 
-const letterVideoForeignObjectStyle = {
-    overflow: 'hidden',
-} satisfies CSSProperties;
+const toCssPath = (path: string) => `path('${path.replace(/\s+/g, ' ').trim()}')`;
+
+const createLetterVideoClipStyle = (path: string) => ({
+    clipPath: toCssPath(path),
+    WebkitClipPath: toCssPath(path),
+} satisfies CSSProperties);
+
+const setLetterVideoClipPath = (element: HTMLElement, path: string) => {
+    const cssPath = toCssPath(path);
+
+    element.style.setProperty('clip-path', cssPath);
+    element.style.setProperty('-webkit-clip-path', cssPath);
+};
 
 function buildMPathRight(rightX: number) {
     return `
@@ -97,6 +107,30 @@ function buildMPathLeft(leftX: number) {
   `;
 }
 
+function buildMPathLeftWithOffset(leftX: number, offsetX: number) {
+    return `
+    M${leftX + offsetX} 2.5
+    H${54.5 + offsetX}
+    H${85 + offsetX}
+    L${118.5 + offsetX} 120
+    L${152 + offsetX} 2.5
+    H${182.5 + offsetX}
+    H${234.5 + offsetX}
+    V245.5
+    H${182.5 + offsetX}
+    V71
+    L${177.5 + offsetX} 70.4
+    L${143 + offsetX} 215.5
+    H${94 + offsetX}
+    L${59.5 + offsetX} 70.4
+    L${54.5 + offsetX} 71
+    V245.5
+    H${leftX + offsetX}
+    V2.5
+    Z
+  `;
+}
+
 const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function MorphSection({
     videoSrc,
     autoPlayTimeline = true,
@@ -127,11 +161,13 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     };
 
     const topVideoRef = useRef<HTMLVideoElement | null>(null);
+    const topVideoClipRef = useRef<HTMLDivElement | null>(null);
     const topClipPathRef = useRef<SVGPathElement | null>(null);
     const topOverlayPathRef = useRef<SVGPathElement | null>(null);
     const topOutlinePathRef = useRef<SVGPathElement | null>(null);
 
     const bottomVideoRef = useRef<HTMLVideoElement | null>(null);
+    const bottomVideoClipRef = useRef<HTMLDivElement | null>(null);
     const bottomClipPathRef = useRef<SVGPathElement | null>(null);
     const bottomOverlayPathRef = useRef<SVGPathElement | null>(null);
     const bottomOutlinePathRef = useRef<SVGPathElement | null>(null);
@@ -589,11 +625,13 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
             const bottomRow = bottomRowRef.current;
 
             const topVideo = topVideoRef.current;
+            const topVideoClip = topVideoClipRef.current;
             const topClipPath = topClipPathRef.current;
             const topOverlayPath = topOverlayPathRef.current;
             const topOutlinePath = topOutlinePathRef.current;
 
             const bottomVideo = bottomVideoRef.current;
+            const bottomVideoClip = bottomVideoClipRef.current;
             const bottomClipPath = bottomClipPathRef.current;
             const bottomOverlayPath = bottomOverlayPathRef.current;
             const bottomOutlinePath = bottomOutlinePathRef.current;
@@ -605,10 +643,12 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 !topRow ||
                 !bottomRow ||
                 !topVideo ||
+                !topVideoClip ||
                 !topClipPath ||
                 !topOverlayPath ||
                 !topOutlinePath ||
                 !bottomVideo ||
+                !bottomVideoClip ||
                 !bottomClipPath ||
                 !bottomOverlayPath ||
                 !bottomOutlinePath
@@ -624,13 +664,16 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 topClipPath.setAttribute('d', d);
                 topOverlayPath.setAttribute('d', d);
                 topOutlinePath.setAttribute('d', d);
+                setLetterVideoClipPath(topVideoClip, d);
             };
 
             const renderBottom = () => {
                 const d = buildMPathLeft(bottomState.leftX);
+                const videoClipD = buildMPathLeftWithOffset(bottomState.leftX, -bottomSvgX);
                 bottomClipPath.setAttribute('d', d);
                 bottomOverlayPath.setAttribute('d', d);
                 bottomOutlinePath.setAttribute('d', d);
+                setLetterVideoClipPath(bottomVideoClip, videoClipD);
             };
 
             gsap.set(topRow, {
@@ -1195,112 +1238,114 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     />
                 </svg>
 
-                <svg
-                    width={topSvgWidth}
-                    height={topSvgHeight}
-                    viewBox={`0 0 ${topSvgWidth} ${topSvgHeight}`}
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="-ml-6 shrink-0 overflow-visible"
+                <div
+                    className="-ml-6 relative shrink-0 overflow-visible"
+                    style={{width: topSvgWidth, height: topSvgHeight}}
                 >
-                    <defs>
-                        <clipPath id={topClipId} clipPathUnits="userSpaceOnUse">
-                            <path ref={topClipPathRef} d={buildMPathRight(TOP_START_RIGHT_X)}/>
-                        </clipPath>
-                    </defs>
+                    <div
+                        ref={topVideoClipRef}
+                        className="absolute inset-0 z-0 overflow-hidden"
+                        style={createLetterVideoClipStyle(buildMPathRight(TOP_START_RIGHT_X))}
+                    >
+                        <video
+                            ref={topVideoRef}
+                            src={videoSrc}
+                            muted
+                            playsInline
+                            preload="auto"
+                            className="block h-full w-full object-cover"
+                            onCanPlay={markSectionVideoReady}
+                            onLoadedData={markSectionVideoReady}
+                            onError={markSectionVideoReady}
+                        />
+                    </div>
 
-                    <foreignObject
-                        x="0"
-                        y="0"
+                    <svg
                         width={topSvgWidth}
                         height={topSvgHeight}
-                        clipPath={`url(#${topClipId})`}
-                        style={letterVideoForeignObjectStyle}
-                    >
-                        <div className="relative h-full w-full overflow-hidden">
-                            <video
-                                ref={topVideoRef}
-                                src={videoSrc}
-                                muted
-                                playsInline
-                                preload="auto"
-                                className="block h-full w-full object-cover"
-                                onCanPlay={markSectionVideoReady}
-                                onLoadedData={markSectionVideoReady}
-                                onError={markSectionVideoReady}
-                            />
-                        </div>
-                    </foreignObject>
-
-                    <path
-                        ref={topOverlayPathRef}
-                        d={buildMPathRight(TOP_START_RIGHT_X)}
-                        fill="#66FF66"
-                    />
-
-                    <path
-                        ref={topOutlinePathRef}
-                        d={buildMPathRight(TOP_START_RIGHT_X)}
+                        viewBox={`0 0 ${topSvgWidth} ${topSvgHeight}`}
                         fill="none"
-                        stroke="white"
-                        strokeWidth="5"
-                    />
-                </svg>
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="relative z-10 overflow-visible"
+                    >
+                        <defs>
+                            <clipPath id={topClipId} clipPathUnits="userSpaceOnUse">
+                                <path ref={topClipPathRef} d={buildMPathRight(TOP_START_RIGHT_X)}/>
+                            </clipPath>
+                        </defs>
+
+                        <path
+                            ref={topOverlayPathRef}
+                            d={buildMPathRight(TOP_START_RIGHT_X)}
+                            fill="#66FF66"
+                        />
+
+                        <path
+                            ref={topOutlinePathRef}
+                            d={buildMPathRight(TOP_START_RIGHT_X)}
+                            fill="none"
+                            stroke="white"
+                            strokeWidth="5"
+                        />
+                    </svg>
+                </div>
             </div>
 
             {/* Нижняя строка */}
             <div ref={bottomRowRef} className="relative z-10 mt-[clamp(1rem,4vh,2.5rem)] flex translate-x-[24px] gap-[36px]">
-                <svg
-                    width={bottomSvgWidth}
-                    height={bottomSvgHeight}
-                    viewBox={`${bottomSvgX} 0 ${bottomSvgWidth} ${bottomSvgHeight}`}
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="shrink-0 overflow-visible"
+                <div
+                    className="relative shrink-0 overflow-visible"
+                    style={{width: bottomSvgWidth, height: bottomSvgHeight}}
                 >
-                    <defs>
-                        <clipPath id={bottomClipId} clipPathUnits="userSpaceOnUse">
-                            <path ref={bottomClipPathRef} d={buildMPathLeft(BOTTOM_START_LEFT_X)}/>
-                        </clipPath>
-                    </defs>
+                    <div
+                        ref={bottomVideoClipRef}
+                        className="absolute inset-0 z-0 overflow-hidden"
+                        style={createLetterVideoClipStyle(
+                            buildMPathLeftWithOffset(BOTTOM_START_LEFT_X, -bottomSvgX),
+                        )}
+                    >
+                        <video
+                            ref={bottomVideoRef}
+                            src={videoSrc}
+                            muted
+                            playsInline
+                            preload="auto"
+                            className="block h-full w-full object-cover"
+                            onCanPlay={markSectionVideoReady}
+                            onLoadedData={markSectionVideoReady}
+                            onError={markSectionVideoReady}
+                        />
+                    </div>
 
-                    <foreignObject
-                        x={bottomSvgX}
-                        y="0"
+                    <svg
                         width={bottomSvgWidth}
                         height={bottomSvgHeight}
-                        clipPath={`url(#${bottomClipId})`}
-                        style={letterVideoForeignObjectStyle}
-                    >
-                        <div className="relative h-full w-full overflow-hidden">
-                            <video
-                                ref={bottomVideoRef}
-                                src={videoSrc}
-                                muted
-                                playsInline
-                                preload="auto"
-                                className="block h-full w-full object-cover"
-                                onCanPlay={markSectionVideoReady}
-                                onLoadedData={markSectionVideoReady}
-                                onError={markSectionVideoReady}
-                            />
-                        </div>
-                    </foreignObject>
-
-                    <path
-                        ref={bottomOverlayPathRef}
-                        d={buildMPathLeft(BOTTOM_START_LEFT_X)}
-                        fill="#66FF66"
-                    />
-
-                    <path
-                        ref={bottomOutlinePathRef}
-                        d={buildMPathLeft(BOTTOM_START_LEFT_X)}
+                        viewBox={`${bottomSvgX} 0 ${bottomSvgWidth} ${bottomSvgHeight}`}
                         fill="none"
-                        stroke="white"
-                        strokeWidth="5"
-                    />
-                </svg>
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="relative z-10 overflow-visible"
+                    >
+                        <defs>
+                            <clipPath id={bottomClipId} clipPathUnits="userSpaceOnUse">
+                                <path ref={bottomClipPathRef} d={buildMPathLeft(BOTTOM_START_LEFT_X)}/>
+                            </clipPath>
+                        </defs>
+
+                        <path
+                            ref={bottomOverlayPathRef}
+                            d={buildMPathLeft(BOTTOM_START_LEFT_X)}
+                            fill="#66FF66"
+                        />
+
+                        <path
+                            ref={bottomOutlinePathRef}
+                            d={buildMPathLeft(BOTTOM_START_LEFT_X)}
+                            fill="none"
+                            stroke="white"
+                            strokeWidth="5"
+                        />
+                    </svg>
+                </div>
 
                 <svg
                     width="168"
