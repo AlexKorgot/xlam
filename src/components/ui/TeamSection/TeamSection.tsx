@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import Image, { type StaticImageData } from 'next/image';
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FULLPAGE_SCROLL_EVENT,
   FULLPAGE_SCROLL_IGNORE_ATTR,
@@ -117,13 +117,40 @@ const teamItems: TeamItem[] = [
   },
 ];
 
+const PICKER_CYCLE_COUNT = 5;
+const PICKER_MIDDLE_CYCLE = 2;
+
 export function TeamSection() {
   const [activeId, setActiveId] = useState('valeriya');
+  const [isMobilePicker, setIsMobilePicker] = useState(false);
   const listRef = useRef<HTMLUListElement | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const scrollStopTimeoutRef = useRef<number | null>(null);
+  const isSnapScrollingRef = useRef(false);
+  const hasCenteredInitialItemRef = useRef(false);
   const activeItem =
     teamItems.find((item) => item.id === activeId) ?? teamItems[3];
+  const pickerItems = useMemo(
+    () =>
+      isMobilePicker
+        ? Array.from({ length: PICKER_CYCLE_COUNT }).flatMap((_, cycle) =>
+            teamItems.map((item) => ({
+              item,
+              cycle,
+              key: `${cycle}-${item.id}`,
+            })),
+          )
+        : teamItems.map((item) => ({
+            item,
+            cycle: PICKER_MIDDLE_CYCLE,
+            key: item.id,
+          })),
+    [isMobilePicker],
+  );
   const scrollEdgeThreshold = 2;
+
+  const isMobilePickerViewport = () =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 999.98px)').matches;
 
   const canScrollList = (direction: 'up' | 'down') => {
     const list = listRef.current;
@@ -147,6 +174,203 @@ export function TeamSection() {
     );
   };
 
+  const scrollRowToListCenter = (row: HTMLLIElement, behavior: ScrollBehavior) => {
+    const list = listRef.current;
+
+    if (!list) {
+      return;
+    }
+
+    const rowTop = row.offsetTop;
+    const targetScrollTop = rowTop - (list.clientHeight - row.offsetHeight) / 2;
+
+    list.scrollTo({
+      top: Math.max(0, targetScrollTop),
+      behavior,
+    });
+  };
+
+  const getPickerCycleHeight = () => {
+    const list = listRef.current;
+
+    if (!list || !isMobilePickerViewport()) {
+      return 0;
+    }
+
+    const firstCycleRow = list.querySelector<HTMLLIElement>('[data-team-cycle="0"]');
+    const secondCycleRow = list.querySelector<HTMLLIElement>('[data-team-cycle="1"]');
+
+    if (!firstCycleRow || !secondCycleRow) {
+      return 0;
+    }
+
+    return secondCycleRow.offsetTop - firstCycleRow.offsetTop;
+  };
+
+  const normalizeInfinitePickerScroll = () => {
+    const list = listRef.current;
+    const cycleHeight = getPickerCycleHeight();
+
+    if (!list || cycleHeight <= 0) {
+      return;
+    }
+
+    const lowerBoundary = cycleHeight * 1.2;
+    const upperBoundary = cycleHeight * (PICKER_CYCLE_COUNT - 1.2);
+    const cycleShift = cycleHeight * PICKER_MIDDLE_CYCLE;
+
+    if (list.scrollTop < lowerBoundary) {
+      isSnapScrollingRef.current = true;
+      list.scrollTop += cycleShift;
+
+      window.requestAnimationFrame(() => {
+        isSnapScrollingRef.current = false;
+      });
+      return;
+    }
+
+    if (list.scrollTop > upperBoundary) {
+      isSnapScrollingRef.current = true;
+      list.scrollTop -= cycleShift;
+
+      window.requestAnimationFrame(() => {
+        isSnapScrollingRef.current = false;
+      });
+    }
+  };
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 999.98px)');
+    const syncPickerMode = () => {
+      setIsMobilePicker(media.matches);
+    };
+
+    syncPickerMode();
+    media.addEventListener('change', syncPickerMode);
+
+    return () => {
+      media.removeEventListener('change', syncPickerMode);
+    };
+  }, []);
+
+  const selectCenteredListItem = useCallback((snapToItem = true) => {
+    const list = listRef.current;
+
+    if (!list || !isMobilePickerViewport()) {
+      return;
+    }
+
+    const listRect = list.getBoundingClientRect();
+    const listCenterY = listRect.top + listRect.height / 2;
+    const rows = Array.from(list.querySelectorAll<HTMLLIElement>('[data-team-item-id]'));
+    let closestRow: HTMLLIElement | null = null;
+    let closestDistance = Number.POSITIVE_INFINITY;
+
+    for (const row of rows) {
+      const rowRect = row.getBoundingClientRect();
+      const rowCenterY = rowRect.top + rowRect.height / 2;
+      const distance = Math.abs(rowCenterY - listCenterY);
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestRow = row;
+      }
+    }
+
+    const nextId = closestRow?.dataset.teamItemId;
+
+    if (!nextId) {
+      return;
+    }
+
+    if (snapToItem && closestRow) {
+      isSnapScrollingRef.current = true;
+      scrollRowToListCenter(closestRow, 'smooth');
+
+      window.setTimeout(() => {
+        isSnapScrollingRef.current = false;
+      }, 260);
+    }
+
+    setActiveId(nextId);
+  }, []);
+
+  const centerAndSelectItem = useCallback((id: string) => {
+    const list = listRef.current;
+
+    if (!list || !isMobilePickerViewport()) {
+      setActiveId(id);
+      return;
+    }
+
+    const rows = Array.from(list.querySelectorAll<HTMLLIElement>(`[data-team-item-id="${id}"]`));
+    const listRect = list.getBoundingClientRect();
+    const listCenterY = listRect.top + listRect.height / 2;
+    let row: HTMLLIElement | null = null;
+    let closestDistance = Number.POSITIVE_INFINITY;
+
+    for (const candidate of rows) {
+      const rowRect = candidate.getBoundingClientRect();
+      const rowCenterY = rowRect.top + rowRect.height / 2;
+      const distance = Math.abs(rowCenterY - listCenterY);
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        row = candidate;
+      }
+    }
+
+    if (!row) {
+      setActiveId(id);
+      return;
+    }
+
+    isSnapScrollingRef.current = true;
+    scrollRowToListCenter(row, 'smooth');
+    setActiveId(id);
+
+    window.setTimeout(() => {
+      isSnapScrollingRef.current = false;
+    }, 260);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobilePicker) {
+      return undefined;
+    }
+
+    if (hasCenteredInitialItemRef.current) {
+      return undefined;
+    }
+
+    hasCenteredInitialItemRef.current = true;
+
+    const centerInitialItem = window.setTimeout(() => {
+      const list = listRef.current;
+
+      if (!list || !isMobilePickerViewport()) {
+        return;
+      }
+
+      const row =
+        list.querySelector<HTMLLIElement>(
+          `[data-team-item-id="${activeId}"][data-team-cycle="${PICKER_MIDDLE_CYCLE}"]`,
+        ) ?? list.querySelector<HTMLLIElement>(`[data-team-item-id="${activeId}"]`);
+
+      if (row) {
+        scrollRowToListCenter(row, 'auto');
+      }
+    }, 0);
+
+    return () => {
+      window.clearTimeout(centerInitialItem);
+
+      if (scrollStopTimeoutRef.current !== null) {
+        window.clearTimeout(scrollStopTimeoutRef.current);
+      }
+    };
+  }, [activeId, isMobilePicker]);
+
   const handleListWheel = (event: React.WheelEvent<HTMLUListElement>) => {
     const direction = event.deltaY > 0 ? 'down' : 'up';
 
@@ -157,6 +381,27 @@ export function TeamSection() {
     event.preventDefault();
     event.stopPropagation();
     requestFullPageScroll(direction);
+  };
+
+  const handleListScroll = () => {
+    if (!isMobilePickerViewport()) {
+      return;
+    }
+
+    normalizeInfinitePickerScroll();
+
+    if (isSnapScrollingRef.current) {
+      return;
+    }
+
+    if (scrollStopTimeoutRef.current !== null) {
+      window.clearTimeout(scrollStopTimeoutRef.current);
+    }
+
+    scrollStopTimeoutRef.current = window.setTimeout(() => {
+      scrollStopTimeoutRef.current = null;
+      selectCenteredListItem();
+    }, 150);
   };
 
   const handleListPointerDown = (event: React.PointerEvent<HTMLUListElement>) => {
@@ -213,21 +458,21 @@ export function TeamSection() {
       aria-labelledby="team-heading"
     >
       <div className="mx-auto flex h-full min-h-0 w-full max-w-[1920px] flex-col px-[18px] pb-8 pt-0 sm:px-8 lg:px-[92px] lg:pb-0">
-        <div className="relative mx-auto flex min-h-0 w-full flex-1 flex-col pt-[clamp(76px,16svh,132px)] sm:pt-24 lg:max-w-[1740px] lg:justify-center lg:pt-0">
-          <div className="relative z-50 max-w-[740px]">
+        <div className="relative mx-auto flex min-h-0 w-full flex-1 flex-col pt-[clamp(76px,16svh,132px)] max-lg:[@media_(orientation:landscape)]:pt-[calc(var(--header-offset)+8px)] sm:pt-24 lg:max-w-[1740px] lg:justify-center lg:pt-0">
+          <div className="relative z-50 max-w-[740px] max-lg:[@media_(orientation:landscape)]:max-w-[46vw]">
             <h2
               id="team-heading"
-              className="text-[38px] font-black uppercase leading-[1.21] tracking-normal text-white sm:text-[64px] lg:text-[90px]"
+              className="text-[38px] font-black uppercase leading-[1.21] tracking-normal text-white max-lg:[@media_(orientation:landscape)]:text-[32px] sm:text-[64px] lg:text-[90px]"
             >
               Команд<span className="text-[#66ff66]">а</span>
             </h2>
-            <p className="mt-3 max-w-[379px] text-[14px] font-medium uppercase leading-[0.99] text-white sm:max-w-[673px] sm:text-[14px] lg:mt-2 lg:max-w-[740px] lg:text-[16px]">
+            <p className="mt-3 max-w-[379px] text-[14px] font-medium uppercase leading-[0.99] text-white max-lg:[@media_(orientation:landscape)]:mt-1 max-lg:[@media_(orientation:landscape)]:line-clamp-2 max-lg:[@media_(orientation:landscape)]:text-[11px] sm:max-w-[673px] sm:text-[14px] lg:mt-2 lg:max-w-[740px] lg:text-[16px]">
               Не аутсорс-лотерея, а одна команда от идеи до эфира.
               Генеральный медиаподрядчик полного цикла.
             </p>
           </div>
 
-          <div className="pointer-events-none absolute right-[-46px] top-[307px] z-40 flex justify-end lg:right-[188px] lg:top-1/2 lg:block lg:-translate-y-[43%]">
+          <div className="pointer-events-none absolute right-[-46px] top-[307px] z-40 flex justify-end max-lg:[@media_(orientation:landscape)]:right-[8px] max-lg:[@media_(orientation:landscape)]:top-[calc(var(--header-offset)+10px)] lg:right-[188px] lg:top-1/2 lg:block lg:-translate-y-[43%]">
             {activeItem.videoSrc ? (
               <video
                 key={activeItem.id}
@@ -237,7 +482,7 @@ export function TeamSection() {
                 muted
                 loop
                 playsInline
-                className="h-[490px] w-auto max-w-none object-contain lg:h-[704px]"
+                className="h-[490px] w-auto max-w-none object-contain max-lg:[@media_(orientation:landscape)]:h-[min(66svh,300px)] lg:h-[704px]"
               />
             ) : (
               <Image
@@ -246,29 +491,42 @@ export function TeamSection() {
                 alt={`${activeItem.name}, ${activeItem.role}`}
                 loading="eager"
                 sizes="(min-width: 1280px) 388px, (min-width: 1024px) 30vw, 58vw"
-                className="h-[490px] w-auto max-w-none object-contain lg:h-[704px]"
+                className="h-[490px] w-auto max-w-none object-contain max-lg:[@media_(orientation:landscape)]:h-[min(66svh,300px)] lg:h-[704px]"
               />
             )}
           </div>
 
-          <ul
-            ref={listRef}
-            className="relative z-30 mt-[20px] min-h-0 w-full flex-1 touch-pan-y overflow-y-auto overscroll-contain pr-1 lg:mt-[17px] lg:flex-none lg:overflow-visible lg:pr-0"
-            {...{ [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' }}
-            onWheel={handleListWheel}
-            onPointerDown={handleListPointerDown}
-            onPointerUp={handleListPointerUp}
-            onPointerCancel={handleListPointerCancel}
-          >
-            {teamItems.map((item) => (
-              <TeamRow
-                key={item.id}
-                item={item}
-                isActive={item.id === activeItem.id}
-                onActivate={() => setActiveId(item.id)}
-              />
-            ))}
-          </ul>
+          <div className="relative z-30 mt-5 h-[270px] min-h-0 w-full max-w-full flex-none overflow-hidden max-lg:[@media_(orientation:landscape)]:mt-3 max-lg:[@media_(orientation:landscape)]:h-[144px] max-lg:[@media_(orientation:landscape)]:max-w-[52vw] sm:h-[350px] lg:mt-[17px] lg:h-auto lg:flex-none lg:overflow-visible">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute left-0 right-[4px] top-1/2 z-20 hidden h-[54px] -translate-y-1/2 border-y border-[#66ff66]/70 bg-[#66ff66]/[0.06] shadow-[0_0_42px_rgba(102,255,102,0.16)] max-lg:block max-lg:[@media_(orientation:landscape)]:h-[48px] sm:h-[70px]"
+            />
+            <ul
+              ref={listRef}
+              className="relative z-10 h-full min-h-0 w-full max-w-full flex-1 touch-pan-y snap-y snap-mandatory overflow-y-auto overflow-x-hidden overscroll-contain py-[108px] pr-1 [mask-image:linear-gradient(to_bottom,transparent_0%,#000_18%,#000_50%,#000_82%,transparent_100%)] [scrollbar-width:none] max-lg:[@media_(orientation:landscape)]:py-[48px] sm:py-[140px] lg:h-auto lg:flex-none lg:snap-none lg:overflow-visible lg:py-0 lg:pr-0 lg:[mask-image:none] [&::-webkit-scrollbar]:hidden"
+              {...{ [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' }}
+              onScroll={handleListScroll}
+              onWheel={handleListWheel}
+              onPointerDown={handleListPointerDown}
+              onPointerUp={handleListPointerUp}
+              onPointerCancel={handleListPointerCancel}
+            >
+              {pickerItems.map(({ item, cycle, key }) => (
+                <TeamRow
+                  key={key}
+                  item={item}
+                  cycle={cycle}
+                  isActive={item.id === activeItem.id}
+                  onActivate={() => {
+                    if (!isMobilePickerViewport()) {
+                      setActiveId(item.id);
+                    }
+                  }}
+                  onSelect={() => centerAndSelectItem(item.id)}
+                />
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>
@@ -277,17 +535,23 @@ export function TeamSection() {
 
 function TeamRow({
   item,
+  cycle,
   isActive,
   onActivate,
+  onSelect,
 }: {
   item: TeamItem;
+  cycle: number;
   isActive: boolean;
   onActivate: () => void;
+  onSelect: () => void;
 }) {
   return (
     <li
+      data-team-item-id={item.id}
+      data-team-cycle={cycle}
       className={clsx(
-        'border-t border-white/55 last:border-b',
+        'snap-center lg:border-t lg:border-white/55 lg:last:border-b',
       )}
     >
       <button
@@ -296,9 +560,9 @@ function TeamRow({
         aria-pressed={isActive}
         onMouseEnter={onActivate}
         onFocus={onActivate}
-        onClick={onActivate}
+        onClick={onSelect}
         className={clsx(
-          'group relative flex min-h-[54px] w-full overflow-hidden text-left uppercase transition-colors sm:min-h-[70px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#66ff66] lg:h-[59px] lg:min-h-[59px]',
+          'group relative flex min-h-[54px] w-full min-w-0 overflow-hidden text-left uppercase transition-colors max-lg:[@media_(orientation:landscape)]:min-h-[48px] sm:min-h-[70px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#66ff66] lg:h-[59px] lg:min-h-[59px]',
           isActive ? 'text-black' : 'text-white',
         )}
       >
@@ -309,13 +573,13 @@ function TeamRow({
             isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
           )}
         />
-        <span className="relative flex w-full flex-col items-start gap-[4px] px-[8px] py-[6px] sm:flex-row sm:items-start sm:gap-4 sm:px-[9px] sm:py-2 lg:h-full lg:gap-[28px] lg:px-[10px] lg:py-0 lg:pt-[11px]">
-          <span className="whitespace-nowrap text-[16px] font-medium leading-[0.99] tracking-normal sm:text-[22px] lg:text-[28px] max-[1400px]:text-[24px]">
+        <span className="relative flex w-full min-w-0 flex-col items-start gap-[4px] px-[8px] py-[6px] max-lg:[@media_(orientation:landscape)]:gap-[2px] max-lg:[@media_(orientation:landscape)]:py-[4px] sm:flex-row sm:items-start sm:gap-4 sm:px-[9px] sm:py-2 lg:h-full lg:gap-[28px] lg:px-[10px] lg:py-0 lg:pt-[11px]">
+          <span className="max-w-full truncate whitespace-nowrap text-[16px] font-medium leading-[0.99] tracking-normal max-lg:[@media_(orientation:landscape)]:text-[15px] sm:text-[22px] lg:text-[28px] max-[1400px]:text-[24px]">
             {item.name}
           </span>
           <span
             className={clsx(
-              'inline-flex h-5 w-[176px] items-center justify-center px-2.5 text-center text-[10px] font-medium leading-none transition-colors sm:h-6 sm:min-w-[207px] sm:text-[12px] lg:h-5 lg:min-w-0 lg:text-[16px]',
+              'inline-flex h-5 w-[176px] items-center justify-center px-2.5 text-center text-[10px] font-medium leading-none transition-colors max-lg:[@media_(orientation:landscape)]:h-4 max-lg:[@media_(orientation:landscape)]:w-[150px] max-lg:[@media_(orientation:landscape)]:text-[9px] sm:h-6 sm:min-w-[207px] sm:text-[12px] lg:h-5 lg:min-w-0 lg:text-[16px]',
               item.roleClassName,
               isActive
                 ? 'bg-black text-white'
