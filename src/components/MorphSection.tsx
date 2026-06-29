@@ -115,6 +115,11 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     const isExpandedVideoPlayingRef = useRef(false);
     const [lettersScale, setLettersScale] = useState(1);
     const [lettersScaledHeight, setLettersScaledHeight] = useState<number | null>(null);
+    const [isSectionVideoReady, setIsSectionVideoReady] = useState(false);
+
+    const markSectionVideoReady = () => {
+        setIsSectionVideoReady(true);
+    };
 
     const topVideoRef = useRef<HTMLVideoElement | null>(null);
     const topClipPathRef = useRef<SVGPathElement | null>(null);
@@ -1227,6 +1232,9 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                                 playsInline
                                 preload="auto"
                                 className="h-full w-full object-cover"
+                                onCanPlay={markSectionVideoReady}
+                                onLoadedData={markSectionVideoReady}
+                                onError={markSectionVideoReady}
                             />
                         </div>
                     </foreignObject>
@@ -1278,6 +1286,9 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                                 playsInline
                                 preload="auto"
                                 className="h-full w-full object-cover"
+                                onCanPlay={markSectionVideoReady}
+                                onLoadedData={markSectionVideoReady}
+                                onError={markSectionVideoReady}
                             />
                         </div>
                     </foreignObject>
@@ -1364,6 +1375,27 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 <p ref={textRef} className="mt-[clamp(0.875rem,3vh,3.125rem)] text-[clamp(1.15rem,2.4vw,2.5rem)] font-bold uppercase leading-[1.14] text-white">
                     Мы делаем шоу для платформ, рекламу для брендов и <br/> контент для бизнеса. Такие дела.
                 </p>
+            </div>
+            <div
+                aria-hidden="true"
+                className={[
+                    'pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-black transition-[opacity,visibility] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                    isSectionVideoReady ? 'invisible opacity-0' : 'visible opacity-100',
+                ].join(' ')}
+            >
+                <div className="relative flex w-[min(42vw,360px)] flex-col items-center text-center uppercase">
+                    <div className="relative mb-7 h-[118px] w-[118px]">
+                        <div className="absolute inset-0 rotate-45 border border-[#66ff66]/85 shadow-[0_0_48px_rgba(102,255,102,0.34)]" />
+                        <div className="absolute inset-5 -rotate-45 border border-white/28" />
+                        <div className="absolute left-1/2 top-1/2 h-[2px] w-[154px] -translate-x-1/2 -translate-y-1/2 animate-pulse bg-[#66ff66] shadow-[0_0_24px_rgba(102,255,102,0.82)]" />
+                        <div className="absolute left-1/2 top-1/2 h-[154px] w-[2px] -translate-x-1/2 -translate-y-1/2 animate-pulse bg-[#66ff66] shadow-[0_0_24px_rgba(102,255,102,0.82)]" />
+                    </div>
+                    <p className="text-[14px] font-medium tracking-[0.42em] text-white/72">XLAM MEDIA</p>
+                    <p className="mt-4 text-[12px] font-medium tracking-[0.32em] text-[#66ff66]">loading video</p>
+                    <div className="mt-6 h-px w-full overflow-hidden bg-white/14">
+                        <div className="h-full w-2/5 animate-pulse bg-[#66ff66] shadow-[0_0_18px_rgba(102,255,102,0.9)]" />
+                    </div>
+                </div>
             </div>
         </section>
     );
