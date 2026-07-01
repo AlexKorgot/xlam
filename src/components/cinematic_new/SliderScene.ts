@@ -722,7 +722,7 @@ export class SliderScene {
   }
 
   private getFilmStripLayoutConfig() {
-    return getFilmStripLayoutConfig(this.viewport.x);
+    return getFilmStripLayoutConfig(this.viewport.x, this.viewport.y);
   }
 
   private getSlideRole(offset: number): FilmStripSlideRole {
@@ -883,7 +883,7 @@ export class SliderScene {
     const outsideProgress = smoothstep01(outsideDistance / Math.max(frameWidth * 0.35, 1));
     const viewportOpacity = this.getViewportFadeOpacity(stripX, frameWidth);
     const roleOpacity = this.getRoleOpacity(role, absOffset);
-    const bandY = getFilmStripBandY(width);
+    const bandY = getFilmStripBandY(width, this.viewport.y);
 
     return {
       x: stripX,

@@ -886,8 +886,17 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
         className="pointer-events-none absolute inset-0 z-10"
         style={{ '--cinematic-chrome-opacity': 1 } as CinematicChromeStyle}
       >
+        <div className="absolute inset-x-0 top-0 z-10 min-[1000px]:hidden">
+          <div className="flex h-[var(--header-offset)] w-full items-center justify-center px-4 text-center opacity-[var(--cinematic-chrome-opacity)]">
+            <h2 className="max-w-[9.5rem] text-[1.18rem] font-black uppercase leading-[0.9] drop-shadow-[0_10px_24px_rgba(0,0,0,0.65)]">
+              <span className="block">{headingLead}</span>
+              <span className="block text-[#66ff66]">{headingAccent}</span>
+            </h2>
+          </div>
+        </div>
+
         <div
-          className="absolute left-1/2 z-10 w-full px-5 text-center opacity-[var(--cinematic-chrome-opacity)]"
+          className="absolute left-1/2 z-10 hidden w-full px-5 text-center opacity-[var(--cinematic-chrome-opacity)] min-[1000px]:block"
           style={{
             top: 'var(--cinematic-heading-top)',
             transform: 'translate(-50%, calc(-100% - 50px))',
