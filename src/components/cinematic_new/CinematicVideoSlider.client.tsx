@@ -14,6 +14,7 @@ import {
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
 import { cinematicSlides } from './data';
+import { getFilmStripChromeLayout } from './filmStripLayout';
 import { SliderScene, type SliderPointerAction } from './SliderScene';
 import type { CinematicOverlayState, CinematicSlide } from './types';
 
@@ -25,6 +26,14 @@ type CinematicVideoSliderProps = {
 
 type CinematicChromeStyle = CSSProperties & {
   '--cinematic-chrome-opacity': number;
+};
+
+type CinematicSectionStyle = CSSProperties & {
+  '--cinematic-band-top': string;
+  '--cinematic-band-bottom': string;
+  '--cinematic-heading-top': string;
+  '--cinematic-bottom-chrome-top': string;
+  '--cinematic-bottom-chrome-gap': string;
 };
 
 const headingLead = '\u041d\u0410\u0428\u0418';
@@ -190,6 +199,13 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   const [pendingOpenedIndex, setPendingOpenedIndex] = useState<number | null>(null);
   const [overlayState, setOverlayState] = useState<CinematicOverlayState>('slider');
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [sectionStyle, setSectionStyle] = useState<CinematicSectionStyle>({
+    '--cinematic-band-top': '38%',
+    '--cinematic-band-bottom': '62%',
+    '--cinematic-heading-top': '18%',
+    '--cinematic-bottom-chrome-top': '68%',
+    '--cinematic-bottom-chrome-gap': '20px',
+  });
   const slides = useMemo(() => cinematicSlides, []);
   const activeSlide = slides[activeIndex];
   const slideCount = slides.length;
@@ -281,6 +297,38 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       sceneRef.current = null;
     };
   }, [handlePointerAction, reducedMotion, slides]);
+
+  useEffect(() => {
+    const root = rootRef.current;
+
+    if (!root) {
+      return;
+    }
+
+    const syncChromeLayout = () => {
+      const rect = root.getBoundingClientRect();
+      const width = Math.max(1, rect.width);
+      const height = Math.max(1, rect.height);
+      const layout = getFilmStripChromeLayout(width, height);
+
+      setSectionStyle({
+        '--cinematic-band-top': `${layout.bandTop}px`,
+        '--cinematic-band-bottom': `${layout.bandBottom}px`,
+        '--cinematic-heading-top': `${layout.headingTop}px`,
+        '--cinematic-bottom-chrome-top': `${layout.bottomChromeTop}px`,
+        '--cinematic-bottom-chrome-gap': `${layout.bottomChromeGap}px`,
+      });
+    };
+
+    syncChromeLayout();
+
+    const resizeObserver = new ResizeObserver(syncChromeLayout);
+    resizeObserver.observe(root);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     overlayStateRef.current = overlayState;
@@ -825,6 +873,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       data-fullpage-scroll-ignore
       className={`font-normalidad group relative isolate h-full min-h-0 w-full overflow-hidden bg-black text-white ${className}`}
       aria-label="Cinematic project slider"
+      style={sectionStyle}
     >
       <div className="pointer-events-none absolute inset-0 z-[-2] bg-black" />
       <div className="pointer-events-none absolute left-1/2 top-[17.5svh] z-[-1] h-[68svh] w-[86vw] -translate-x-1/2 rounded-[50%] bg-[#458294] opacity-55 blur-[220px] md:top-[17.5vh] md:h-[68vh] md:w-[85.5vw] md:blur-[275px]" />
@@ -837,53 +886,64 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
         className="pointer-events-none absolute inset-0 z-10"
         style={{ '--cinematic-chrome-opacity': 1 } as CinematicChromeStyle}
       >
-        <div className="absolute left-1/2 top-[13svh] z-10 w-full -translate-x-1/2 px-5 text-center opacity-[var(--cinematic-chrome-opacity)] md:top-[10.5svh]">
+        <div
+          className="absolute left-1/2 z-10 w-full px-5 text-center opacity-[var(--cinematic-chrome-opacity)]"
+          style={{
+            top: 'var(--cinematic-heading-top)',
+            transform: 'translate(-50%, calc(-100% - 50px))',
+          }}
+        >
           <h2 className="text-[2rem] font-black uppercase leading-none drop-shadow-[0_12px_30px_rgba(0,0,0,0.55)] md:text-[2.75rem] xl:text-[3.65rem]">
             {headingLead} <span className="text-[#66ff66]">{headingAccent}</span>
           </h2>
         </div>
 
         <div
-          ref={labelRef}
-          className="absolute inset-x-0 bottom-[16svh] z-10 px-6 text-center opacity-[var(--cinematic-chrome-opacity)] md:bottom-[13svh]"
+          className="absolute inset-x-0 z-10 flex flex-col items-center px-6 text-center opacity-[var(--cinematic-chrome-opacity)]"
+          style={{
+            top: 'var(--cinematic-bottom-chrome-top)',
+            gap: 'var(--cinematic-bottom-chrome-gap)',
+          }}
         >
-          <p data-slide-label className="mx-auto mb-2 max-w-[28rem] text-[9px] font-black uppercase leading-none text-white/88 drop-shadow-[0_6px_16px_rgba(0,0,0,0.65)] md:text-[10px]">
-            {activeSlide.eyebrow}
-          </p>
-          <h3
-            data-slide-label
-            className="mx-auto max-w-[34rem] text-[1rem] font-black uppercase leading-none text-[#66ff66] drop-shadow-[0_10px_22px_rgba(0,0,0,0.62)] md:text-[1.35rem] xl:text-[1.875rem]"
-          >
-            {activeSlide.title}
-          </h3>
-        </div>
+          <div ref={labelRef} className="w-full">
+            <p data-slide-label className="mx-auto mb-2 max-w-[28rem] text-[9px] font-black uppercase leading-none text-white/88 drop-shadow-[0_6px_16px_rgba(0,0,0,0.65)] md:text-[10px]">
+              {activeSlide.eyebrow}
+            </p>
+            <h3
+              data-slide-label
+              className="mx-auto max-w-[34rem] text-[1rem] font-black uppercase leading-none text-[#66ff66] drop-shadow-[0_10px_22px_rgba(0,0,0,0.62)] md:text-[1.35rem] xl:text-[1.875rem]"
+            >
+              {activeSlide.title}
+            </h3>
+          </div>
 
-        <div className="pointer-events-auto absolute bottom-[7.5svh] left-1/2 z-20 flex -translate-x-1/2 items-center gap-5 opacity-[calc(var(--cinematic-chrome-opacity)*0.48)] transition-opacity duration-300 group-hover:opacity-[calc(var(--cinematic-chrome-opacity)*0.9)] focus-within:opacity-[var(--cinematic-chrome-opacity)]">
-          <button
-            type="button"
-            className="grid h-9 w-9 place-items-center rounded-full border border-white/18 bg-black/35 text-lg font-black text-white/58 backdrop-blur-md transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"
-            onClick={handlePrevious}
-            aria-label="Previous project"
-          >
-            <GlitchText size="18">{previousGlyph}</GlitchText>
-          </button>
-          <button
-            type="button"
-            className="h-9 border border-white/20 bg-black/35 px-6 text-[9px] font-black uppercase tracking-[0.28em] text-white/78 backdrop-blur-md transition-colors hover:border-[#66ff66]/60 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:px-7 md:text-[10px]"
-            onClick={handleOpen}
-          >
-            <GlitchText>
-              {openLabel}
-            </GlitchText>
-          </button>
-          <button
-            type="button"
-            className="grid h-9 w-9 place-items-center rounded-full border border-white/18 bg-black/35 text-lg font-black text-white/58 backdrop-blur-md transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"
-            onClick={handleNext}
-            aria-label="Next project"
-          >
-            <GlitchText size="18">{nextGlyph}</GlitchText>
-          </button>
+          <div className="pointer-events-auto flex items-center gap-5 opacity-[0.48] transition-opacity duration-300 group-hover:opacity-[0.9] focus-within:opacity-100">
+            <button
+              type="button"
+              className="grid h-9 w-9 place-items-center rounded-full border border-white/18 bg-black/35 text-lg font-black text-white/58 backdrop-blur-md transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"
+              onClick={handlePrevious}
+              aria-label="Previous project"
+            >
+              <GlitchText size="18">{previousGlyph}</GlitchText>
+            </button>
+            <button
+              type="button"
+              className="h-9 border border-white/20 bg-black/35 px-6 text-[9px] font-black uppercase tracking-[0.28em] text-white/78 backdrop-blur-md transition-colors hover:border-[#66ff66]/60 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:px-7 md:text-[10px]"
+              onClick={handleOpen}
+            >
+              <GlitchText>
+                {openLabel}
+              </GlitchText>
+            </button>
+            <button
+              type="button"
+              className="grid h-9 w-9 place-items-center rounded-full border border-white/18 bg-black/35 text-lg font-black text-white/58 backdrop-blur-md transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"
+              onClick={handleNext}
+              aria-label="Next project"
+            >
+              <GlitchText size="18">{nextGlyph}</GlitchText>
+            </button>
+          </div>
         </div>
       </div>
 

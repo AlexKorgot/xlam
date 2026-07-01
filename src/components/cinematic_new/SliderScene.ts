@@ -1,6 +1,14 @@
 import gsap from 'gsap';
 import * as THREE from 'three';
 import { VideoPlane, type VideoPlaneLayout } from './VideoPlane';
+import {
+  clamp,
+  type FilmStripFrameMetrics,
+  getFilmStripBandY,
+  getFilmStripFrameMetrics,
+  getFilmStripLayoutConfig,
+  isFilmStripMobileViewport,
+} from './filmStripLayout';
 import type { CinematicSlide, SliderSceneCallbacks } from './types';
 
 type SliderSceneOptions = SliderSceneCallbacks & {
@@ -19,105 +27,6 @@ type SlideVideo = {
 };
 
 export type SliderPointerAction = 'open' | 'previous' | 'next';
-
-type FilmStripLayoutConfig = {
-  centerWidthRatio: number;
-  centerMaxWidthRatio: number;
-  centerAspect: number;
-  maxHeightRatio: number;
-  tallDesktopMinHeight?: {
-    minViewportHeight: number;
-    height: number;
-    maxHeightRatio: number;
-  };
-  gap: {
-    min: number;
-    max: number;
-    ratio: number;
-  };
-  sideVisibleRatio: number;
-  sideScale: number;
-  sideRotationY: number;
-  bend: {
-    center: number;
-    side: number;
-    buffer: number;
-  };
-  edgeCurve: {
-    center: number;
-    side: number;
-    buffer: number;
-  };
-  hiddenOffset: number;
-};
-
-type FilmStripFrameMetrics = {
-  config: FilmStripLayoutConfig;
-  centerWidth: number;
-  centerHeight: number;
-  gap: number;
-  sideVisibleWidth: number;
-  sideWidth: number;
-  sideHeight: number;
-};
-
-const DESKTOP_FILM_STRIP_LAYOUT: FilmStripLayoutConfig = {
-  centerWidthRatio: 0.78,
-  centerMaxWidthRatio: 0.82,
-  centerAspect: 16 / 6.4,
-  maxHeightRatio: 0.54,
-  tallDesktopMinHeight: {
-    minViewportHeight: 960,
-    height: 650,
-    maxHeightRatio: 0.64,
-  },
-  gap: {
-    min: 20,
-    max: 70,
-    ratio: 0.026,
-  },
-  sideVisibleRatio: 0.34,
-  sideScale: 1.02,
-  sideRotationY: 0.055,
-  bend: {
-    center: 56,
-    side: 62,
-    buffer: 68,
-  },
-  edgeCurve: {
-    center: 14,
-    side: 18,
-    buffer: 22,
-  },
-  hiddenOffset: 2.5,
-};
-const MOBILE_FILM_STRIP_LAYOUT: FilmStripLayoutConfig = {
-  centerWidthRatio: 0.9,
-  centerMaxWidthRatio: 0.94,
-  centerAspect: 16 / 7.4,
-  maxHeightRatio: 0.66,
-  gap: {
-    min: 14,
-    max: 28,
-    ratio: 0.04,
-  },
-  sideVisibleRatio: 0.28,
-  sideScale: 1,
-  sideRotationY: 0.04,
-  bend: {
-    center: 42,
-    side: 52,
-    buffer: 58,
-  },
-  edgeCurve: {
-    center: 10,
-    side: 14,
-    buffer: 16,
-  },
-  hiddenOffset: 2.5,
-};
-
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
 
 function wrapIndex(index: number, total: number) {
@@ -281,10 +190,6 @@ export class SliderScene {
       return 'open';
     }
 
-    if (rect.width < 760) {
-      return null;
-    }
-
     const leftLayout = this.getLayoutForOffset(-1);
     const rightLayout = this.getLayoutForOffset(1);
 
@@ -307,7 +212,7 @@ export class SliderScene {
     const rect = this.container.getBoundingClientRect();
     const deltaX = endX - startX;
     const deltaY = endY - startY;
-    const isMobile = rect.width < 760;
+    const isMobile = isFilmStripMobileViewport(rect.width);
     const isSwipe = Math.abs(deltaX) > 42 && Math.abs(deltaX) > Math.abs(deltaY) * 1.35;
 
     if (isMobile && isSwipe) {
@@ -461,7 +366,7 @@ export class SliderScene {
     const rect = this.container.getBoundingClientRect();
     const width = Math.max(1, rect.width);
     const height = Math.max(1, rect.height);
-    const isMobile = width < 760;
+    const isMobile = isFilmStripMobileViewport(width);
 
     const maxDpr = isMobile || this.reducedMotion ? 1.5 : 2;
     const dpr = clamp(window.devicePixelRatio || 1, 1, maxDpr);
@@ -817,7 +722,7 @@ export class SliderScene {
   }
 
   private getFilmStripLayoutConfig() {
-    return this.viewport.x < 760 ? MOBILE_FILM_STRIP_LAYOUT : DESKTOP_FILM_STRIP_LAYOUT;
+    return getFilmStripLayoutConfig(this.viewport.x);
   }
 
   private getSlideRole(offset: number): FilmStripSlideRole {
@@ -840,42 +745,7 @@ export class SliderScene {
   }
 
   private getFilmStripFrameMetrics(): FilmStripFrameMetrics {
-    const width = this.viewport.x;
-    const height = this.viewport.y;
-    const config = this.getFilmStripLayoutConfig();
-    const desiredCenterWidth = width * config.centerWidthRatio;
-    const maxCenterWidth = width * config.centerMaxWidthRatio;
-    const maxCenterHeight = height * config.maxHeightRatio;
-    const centerWidthByRatio = Math.min(desiredCenterWidth, maxCenterWidth);
-    const centerHeightByRatio = centerWidthByRatio / config.centerAspect;
-    let centerHeight = Math.min(centerHeightByRatio, maxCenterHeight);
-
-    if (config.tallDesktopMinHeight && height >= config.tallDesktopMinHeight.minViewportHeight) {
-      const tallHeight = Math.min(
-        config.tallDesktopMinHeight.height,
-        height * config.tallDesktopMinHeight.maxHeightRatio,
-        centerHeightByRatio,
-      );
-
-      centerHeight = Math.max(centerHeight, tallHeight);
-    }
-
-    const centerWidth = centerHeight < centerHeightByRatio ? centerHeight * config.centerAspect : centerWidthByRatio;
-    const gap = clamp(width * config.gap.ratio, config.gap.min, config.gap.max);
-    const visibleSpaceBesideCenter = Math.max(width / 2 - centerWidth / 2 - gap, 1);
-    const sideVisibleWidth = visibleSpaceBesideCenter;
-    const sideWidth = centerWidth;
-    const sideHeight = centerHeight;
-
-    return {
-      config,
-      centerWidth,
-      centerHeight,
-      gap,
-      sideVisibleWidth,
-      sideWidth,
-      sideHeight,
-    };
+    return getFilmStripFrameMetrics(this.viewport.x, this.viewport.y);
   }
 
   private getRoleOpacity(role: FilmStripSlideRole, absOffset: number) {
@@ -986,7 +856,7 @@ export class SliderScene {
 
   private getLayoutForOffset(offset: number): VideoPlaneLayout {
     const width = this.viewport.x;
-    const isMobile = width < 760;
+    const isMobile = isFilmStripMobileViewport(width);
     const metrics = this.getFilmStripFrameMetrics();
 
     const absOffset = Math.abs(offset);
@@ -1013,7 +883,7 @@ export class SliderScene {
     const outsideProgress = smoothstep01(outsideDistance / Math.max(frameWidth * 0.35, 1));
     const viewportOpacity = this.getViewportFadeOpacity(stripX, frameWidth);
     const roleOpacity = this.getRoleOpacity(role, absOffset);
-    const bandY = isMobile ? -6 : 10;
+    const bandY = getFilmStripBandY(width);
 
     return {
       x: stripX,
