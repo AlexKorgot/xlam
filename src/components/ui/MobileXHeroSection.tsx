@@ -7,11 +7,13 @@ import type {
 } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { useContactModal } from '@/src/components/ui/contact-modal';
+import { publicAssetPath } from '@/src/lib/publicAssetPath';
 
 const TAGLINE =
-  'Создаем видео, шоу, рекламу и бренды, которые звучат дольше, чем длятся';
+  'Мы делаем шоу для платформ, рекламу для брендов и контент для бизнеса. Такие дела.';
 
-const onlyBgVideo = 'https://www.dropbox.com/scl/fi/urqmhglifumcmig7xwhu4/3-4-.-1.mp4?rlkey=krl52r8p9i7w2znikdylxuuwt&st=spfi2yd3&raw=1';
+const onlyBgVideo = publicAssetPath('/video/only_bg.mp4');
 const EXPANDED_PLAY_BUTTON_TAP_THRESHOLD = 10;
 
 gsap.registerPlugin(useGSAP);
@@ -28,6 +30,7 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
   _props,
   ref,
 ) {
+  const { openContactModal } = useContactModal();
   const rootRef = useRef<HTMLElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const expandedVideoFrameRef = useRef<HTMLDivElement | null>(null);
@@ -385,15 +388,14 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
     >
       <video
         className="absolute inset-0 h-full w-full object-cover"
+        src={onlyBgVideo}
         autoPlay
         muted
         loop
         playsInline
         preload="auto"
         aria-hidden="true"
-      >
-        <source src={onlyBgVideo} type="video/mp4" media="(max-width: 999.98px)" />
-      </video>
+      />
 
       <div className="absolute inset-0 bg-black/24" aria-hidden="true" />
       <div
@@ -413,15 +415,14 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
         <video
           ref={expandedVideoRef}
           className="h-full w-full scale-x-[-1] object-cover brightness-110 contrast-110"
+          src={onlyBgVideo}
           muted
           playsInline
           preload="auto"
           onEnded={handleExpandedVideoEnded}
           onPause={handleExpandedVideoPause}
           onPlay={handleExpandedVideoPlayEvent}
-        >
-          <source src={onlyBgVideo} type="video/mp4" media="(max-width: 999.98px)" />
-        </video>
+        />
         <div className="absolute inset-0 bg-black/12" />
         <button
           ref={expandedPlayButtonRef}
@@ -490,15 +491,14 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
               >
                 <video
                   className="h-full w-full scale-x-[-1] object-cover brightness-125 contrast-110"
+                  src={onlyBgVideo}
                   autoPlay
                   muted
                   loop
                   playsInline
                   preload="auto"
                   aria-hidden="true"
-                >
-                  <source src={onlyBgVideo} type="video/mp4" media="(max-width: 999.98px)" />
-                </video>
+                />
               </foreignObject>
               <path
                 d="M238 360 166.4 240 94 360H-8l113.6-181.6L0 0h126l45.7 92L214 0h126L227.2 178.4 340 360H238Z"
@@ -528,12 +528,13 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
             {TAGLINE}
           </p>
 
-          <a
-            href="#contacts"
+          <button
+            type="button"
             className="mt-[22px] flex h-[54px] w-full items-center justify-center border border-white/88 bg-white/[0.08] px-5 text-center text-[clamp(1.05rem,4.5vw,1.25rem)] font-bold uppercase leading-none text-white shadow-[0_20px_70px_rgba(0,0,0,0.5),inset_0_0_32px_rgba(255,255,255,0.08)] backdrop-blur-[9px] transition-colors hover:border-[#66ff66] hover:text-[#66ff66] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+            onClick={openContactModal}
           >
             Заказать проект
-          </a>
+          </button>
         </div>
       </div>
     </section>

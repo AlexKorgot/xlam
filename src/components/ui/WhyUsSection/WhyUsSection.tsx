@@ -77,7 +77,7 @@ export function WhyUsSection() {
 
           <ul
             aria-label="Преимущества"
-            className={`${styles.featureList} mt-[clamp(7rem,22svh,12rem)] md:mt-7`}
+            className={`${styles.featureList} mt-[clamp(2rem,5svh,12rem)] md:mt-7`}
           >
             {featureBlocks.map((feature, index) => (
               <FeatureBlock
