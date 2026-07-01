@@ -13,6 +13,7 @@ import {
   FULLPAGE_TOUCH_SWIPE_THRESHOLD,
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
+import { ModalPortal } from '@/src/components/ui/modal';
 import { cinematicSlides } from './data';
 import { getFilmStripChromeLayout } from './filmStripLayout';
 import { SliderScene, type SliderPointerAction } from './SliderScene';
@@ -956,13 +957,14 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
         </div>
       </div>
 
-      <div
-        ref={detailsRef}
-        className={`absolute inset-0 z-20 transition-opacity duration-300 ${
-          isDetailsLayerVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
-        }`}
-        aria-hidden={!isDetailsLayerVisible}
-      >
+      <ModalPortal>
+        <div
+          ref={detailsRef}
+          className={`fixed inset-0 z-[80] transition-opacity duration-300 ${
+            isDetailsLayerVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+          }`}
+          aria-hidden={!isDetailsLayerVisible}
+        >
         <button
           type="button"
           className="absolute inset-0 bg-black/34 backdrop-blur-[1px] sm:bg-black/58 sm:backdrop-blur-[2px] lg:bg-transparent lg:backdrop-blur-none"
@@ -971,14 +973,14 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
           tabIndex={-1}
         />
 
-        <div className="absolute inset-x-0 bottom-0 top-[calc(var(--header-offset)+0.5rem)] z-30 flex max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-0.5rem)] items-start justify-center px-3 pb-3 sm:px-5 sm:pb-5 lg:inset-0 lg:max-h-[var(--fullpage-height,100svh)] lg:items-stretch lg:px-6 lg:pb-5 lg:pt-[calc(var(--header-offset)+0.5rem)] xl:px-8">
+        <div className="absolute inset-x-0 bottom-0 top-[calc(var(--header-offset)+0.5rem)] z-30 flex max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-0.5rem)] items-start justify-center px-3 pb-3 sm:px-5 sm:pb-5 lg:inset-0 lg:max-h-[var(--fullpage-height,100svh)] lg:items-stretch lg:px-6 lg:pb-5 lg:pt-[calc(var(--header-offset)+0.5rem)] xl:px-8 [@media_(max-width:999.98px)_and_(orientation:landscape)]:inset-0 [@media_(max-width:999.98px)_and_(orientation:landscape)]:max-h-[var(--fullpage-height,100svh)] [@media_(max-width:999.98px)_and_(orientation:landscape)]:items-stretch [@media_(max-width:999.98px)_and_(orientation:landscape)]:px-0 [@media_(max-width:999.98px)_and_(orientation:landscape)]:pb-0">
           <div
             ref={sheetRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="cinematic-project-title"
             tabIndex={-1}
-            className="relative flex max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1rem)] w-full max-w-[94rem] flex-col overflow-hidden rounded-[8px] border border-white/16 bg-[#030707]/88 text-white opacity-0 shadow-[0_30px_120px_rgba(0,0,0,0.78)] outline-none backdrop-blur-xl sm:max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1.5rem)] sm:bg-[#030707]/82 lg:h-full lg:max-h-none lg:max-w-full lg:rounded-none lg:border-transparent lg:bg-transparent lg:shadow-none lg:backdrop-blur-none"
+            className="relative flex max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1rem)] w-full max-w-[94rem] flex-col overflow-hidden rounded-[8px] border border-white/16 bg-[#030707]/88 text-white opacity-0 shadow-[0_30px_120px_rgba(0,0,0,0.78)] outline-none backdrop-blur-xl sm:max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1.5rem)] sm:bg-[#030707]/82 lg:h-full lg:max-h-none lg:max-w-full lg:rounded-none lg:border-transparent lg:bg-transparent lg:shadow-none lg:backdrop-blur-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:h-full [@media_(max-width:999.98px)_and_(orientation:landscape)]:max-h-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:max-w-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:rounded-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:border-0 [@media_(max-width:999.98px)_and_(orientation:landscape)]:bg-[#030707]/74 [@media_(max-width:999.98px)_and_(orientation:landscape)]:shadow-none"
             onPointerDown={handleSheetPointerDown}
             onPointerUp={handleSheetPointerUp}
             onPointerCancel={() => {
@@ -988,13 +990,13 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_12%,rgba(102,255,102,0.12),rgba(102,255,102,0)_28%),linear-gradient(180deg,rgba(0,0,0,0.24),rgba(0,0,0,0.62))] lg:bg-none" aria-hidden="true" />
 
             <div ref={sheetContentRef} className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-              <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-white/28 lg:hidden" aria-hidden="true" />
+              <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-white/28 lg:hidden [@media_(max-width:999.98px)_and_(orientation:landscape)]:hidden" aria-hidden="true" />
 
-              <div className="z-40 flex justify-end border-b border-white/10 px-5 pb-4 pt-4 sm:px-7 lg:pointer-events-none lg:absolute lg:right-0 lg:top-0 lg:border-b-0 lg:p-0">
+              <div className="z-40 flex justify-end border-b border-white/10 px-5 pb-4 pt-4 sm:px-7 lg:pointer-events-none lg:absolute lg:right-0 lg:top-0 lg:border-b-0 lg:p-0 [@media_(max-width:999.98px)_and_(orientation:landscape)]:absolute [@media_(max-width:999.98px)_and_(orientation:landscape)]:right-3 [@media_(max-width:999.98px)_and_(orientation:landscape)]:top-3 [@media_(max-width:999.98px)_and_(orientation:landscape)]:border-b-0 [@media_(max-width:999.98px)_and_(orientation:landscape)]:p-0">
                 <button
                   ref={closeButtonRef}
                   type="button"
-                  className="pointer-events-auto flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center border border-white/24 bg-black/52 font-black uppercase leading-none text-white/78 transition-colors hover:border-[#66ff66]/65 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-11 md:w-11 lg:bg-black/24 lg:backdrop-blur-sm"
+                  className="pointer-events-auto flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center border border-white/24 bg-black/52 font-black uppercase leading-none text-white/78 transition-colors hover:border-[#66ff66]/65 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-11 md:w-11 lg:bg-black/24 lg:backdrop-blur-sm [@media_(max-width:999.98px)_and_(orientation:landscape)]:h-9 [@media_(max-width:999.98px)_and_(orientation:landscape)]:w-9 [@media_(max-width:999.98px)_and_(orientation:landscape)]:bg-black/42 [@media_(max-width:999.98px)_and_(orientation:landscape)]:backdrop-blur-sm"
                   onClick={handleClose}
                   aria-label="Close project"
                 >
@@ -1004,9 +1006,9 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
               <div
                 ref={sheetScrollRef}
-                className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 [scrollbar-width:none] sm:px-7 lg:max-w-none lg:px-0 lg:py-0 [&::-webkit-scrollbar]:hidden"
+                className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 [scrollbar-width:none] sm:px-7 lg:max-w-none lg:px-0 lg:py-0 [&::-webkit-scrollbar]:hidden [@media_(max-width:999.98px)_and_(orientation:landscape)]:px-4 [@media_(max-width:999.98px)_and_(orientation:landscape)]:py-3 [@media_(max-width:999.98px)_and_(orientation:landscape)]:pr-14"
               >
-                <div className="lg:flex lg:min-h-full lg:flex-col lg:justify-end lg:pb-5 2xl:pb-[30px]">
+                <div className="lg:flex lg:min-h-full lg:flex-col lg:justify-end lg:pb-5 2xl:pb-[30px] [@media_(max-width:999.98px)_and_(orientation:landscape)]:pb-2">
                   <OpenedSheetBody slide={activeSlide} titleRef={sheetTitleRef} titleId="cinematic-project-title" />
                 </div>
               </div>
@@ -1014,12 +1016,12 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
             <nav
               data-case-detail
-              className="sticky bottom-0 z-30 mt-auto grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-white/10 bg-black/64 px-5 py-3 backdrop-blur-md sm:gap-4 sm:px-7 lg:border-t-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none"
+              className="sticky bottom-0 z-30 mt-auto grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-white/10 bg-black/64 px-5 py-3 backdrop-blur-md sm:gap-4 sm:px-7 lg:border-t-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:gap-2 [@media_(max-width:999.98px)_and_(orientation:landscape)]:px-4 [@media_(max-width:999.98px)_and_(orientation:landscape)]:py-1.5"
               aria-label="Opened project navigation"
             >
               <button
                 type="button"
-                className="flex h-14 w-full min-w-0 items-center gap-3 text-left text-[11px] font-medium leading-none text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] disabled:pointer-events-none disabled:text-white/32 sm:text-sm lg:bg-black/20 lg:px-4 lg:backdrop-blur-sm"
+                className="flex h-14 w-full min-w-0 items-center gap-3 text-left text-[11px] font-medium leading-none text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] disabled:pointer-events-none disabled:text-white/32 sm:text-sm lg:bg-black/20 lg:px-4 lg:backdrop-blur-sm [@media_(max-width:999.98px)_and_(orientation:landscape)]:h-10 [@media_(max-width:999.98px)_and_(orientation:landscape)]:gap-2"
                 onClick={handleOpenedPrevious}
                 disabled={overlayState === 'openedSliding'}
               >
@@ -1031,7 +1033,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
                 </span>
               </button>
 
-              <div className="flex h-14 min-w-0 items-center justify-center bg-black/20 px-4 text-center text-[14px] font-medium leading-none text-[#66ff66] backdrop-blur-sm sm:text-[22px] lg:bg-transparent lg:px-0 lg:backdrop-blur-none">
+              <div className="flex h-14 min-w-0 items-center justify-center bg-black/20 px-4 text-center text-[14px] font-medium leading-none text-[#66ff66] backdrop-blur-sm sm:text-[22px] lg:bg-transparent lg:px-0 lg:backdrop-blur-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:h-10 [@media_(max-width:999.98px)_and_(orientation:landscape)]:px-2 [@media_(max-width:999.98px)_and_(orientation:landscape)]:text-[13px]">
                 <span className="min-w-0 truncate leading-none">
                   <GlitchText size="22">{activeSlide.opened.navLabel}</GlitchText>
                 </span>
@@ -1039,7 +1041,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
               <button
                 type="button"
-                className="flex h-14 w-full min-w-0 items-center justify-end gap-3 text-right text-[11px] font-medium leading-none text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] disabled:pointer-events-none disabled:text-white/32 sm:text-sm lg:bg-black/20 lg:px-4 lg:backdrop-blur-sm"
+                className="flex h-14 w-full min-w-0 items-center justify-end gap-3 text-right text-[11px] font-medium leading-none text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] disabled:pointer-events-none disabled:text-white/32 sm:text-sm lg:bg-black/20 lg:px-4 lg:backdrop-blur-sm [@media_(max-width:999.98px)_and_(orientation:landscape)]:h-10 [@media_(max-width:999.98px)_and_(orientation:landscape)]:gap-2"
                 onClick={handleOpenedNext}
                 disabled={overlayState === 'openedSliding'}
               >
@@ -1057,23 +1059,24 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             <div
               ref={measureSheetContentRef}
               aria-hidden="true"
-              className="pointer-events-none invisible absolute inset-x-3 top-[calc(var(--header-offset)+0.5rem)] flex max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1rem)] max-w-[94rem] flex-col overflow-hidden text-white sm:inset-x-5 sm:max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1.5rem)] lg:inset-x-6 lg:top-[calc(var(--header-offset)+0.5rem)] lg:mx-auto lg:h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-2rem)] lg:max-h-none lg:max-w-full xl:inset-x-8"
+              className="pointer-events-none invisible absolute inset-x-3 top-[calc(var(--header-offset)+0.5rem)] flex max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1rem)] max-w-[94rem] flex-col overflow-hidden text-white sm:inset-x-5 sm:max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1.5rem)] lg:inset-x-6 lg:top-[calc(var(--header-offset)+0.5rem)] lg:mx-auto lg:h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-2rem)] lg:max-h-none lg:max-w-full xl:inset-x-8 [@media_(max-width:999.98px)_and_(orientation:landscape)]:inset-0 [@media_(max-width:999.98px)_and_(orientation:landscape)]:h-[var(--fullpage-height,100svh)] [@media_(max-width:999.98px)_and_(orientation:landscape)]:max-h-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:max-w-none"
             >
-              <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-white/28 lg:hidden" aria-hidden="true" />
+              <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-white/28 lg:hidden [@media_(max-width:999.98px)_and_(orientation:landscape)]:hidden" aria-hidden="true" />
 
-              <div className="z-40 flex justify-end border-b border-white/10 px-5 pb-4 pt-4 sm:px-7 lg:pointer-events-none lg:absolute lg:right-0 lg:top-0 lg:border-b-0 lg:p-0">
-                <div className="h-10 shrink-0 border border-white/24 bg-black/52 px-4 md:h-11 md:px-5 lg:bg-black/24 lg:backdrop-blur-sm" />
+              <div className="z-40 flex justify-end border-b border-white/10 px-5 pb-4 pt-4 sm:px-7 lg:pointer-events-none lg:absolute lg:right-0 lg:top-0 lg:border-b-0 lg:p-0 [@media_(max-width:999.98px)_and_(orientation:landscape)]:absolute [@media_(max-width:999.98px)_and_(orientation:landscape)]:right-3 [@media_(max-width:999.98px)_and_(orientation:landscape)]:top-3 [@media_(max-width:999.98px)_and_(orientation:landscape)]:border-b-0 [@media_(max-width:999.98px)_and_(orientation:landscape)]:p-0">
+                <div className="h-10 shrink-0 border border-white/24 bg-black/52 px-4 md:h-11 md:px-5 lg:bg-black/24 lg:backdrop-blur-sm [@media_(max-width:999.98px)_and_(orientation:landscape)]:h-9 [@media_(max-width:999.98px)_and_(orientation:landscape)]:px-4" />
               </div>
 
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 [scrollbar-width:none] sm:px-7 lg:max-w-none lg:px-0 lg:py-0 [&::-webkit-scrollbar]:hidden">
-                <div className="lg:flex lg:min-h-full lg:flex-col lg:justify-end lg:pb-5 2xl:pb-[30px]">
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 [scrollbar-width:none] sm:px-7 lg:max-w-none lg:px-0 lg:py-0 [&::-webkit-scrollbar]:hidden [@media_(max-width:999.98px)_and_(orientation:landscape)]:px-4 [@media_(max-width:999.98px)_and_(orientation:landscape)]:py-3 [@media_(max-width:999.98px)_and_(orientation:landscape)]:pr-14">
+                <div className="lg:flex lg:min-h-full lg:flex-col lg:justify-end lg:pb-5 2xl:pb-[30px] [@media_(max-width:999.98px)_and_(orientation:landscape)]:pb-2">
                   <OpenedSheetBody slide={pendingOpenedSlide} />
                 </div>
               </div>
             </div>
           ) : null}
         </div>
-      </div>
+        </div>
+      </ModalPortal>
     </section>
   );
 }

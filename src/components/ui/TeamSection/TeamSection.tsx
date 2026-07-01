@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import Image, { type StaticImageData } from 'next/image';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   FULLPAGE_SCROLL_EVENT,
   FULLPAGE_SCROLL_IGNORE_ATTR,
@@ -117,9 +117,6 @@ const teamItems: TeamItem[] = [
   },
 ];
 
-const PICKER_CYCLE_COUNT = 5;
-const PICKER_MIDDLE_CYCLE = 2;
-
 export function TeamSection() {
   const [activeId, setActiveId] = useState('valeriya');
   const [isMobilePicker, setIsMobilePicker] = useState(false);
@@ -130,23 +127,11 @@ export function TeamSection() {
   const hasCenteredInitialItemRef = useRef(false);
   const activeItem =
     teamItems.find((item) => item.id === activeId) ?? teamItems[3];
-  const pickerItems = useMemo(
-    () =>
-      isMobilePicker
-        ? Array.from({ length: PICKER_CYCLE_COUNT }).flatMap((_, cycle) =>
-            teamItems.map((item) => ({
-              item,
-              cycle,
-              key: `${cycle}-${item.id}`,
-            })),
-          )
-        : teamItems.map((item) => ({
-            item,
-            cycle: PICKER_MIDDLE_CYCLE,
-            key: item.id,
-          })),
-    [isMobilePicker],
-  );
+  const pickerItems = teamItems.map((item) => ({
+    item,
+    cycle: 0,
+    key: item.id,
+  }));
   const scrollEdgeThreshold = 2;
 
   const isMobilePickerViewport = () =>
@@ -188,55 +173,6 @@ export function TeamSection() {
       top: Math.max(0, targetScrollTop),
       behavior,
     });
-  };
-
-  const getPickerCycleHeight = () => {
-    const list = listRef.current;
-
-    if (!list || !isMobilePickerViewport()) {
-      return 0;
-    }
-
-    const firstCycleRow = list.querySelector<HTMLLIElement>('[data-team-cycle="0"]');
-    const secondCycleRow = list.querySelector<HTMLLIElement>('[data-team-cycle="1"]');
-
-    if (!firstCycleRow || !secondCycleRow) {
-      return 0;
-    }
-
-    return secondCycleRow.offsetTop - firstCycleRow.offsetTop;
-  };
-
-  const normalizeInfinitePickerScroll = () => {
-    const list = listRef.current;
-    const cycleHeight = getPickerCycleHeight();
-
-    if (!list || cycleHeight <= 0) {
-      return;
-    }
-
-    const lowerBoundary = cycleHeight * 1.2;
-    const upperBoundary = cycleHeight * (PICKER_CYCLE_COUNT - 1.2);
-    const cycleShift = cycleHeight * PICKER_MIDDLE_CYCLE;
-
-    if (list.scrollTop < lowerBoundary) {
-      isSnapScrollingRef.current = true;
-      list.scrollTop += cycleShift;
-
-      window.requestAnimationFrame(() => {
-        isSnapScrollingRef.current = false;
-      });
-      return;
-    }
-
-    if (list.scrollTop > upperBoundary) {
-      isSnapScrollingRef.current = true;
-      list.scrollTop -= cycleShift;
-
-      window.requestAnimationFrame(() => {
-        isSnapScrollingRef.current = false;
-      });
-    }
   };
 
   useEffect(() => {
@@ -295,6 +231,20 @@ export function TeamSection() {
     setActiveId(nextId);
   }, []);
 
+  const scheduleCenteredSelection = useCallback(
+    (delay = 150) => {
+      if (scrollStopTimeoutRef.current !== null) {
+        window.clearTimeout(scrollStopTimeoutRef.current);
+      }
+
+      scrollStopTimeoutRef.current = window.setTimeout(() => {
+        scrollStopTimeoutRef.current = null;
+        selectCenteredListItem();
+      }, delay);
+    },
+    [selectCenteredListItem],
+  );
+
   const centerAndSelectItem = useCallback((id: string) => {
     const list = listRef.current;
 
@@ -352,10 +302,7 @@ export function TeamSection() {
         return;
       }
 
-      const row =
-        list.querySelector<HTMLLIElement>(
-          `[data-team-item-id="${activeId}"][data-team-cycle="${PICKER_MIDDLE_CYCLE}"]`,
-        ) ?? list.querySelector<HTMLLIElement>(`[data-team-item-id="${activeId}"]`);
+      const row = list.querySelector<HTMLLIElement>(`[data-team-item-id="${activeId}"]`);
 
       if (row) {
         scrollRowToListCenter(row, 'auto');
@@ -388,20 +335,11 @@ export function TeamSection() {
       return;
     }
 
-    normalizeInfinitePickerScroll();
-
     if (isSnapScrollingRef.current) {
       return;
     }
 
-    if (scrollStopTimeoutRef.current !== null) {
-      window.clearTimeout(scrollStopTimeoutRef.current);
-    }
-
-    scrollStopTimeoutRef.current = window.setTimeout(() => {
-      scrollStopTimeoutRef.current = null;
-      selectCenteredListItem();
-    }, 150);
+    scheduleCenteredSelection();
   };
 
   const handleListPointerDown = (event: React.PointerEvent<HTMLUListElement>) => {
@@ -440,6 +378,7 @@ export function TeamSection() {
     const direction = getFullPageSwipeDirection(deltaY);
 
     if (canScrollList(direction)) {
+      scheduleCenteredSelection(180);
       return;
     }
 
@@ -450,6 +389,7 @@ export function TeamSection() {
 
   const handleListPointerCancel = () => {
     touchStartRef.current = null;
+    scheduleCenteredSelection(220);
   };
 
   return (
@@ -458,7 +398,7 @@ export function TeamSection() {
       aria-labelledby="team-heading"
     >
       <div className="mx-auto flex h-full min-h-0 w-full max-w-[1920px] flex-col px-[18px] pb-8 pt-0 sm:px-8 lg:px-[92px] lg:pb-0">
-        <div className="relative mx-auto flex min-h-0 w-full flex-1 flex-col pt-[clamp(76px,16svh,132px)] max-lg:[@media_(orientation:landscape)]:pt-[calc(var(--header-offset)+8px)] sm:pt-24 lg:max-w-[1740px] lg:justify-center lg:pt-0">
+        <div className="relative mx-auto flex min-h-0 w-full flex-1 flex-col pt-[clamp(58px,11svh,92px)] max-lg:[@media_(orientation:landscape)]:pt-[calc(var(--header-offset)+8px)] sm:pt-24 lg:max-w-[1740px] lg:justify-center lg:pt-0">
           <div className="relative z-50 max-w-[740px] max-lg:[@media_(orientation:landscape)]:max-w-[46vw]">
             <h2
               id="team-heading"
@@ -466,13 +406,13 @@ export function TeamSection() {
             >
               Команд<span className="text-[#66ff66]">а</span>
             </h2>
-            <p className="mt-3 max-w-[379px] text-[14px] font-medium uppercase leading-[0.99] text-white max-lg:[@media_(orientation:landscape)]:mt-1 max-lg:[@media_(orientation:landscape)]:line-clamp-2 max-lg:[@media_(orientation:landscape)]:text-[11px] sm:max-w-[673px] sm:text-[14px] lg:mt-2 lg:max-w-[740px] lg:text-[16px]">
+            <p className="mt-2 max-w-[379px] text-[14px] font-medium uppercase leading-[0.99] text-white max-lg:[@media_(orientation:landscape)]:mt-1 max-lg:[@media_(orientation:landscape)]:line-clamp-2 max-lg:[@media_(orientation:landscape)]:text-[11px] sm:max-w-[673px] sm:text-[14px] lg:mt-2 lg:max-w-[740px] lg:text-[16px]">
               Не аутсорс-лотерея, а одна команда от идеи до эфира.
               Генеральный медиаподрядчик полного цикла.
             </p>
           </div>
 
-          <div className="pointer-events-none absolute right-[-46px] top-[307px] z-40 flex justify-end max-lg:[@media_(orientation:landscape)]:right-[8px] max-lg:[@media_(orientation:landscape)]:top-[calc(var(--header-offset)+10px)] lg:right-[188px] lg:top-1/2 lg:block lg:-translate-y-[43%]">
+          <div className="pointer-events-none absolute right-[-68px] top-[218px] z-40 flex justify-end max-lg:[@media_(orientation:landscape)]:right-[8px] max-lg:[@media_(orientation:landscape)]:top-[calc(var(--header-offset)+10px)] lg:right-[188px] lg:top-1/2 lg:block lg:-translate-y-[43%]">
             {activeItem.videoSrc ? (
               <video
                 key={activeItem.id}
@@ -482,7 +422,7 @@ export function TeamSection() {
                 muted
                 loop
                 playsInline
-                className="h-[490px] w-auto max-w-none object-contain max-lg:[@media_(orientation:landscape)]:h-[min(66svh,300px)] lg:h-[704px]"
+                className="h-[520px] w-auto max-w-none object-contain max-lg:[@media_(orientation:landscape)]:h-[min(66svh,300px)] lg:h-[704px]"
               />
             ) : (
               <Image
@@ -491,19 +431,19 @@ export function TeamSection() {
                 alt={`${activeItem.name}, ${activeItem.role}`}
                 loading="eager"
                 sizes="(min-width: 1280px) 388px, (min-width: 1024px) 30vw, 58vw"
-                className="h-[490px] w-auto max-w-none object-contain max-lg:[@media_(orientation:landscape)]:h-[min(66svh,300px)] lg:h-[704px]"
+                className="h-[520px] w-auto max-w-none object-contain max-lg:[@media_(orientation:landscape)]:h-[min(66svh,300px)] lg:h-[704px]"
               />
             )}
           </div>
 
-          <div className="relative z-30 mt-5 h-[270px] min-h-0 w-full max-w-full flex-none overflow-hidden max-lg:[@media_(orientation:landscape)]:mt-3 max-lg:[@media_(orientation:landscape)]:h-[144px] max-lg:[@media_(orientation:landscape)]:max-w-[52vw] sm:h-[350px] lg:mt-[17px] lg:h-auto lg:flex-none lg:overflow-visible">
+          <div className="relative z-30 mt-4 h-[390px] min-h-0 w-full max-w-full flex-none overflow-hidden max-lg:[@media_(orientation:landscape)]:mt-3 max-lg:[@media_(orientation:landscape)]:h-[144px] max-lg:[@media_(orientation:landscape)]:max-w-[52vw] sm:h-[430px] lg:mt-[17px] lg:h-auto lg:flex-none lg:overflow-visible">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute left-0 right-[4px] top-1/2 z-20 hidden h-[54px] -translate-y-1/2 border-y border-[#66ff66]/70 bg-[#66ff66]/[0.06] shadow-[0_0_42px_rgba(102,255,102,0.16)] max-lg:block max-lg:[@media_(orientation:landscape)]:h-[48px] sm:h-[70px]"
             />
             <ul
               ref={listRef}
-              className="relative z-10 h-full min-h-0 w-full max-w-full flex-1 touch-pan-y snap-y snap-mandatory overflow-y-auto overflow-x-hidden overscroll-contain py-[108px] pr-1 [mask-image:linear-gradient(to_bottom,transparent_0%,#000_18%,#000_50%,#000_82%,transparent_100%)] [scrollbar-width:none] max-lg:[@media_(orientation:landscape)]:py-[48px] sm:py-[140px] lg:h-auto lg:flex-none lg:snap-none lg:overflow-visible lg:py-0 lg:pr-0 lg:[mask-image:none] [&::-webkit-scrollbar]:hidden"
+              className="relative z-10 h-full min-h-0 w-full max-w-full flex-1 touch-pan-y snap-y snap-mandatory overflow-y-auto overflow-x-hidden overscroll-contain py-[150px] pr-1 [mask-image:linear-gradient(to_bottom,transparent_0%,#000_12%,#000_50%,#000_88%,transparent_100%)] [scrollbar-width:none] max-lg:[@media_(orientation:landscape)]:py-[48px] sm:py-[170px] lg:h-auto lg:flex-none lg:snap-none lg:overflow-visible lg:py-0 lg:pr-0 lg:[mask-image:none] [&::-webkit-scrollbar]:hidden"
               {...{ [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' }}
               onScroll={handleListScroll}
               onWheel={handleListWheel}
@@ -551,7 +491,7 @@ function TeamRow({
       data-team-item-id={item.id}
       data-team-cycle={cycle}
       className={clsx(
-        'snap-center lg:border-t lg:border-white/55 lg:last:border-b',
+        'snap-center border-t border-white/35 last:border-b lg:border-white/55',
       )}
     >
       <button
