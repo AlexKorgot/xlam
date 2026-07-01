@@ -12,7 +12,7 @@ import { FULLPAGE_SCROLL_EVENT } from '@/src/components/ui/FullPageScroll';
 
 gsap.registerPlugin(useGSAP);
 
-const MENU_ITEM_SIZE = '20';
+const MENU_ITEM_SIZE = '16';
 
 const getInitialMenuStyle = (progress: number): CSSProperties =>
   progress <= 0
@@ -212,7 +212,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
             ))}
             <button
               type="button"
-              className="pointer-events-auto inline-flex min-h-[42px] cursor-pointer items-center justify-center border border-white/90 bg-[linear-gradient(155.051deg,rgba(238,238,238,0.3)_7.5265%,rgba(112,112,112,0.3)_47.838%,rgba(255,255,255,0.3)_95.294%)] px-[28px] py-[9px] uppercase text-white shadow-[0_242.942px_67.889px_rgba(0,0,0,0),0_155.416px_62.279px_rgba(0,0,0,0.01),0_87.527px_52.74px_rgba(0,0,0,0.05),0_38.714px_38.714px_rgba(0,0,0,0.09),0_9.538px_21.321px_rgba(0,0,0,0.1)] backdrop-blur-[5.05px] transition-[border-color,background,opacity] duration-200 hover:border-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/80"
+              className="pointer-events-auto inline-flex min-h-[36px] cursor-pointer items-center justify-center border border-white/90 bg-[linear-gradient(155.051deg,rgba(238,238,238,0.3)_7.5265%,rgba(112,112,112,0.3)_47.838%,rgba(255,255,255,0.3)_95.294%)] px-[20px] py-[7px] uppercase text-white shadow-[0_242.942px_67.889px_rgba(0,0,0,0),0_155.416px_62.279px_rgba(0,0,0,0.01),0_87.527px_52.74px_rgba(0,0,0,0.05),0_38.714px_38.714px_rgba(0,0,0,0.09),0_9.538px_21.321px_rgba(0,0,0,0.1)] backdrop-blur-[5.05px] transition-[border-color,background,opacity] duration-200 hover:border-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/80"
               onClick={openContactModal}
             >
               <GlitchText size={MENU_ITEM_SIZE}>

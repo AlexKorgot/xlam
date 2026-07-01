@@ -902,7 +902,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             transform: 'translate(-50%, calc(-100% - 50px))',
           }}
         >
-          <h2 className="text-[2rem] font-black uppercase leading-none drop-shadow-[0_12px_30px_rgba(0,0,0,0.55)] md:text-[2.75rem] xl:text-[3.65rem]">
+          <h2 className="text-[2rem] font-black uppercase leading-none drop-shadow-[0_12px_30px_rgba(0,0,0,0.55)] md:text-[2.35rem] xl:text-[3rem]">
             {headingLead} <span className="text-[#66ff66]">{headingAccent}</span>
           </h2>
         </div>
