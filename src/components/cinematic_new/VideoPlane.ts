@@ -15,6 +15,7 @@ export type VideoPlaneLayout = {
   opacity: number;
   darkness: number;
   cornerRadius: number;
+  edgeSoftness: number;
   edgeCurve: number;
   curveScale: number;
   velocity: number;
@@ -34,6 +35,7 @@ export class VideoPlane {
     uOpacity: { value: number };
     uDarkness: { value: number };
     uCornerRadius: { value: number };
+    uEdgeSoftness: { value: number };
     uEdgeCurve: { value: number };
     uCurveScale: { value: number };
     uVelocity: { value: number };
@@ -59,6 +61,7 @@ export class VideoPlane {
       uOpacity: { value: 1 },
       uDarkness: { value: 0.2 },
       uCornerRadius: { value: 16 },
+      uEdgeSoftness: { value: 1.6 },
       uEdgeCurve: { value: 12 },
       uCurveScale: { value: viewportSize.x * 0.5 },
       uVelocity: { value: 0 },
@@ -125,6 +128,7 @@ export class VideoPlane {
     this.uniforms.uOpacity.value = layout.opacity;
     this.uniforms.uDarkness.value = layout.darkness;
     this.uniforms.uCornerRadius.value = layout.cornerRadius;
+    this.uniforms.uEdgeSoftness.value = layout.edgeSoftness;
     this.uniforms.uEdgeCurve.value = layout.edgeCurve;
     this.uniforms.uCurveScale.value = layout.curveScale;
     this.uniforms.uVelocity.value = layout.velocity;

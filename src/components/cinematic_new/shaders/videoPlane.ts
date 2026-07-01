@@ -42,6 +42,7 @@ export const videoPlaneFragmentShader = `
   uniform float uOpacity;
   uniform float uDarkness;
   uniform float uCornerRadius;
+  uniform float uEdgeSoftness;
   uniform float uVelocity;
   uniform float uActive;
   uniform float uTransitionProgress;
@@ -100,14 +101,15 @@ export const videoPlaneFragmentShader = `
     return mask.x * mask.y;
   }
 
-  float roundedBoxMask(vec2 uv, vec2 size, float radius) {
+  float roundedBoxMask(vec2 uv, vec2 size, float radius, float softness) {
     vec2 halfSize = size * 0.5;
     float safeRadius = min(radius, min(halfSize.x, halfSize.y) - 1.0);
+    float safeSoftness = max(softness, 0.1);
     vec2 position = (uv - 0.5) * size;
     vec2 q = abs(position) - (halfSize - vec2(safeRadius));
     float distanceToEdge = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - safeRadius;
 
-    return 1.0 - smoothstep(0.0, 1.6, distanceToEdge);
+    return 1.0 - smoothstep(0.0, safeSoftness, distanceToEdge);
   }
 
   void main() {
@@ -133,7 +135,7 @@ export const videoPlaneFragmentShader = `
     color.rgb *= mix(1.0, mix(0.46, 1.0, frameEdge), sliderEffects);
     color.rgb *= 1.0 - (uDarkness * sliderEffects);
 
-    float roundedMask = roundedBoxMask(vUv, uPlaneSize, uCornerRadius);
+    float roundedMask = roundedBoxMask(vUv, uPlaneSize, uCornerRadius, uEdgeSoftness);
     gl_FragColor = vec4(color.rgb, color.a * uOpacity * roundedMask);
   }
 `;

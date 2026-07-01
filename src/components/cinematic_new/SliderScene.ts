@@ -7,6 +7,7 @@ import {
   getFilmStripBandY,
   getFilmStripFrameMetrics,
   getFilmStripLayoutConfig,
+  isFilmStripCompactLandscapeViewport,
   isFilmStripMobileViewport,
 } from './filmStripLayout';
 import type { CinematicSlide, SliderSceneCallbacks } from './types';
@@ -290,6 +291,7 @@ export class SliderScene {
         this.timeline?.to(plane.uniforms.uTransitionProgress, { value: 1, duration: duration * 0.86 }, 0);
         this.timeline?.to(plane.uniforms.uBend, { value: 0, duration: duration * 0.7 }, 0);
         this.timeline?.to(plane.uniforms.uCornerRadius, { value: 0, duration: duration * 0.78 }, 0);
+        this.timeline?.to(plane.uniforms.uEdgeSoftness, { value: 1.6, duration: duration * 0.78 }, 0);
         this.timeline?.to(plane.uniforms.uEdgeCurve, { value: 0, duration: duration * 0.68 }, 0);
         this.timeline?.to(plane.uniforms.uDarkness, { value: 0, duration }, 0);
         this.timeline?.to(plane.uniforms.uVelocity, { value: 0, duration: duration * 0.7 }, 0);
@@ -354,6 +356,7 @@ export class SliderScene {
       this.timeline?.to(plane.uniforms.uTransitionProgress, { value: 0, duration: duration * 0.72 }, 0.06);
       this.timeline?.to(plane.uniforms.uBend, { value: layout.bend, duration: duration * 0.72 }, 0.12);
       this.timeline?.to(plane.uniforms.uCornerRadius, { value: layout.cornerRadius, duration: duration * 0.72 }, 0.08);
+      this.timeline?.to(plane.uniforms.uEdgeSoftness, { value: layout.edgeSoftness, duration: duration * 0.72 }, 0.08);
       this.timeline?.to(plane.uniforms.uEdgeCurve, { value: layout.edgeCurve, duration: duration * 0.72 }, 0.12);
       this.timeline?.to(plane.uniforms.uCurveScale, { value: layout.curveScale, duration: duration * 0.72 }, 0.12);
       this.timeline?.to(plane.uniforms.uOpacity, { value: layout.opacity, duration: duration * 0.68, ease: 'power2.out' }, 0.16);
@@ -387,6 +390,7 @@ export class SliderScene {
       const activePlane = this.planes[this.activeIndex];
       activePlane.uniforms.uPlaneSize.value.copy(this.viewport);
       activePlane.uniforms.uCornerRadius.value = 0;
+      activePlane.uniforms.uEdgeSoftness.value = 1.6;
       activePlane.uniforms.uEdgeCurve.value = 0;
       activePlane.uniforms.uVelocity.value = 0;
       activePlane.mesh.position.set(0, 0, 0);
@@ -603,6 +607,7 @@ export class SliderScene {
     targetPlane.uniforms.uTransitionProgress.value = 1;
     targetPlane.uniforms.uBend.value = 0;
     targetPlane.uniforms.uCornerRadius.value = 0;
+    targetPlane.uniforms.uEdgeSoftness.value = 1.6;
     targetPlane.uniforms.uEdgeCurve.value = 0;
     targetPlane.uniforms.uCurveScale.value = Math.min(this.viewport.x * 0.5, this.viewport.x);
     targetPlane.uniforms.uDarkness.value = 0;
@@ -662,6 +667,7 @@ export class SliderScene {
         plane.uniforms.uTransitionProgress.value = 1;
         plane.uniforms.uBend.value = 0;
         plane.uniforms.uCornerRadius.value = 0;
+        plane.uniforms.uEdgeSoftness.value = 1.6;
         plane.uniforms.uEdgeCurve.value = 0;
         plane.uniforms.uDarkness.value = 0;
         plane.uniforms.uVelocity.value = 0;
@@ -680,6 +686,7 @@ export class SliderScene {
       plane.uniforms.uStripOffset.value = layout.stripX;
       plane.uniforms.uBend.value = layout.bend;
       plane.uniforms.uCornerRadius.value = layout.cornerRadius;
+      plane.uniforms.uEdgeSoftness.value = layout.edgeSoftness;
       plane.uniforms.uEdgeCurve.value = layout.edgeCurve;
       plane.uniforms.uCurveScale.value = layout.curveScale;
       plane.uniforms.uDarkness.value = layout.darkness;
@@ -857,6 +864,7 @@ export class SliderScene {
   private getLayoutForOffset(offset: number): VideoPlaneLayout {
     const width = this.viewport.x;
     const isMobile = isFilmStripMobileViewport(width);
+    const isCompactLandscape = isFilmStripCompactLandscapeViewport(width, this.viewport.y);
     const metrics = this.getFilmStripFrameMetrics();
 
     const absOffset = Math.abs(offset);
@@ -884,6 +892,7 @@ export class SliderScene {
     const viewportOpacity = this.getViewportFadeOpacity(stripX, frameWidth);
     const roleOpacity = this.getRoleOpacity(role, absOffset);
     const bandY = getFilmStripBandY(width, this.viewport.y);
+    const edgeSoftness = isMobile ? (isCompactLandscape ? 6 : 12) : 8;
 
     return {
       x: stripX,
@@ -905,6 +914,7 @@ export class SliderScene {
       darkness: lerpByStripRole(isMobile ? 0.05 : 0.07, isMobile ? 0.1 : 0.12, isMobile ? 0.14 : 0.18, absOffset),
 
       cornerRadius: lerp(isMobile ? 3 : 4, isMobile ? 2 : 3, sideProgress),
+      edgeSoftness,
       edgeCurve: lerpByStripRole(config.edgeCurve.center, config.edgeCurve.side, config.edgeCurve.buffer, absOffset),
       curveScale,
 
