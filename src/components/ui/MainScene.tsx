@@ -198,7 +198,7 @@ export const MainScene = () => {
         <FullPageSection id="why" fullBleed className="items-stretch bg-black">
           <WhyUsSection />
         </FullPageSection>
-        <FullPageSection id="projects" className="items-stretch bg-black min-[1000px]:pt-[calc(var(--header-offset)+2rem)]">
+        <FullPageSection id="projects" className="items-stretch bg-black">
           <CinematicVideoSlider />
         </FullPageSection>
 

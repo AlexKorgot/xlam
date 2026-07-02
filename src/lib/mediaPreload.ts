@@ -23,6 +23,7 @@ import textGrayBottom from '@/src/components/textSection/assets/img/gray_bottom.
 import textModalBottom from '@/src/components/textSection/assets/img/modal_bottom.png';
 import servicesAdsModal from '@/src/components/ui/ServicesSliderSection/assets/ads-modal.png';
 import servicesB2bModal from '@/src/components/ui/ServicesSliderSection/assets/b2b-modal.png';
+import servicesBrandModal from '@/src/components/ui/ServicesSliderSection/assets/brand.png';
 import servicesBrandingModal from '@/src/components/ui/ServicesSliderSection/assets/branding-modal.png';
 import servicesShowModal from '@/src/components/ui/ServicesSliderSection/assets/show-modal.png';
 import teamPersonOne from '@/src/components/ui/TeamSection/assets/07A kopia_13 1.png';
@@ -97,8 +98,10 @@ export const mediaPreloadManifest: MediaPreloadItem[] = [
   image(textModalBottom),
   image(servicesAdsModal),
   image(servicesB2bModal),
+  image(servicesBrandModal),
   image(servicesBrandingModal),
   image(servicesShowModal),
+  image(publicAssetPath('/video/services/posters/5.png')),
   image(teamPersonOne),
   image(teamPersonTwo),
   image(teamPersonThree),

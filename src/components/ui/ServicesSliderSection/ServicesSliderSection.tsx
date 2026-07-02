@@ -11,6 +11,7 @@ import {
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import useEmblaCarousel from 'embla-carousel-react';
 import WheelGesturesPlugin from 'embla-carousel-wheel-gestures';
+import Image from 'next/image';
 import {
   useCallback,
   useEffect,
@@ -20,6 +21,7 @@ import {
 } from 'react';
 import adsModalImage from './assets/ads-modal.png';
 import b2bModalImage from './assets/b2b-modal.png';
+import brandModalImage from './assets/brand.png';
 import brandingModalImage from './assets/branding-modal.png';
 import showModalImage from './assets/show-modal.png';
 import {
@@ -39,9 +41,10 @@ type ServiceSlide = {
   id: string;
   title: string;
   description: string;
-  videoSrc: string;
+  videoSrc?: string;
+  posterSrc: string;
   modal: ServiceModalContent;
-  videoRefConfig: VideoRefConfig;
+  videoRefConfig?: VideoRefConfig;
 };
 
 interface ServicesSliderSectionProps {
@@ -165,6 +168,34 @@ const brandingModalContent: ServiceModalContent = {
   ],
 };
 
+const brandModalContent: ServiceModalContent = {
+  title: 'Брендинг',
+  subtitle: 'Бренд как структура, а не набор красивых элементов',
+  description:
+    'Знаем, как айдентика живет в кадре, потому что сами снимаем шоу и рекламу. Делаем бренды, которые работают не только на бумаге, но и на экране. От стратегии до моушна и CGI.',
+  ctaIntro: 'Поговорим о проекте?',
+  ctaLabel: 'Оставить заявку',
+  backgroundImage: brandModalImage,
+  features: [
+    {
+      title: 'Исследование',
+      description: 'Рынок, конкуренты, аудитория, миссия, тон, визуальный аудит.',
+    },
+    {
+      title: 'Стратегия',
+      description: 'Позиционирование, платформа бренда, ключевые сообщения.',
+    },
+    {
+      title: 'Айдентика',
+      description: 'Логобук, брендбук, типографика, фирменный стиль.',
+    },
+    {
+      title: 'Производство',
+      description: 'Предпечатная подготовка, 3D-графика, CGI.',
+    },
+  ],
+};
+
 export function ServicesSliderSection({
   allowSectionScrollOnEdges = false,
 }: ServicesSliderSectionProps) {
@@ -205,6 +236,7 @@ export function ServicesSliderSection({
         'ОТ ИДЕИ ДО ПРЕМЬЕРЫ: РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР',
       modal: showModalContent,
       videoSrc: publicAssetPath('/video/services/3.mp4'),
+      posterSrc: publicAssetPath('/video/services/posters/3.png'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -218,6 +250,7 @@ export function ServicesSliderSection({
           'ПРОИЗВОДИМ СИСТЕМНЫЙ КОНТЕНТ: ИМИДЖ, ПРОДУКТ, КОММУНИКАЦИИ',
       modal: b2bModalContent,
       videoSrc: publicAssetPath('/video/services/2.mp4'),
+      posterSrc: publicAssetPath('/video/services/posters/2.png'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -231,6 +264,7 @@ export function ServicesSliderSection({
         'ДЕЛАЕМ РЕКЛАМУ, КОТОРУЮ ПЕРЕСЫЛАЮТ ДРУЗЬЯМ',
       modal: adsModalContent,
       videoSrc: publicAssetPath('/video/services/4.mp4'),
+      posterSrc: publicAssetPath('/video/services/posters/4.png'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -244,11 +278,20 @@ export function ServicesSliderSection({
         'СОЗДАЕМ ВИЗУАЛ НОВОГО ПОКОЛЕНИЯ С ПОМОЩЬЮ ИИ',
       modal: brandingModalContent,
       videoSrc: publicAssetPath('/video/services/1.mp4'),
+      posterSrc: publicAssetPath('/video/services/posters/1.png'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
         handleMouseEnter: (ref) => handleEnter(ref),
       },
+    },
+    {
+      id: 'brand',
+      title: 'БРЕНДИНГ',
+      description:
+        'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ',
+      modal: brandModalContent,
+      posterSrc: publicAssetPath('/video/services/posters/5.png'),
     },
   ];
 
@@ -567,21 +610,41 @@ export function ServicesSliderSection({
                       className="embla__slide relative h-full min-w-0 flex-none basis-[calc((100%+9px)/2)] cursor-pointer border-0 bg-transparent pb-0 pl-[9px] pr-0 pt-0 text-left text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45] min-[600px]:basis-[calc((100%+9px)/3)] min-[1000px]:basis-1/4 min-[1000px]:pl-[22px]"
                       aria-label={`Открыть услугу ${slide.title}`}
                       onClick={() => openModal(index)}
-                      onMouseEnter={slide.videoRefConfig.handleMouseEnter(slide.videoRefConfig.ref)}
-                      onMouseLeave={slide.videoRefConfig.handleMouseLeave(slide.videoRefConfig.ref)}
+                      onMouseEnter={
+                        slide.videoRefConfig
+                          ? slide.videoRefConfig.handleMouseEnter(slide.videoRefConfig.ref)
+                          : undefined
+                      }
+                      onMouseLeave={
+                        slide.videoRefConfig
+                          ? slide.videoRefConfig.handleMouseLeave(slide.videoRefConfig.ref)
+                          : undefined
+                      }
                     >
                       <div className="relative h-full w-full overflow-hidden">
-                        <video
-                          ref={slide.videoRefConfig.ref}
-                          className="pointer-events-none h-full w-full object-cover"
-                          src={slide.videoSrc}
-                          playsInline
-                          loop
-                          muted
-                          preload={
-                            preloadedSlideIndexes.has(index) ? 'metadata' : 'none'
-                          }
-                        />
+                        {slide.videoSrc && slide.videoRefConfig ? (
+                          <video
+                            ref={slide.videoRefConfig.ref}
+                            className="pointer-events-none h-full w-full object-cover"
+                            src={slide.videoSrc}
+                            poster={slide.posterSrc}
+                            playsInline
+                            loop
+                            muted
+                            preload={
+                              preloadedSlideIndexes.has(index) ? 'metadata' : 'none'
+                            }
+                          />
+                        ) : (
+                          <Image
+                            className="pointer-events-none object-cover"
+                            src={slide.posterSrc}
+                            alt=""
+                            fill
+                            sizes="(min-width: 1000px) 25vw, (min-width: 600px) 33vw, 50vw"
+                            priority={preloadedSlideIndexes.has(index)}
+                          />
+                        )}
                         <div
                           aria-hidden="true"
                           className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[118px] backdrop-blur-[34px] min-[1000px]:h-[174px]"
