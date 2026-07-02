@@ -31,6 +31,11 @@ const sans = localFont({
   display: 'swap',
 })
 
+export const viewport = {
+  width: 375,
+  initialScale: 1,
+};
+
 
 export const metadata: Metadata = {
   title: "XLAM Media",

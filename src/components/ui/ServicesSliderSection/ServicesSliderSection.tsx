@@ -547,7 +547,7 @@ export function ServicesSliderSection({
 
   return (
     <>
-      <FullPageSection id="services" className="items-stretch bg-black px-4 py-[clamp(1rem,4vh,3rem)] text-white sm:px-6">
+      <FullPageSection id="services" className="items-stretch bg-black px-4 py-[clamp(1rem,4vh,3rem)] text-white sm:px-6 min-[1000px]:pt-[var(--header-offset)]">
         <div
           ref={sectionContentRef}
           className="flex h-full min-h-0 w-full max-w-[1570px] flex-col items-center justify-center gap-[clamp(0.75rem,2vh,2rem)]"

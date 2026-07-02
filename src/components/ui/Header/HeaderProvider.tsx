@@ -21,7 +21,12 @@ function getInitialHeaderProgress(pathname: string) {
   return pathname === '/' || pathname === '/main' ? 0 : 1;
 }
 
-export function HeaderProvider({ children }: { children: ReactNode }) {
+interface HeaderProviderProps {
+  children: ReactNode;
+  desktopBlur?: boolean;
+}
+
+export function HeaderProvider({ children, desktopBlur = true }: HeaderProviderProps) {
   const pathname = usePathname();
   const initialProgress = getInitialHeaderProgress(pathname);
   const isImmersiveRoute = initialProgress === 0;
@@ -40,7 +45,11 @@ export function HeaderProvider({ children }: { children: ReactNode }) {
 
   return (
     <HeaderProgressContext.Provider value={setHeaderProgress}>
-      <Header ref={headerRef} initialProgress={initialProgress} />
+      <Header
+        ref={headerRef}
+        initialProgress={initialProgress}
+        desktopBlur={desktopBlur}
+      />
       <RouteNoiseOverlay />
       <main data-header-content-shell style={contentShellStyle}>
         {children}

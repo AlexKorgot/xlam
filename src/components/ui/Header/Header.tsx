@@ -9,10 +9,11 @@ export type { HeaderHandle } from '@/src/components/ui/Header/types';
 
 interface HeaderProps {
   initialProgress?: number;
+  desktopBlur?: boolean;
 }
 
 export const Header = forwardRef<HeaderHandle, HeaderProps>(function Header(
-  { initialProgress = 0 },
+  { initialProgress = 0, desktopBlur = true },
   ref,
 ) {
   const desktopRef = useRef<HeaderHandle>(null);
@@ -27,7 +28,11 @@ export const Header = forwardRef<HeaderHandle, HeaderProps>(function Header(
 
   return (
     <>
-      <HeaderDesktop ref={desktopRef} initialProgress={initialProgress} />
+      <HeaderDesktop
+        ref={desktopRef}
+        initialProgress={initialProgress}
+        desktopBlur={desktopBlur}
+      />
       <HeaderMobile ref={mobileRef} initialProgress={initialProgress} />
     </>
   );
