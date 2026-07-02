@@ -24,6 +24,7 @@ import {WhyUsSection} from "@/src/components/ui/WhyUsSection";
 import {TeamSection} from "@/src/components/ui/TeamSection";
 import { FinalContactSection } from '@/src/components/ui/FinalContactSection/FinalContactSection';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
+import { MediaPreloader } from '@/src/components/ui/MediaPreloader';
 
 const SECOND_SECTION_INDEX = 1;
 const MORPH_SECTION_INDEX = 2;
@@ -60,6 +61,7 @@ export const MainScene = () => {
 
   return (
     <div className="">
+      <MediaPreloader />
       <FullPageScroll
         beforeTransitionCallback={(startIndex, targetIndex) => {
           if (
