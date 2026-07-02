@@ -189,6 +189,7 @@ export function ServiceModal({
           alt=""
           fill
           loading="eager"
+          unoptimized
           sizes="(min-width: 1024px) 1540px, 100vw"
           className="object-cover"
         />

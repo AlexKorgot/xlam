@@ -747,7 +747,8 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
             alt=""
             aria-hidden="true"
             fill
-            loading="lazy"
+            loading="eager"
+            unoptimized
             className="object-cover"
             sizes="100vw"
           />
@@ -820,7 +821,8 @@ function SlideArtwork({
           alt=""
           aria-hidden="true"
           fill
-          loading="lazy"
+          loading="eager"
+          unoptimized
           className="object-cover object-bottom"
           sizes="100vw"
         />
@@ -836,7 +838,8 @@ function SlideArtwork({
           alt=""
           aria-hidden="true"
           fill
-          loading="lazy"
+          loading="eager"
+          unoptimized
           className="object-cover object-top"
           sizes="100vw"
         />

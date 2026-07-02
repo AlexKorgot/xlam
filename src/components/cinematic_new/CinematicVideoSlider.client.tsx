@@ -152,6 +152,8 @@ function OpenedSheetBody({
                 src={preview.src}
                 alt={preview.alt}
                 fill
+                loading="eager"
+                unoptimized
                 sizes="(max-width: 639px) calc(100vw - 40px), (max-width: 1023px) 50vw, 45vw"
                 className="scale-[1.12] object-cover object-center"
               />

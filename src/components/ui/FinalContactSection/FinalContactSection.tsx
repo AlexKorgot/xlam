@@ -24,7 +24,8 @@ export function FinalContactSection() {
         <Image
           src={teleImage}
           alt=""
-          priority={false}
+          loading="eager"
+          unoptimized
           sizes="(max-width: 639px) 178vw, (max-width: 899px) 142vw, 114vw"
           className="pointer-events-none absolute bottom-[-2.5svh] left-1/2 z-50 h-auto w-[178vw] max-w-none -translate-x-[49%] select-none object-contain sm:bottom-[-5svh] sm:w-[142vw] min-[1000px]:bottom-0 min-[1000px]:h-full min-[1000px]:w-auto min-[1000px]:min-w-[114.6vw]"
           aria-hidden="true"

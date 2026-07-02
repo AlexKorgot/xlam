@@ -430,6 +430,7 @@ export function TeamSection() {
                 src={activeItem.image}
                 alt={`${activeItem.name}, ${activeItem.role}`}
                 loading="eager"
+                unoptimized
                 sizes="(min-width: 1280px) 388px, (min-width: 1024px) 30vw, 58vw"
                 className="h-[520px] w-auto max-w-none object-contain max-lg:[@media_(orientation:landscape)]:h-[min(76svh,320px)] lg:h-[704px]"
               />
