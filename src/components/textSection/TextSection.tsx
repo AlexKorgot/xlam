@@ -125,7 +125,7 @@ const slides: TextSlide[] = [
         '6xl': '0',
       },
       topHeight: {
-        base: defaultImagePosition.topHeight,
+        base: '580px',
         sm: '360px',
         md: '420px',
         lg: '520px',
@@ -137,7 +137,7 @@ const slides: TextSlide[] = [
         '6xl': '1280px',
       },
       bottomHeight: {
-        base: defaultImagePosition.bottomHeight,
+        base: '580px',
         sm: '300px',
         md: '350px',
         lg: '430px',
@@ -181,7 +181,7 @@ const slides: TextSlide[] = [
         '6xl': '0',
       },
       topHeight: {
-        base: defaultImagePosition.topHeight,
+        base: '680px',
         sm: '360px',
         md: '420px',
         lg: '520px',
@@ -193,7 +193,7 @@ const slides: TextSlide[] = [
         '6xl': '1300px',
       },
       bottomHeight: {
-        base: defaultImagePosition.bottomHeight,
+        base: '680px',
         sm: '300px',
         md: '350px',
         lg: '430px',
@@ -237,7 +237,7 @@ const slides: TextSlide[] = [
         '6xl': '0',
       },
       topHeight: {
-        base: defaultImagePosition.topHeight,
+        base: '580px',
         sm: '360px',
         md: '420px',
         lg: '520px',
@@ -249,7 +249,7 @@ const slides: TextSlide[] = [
         '6xl': '1400px',
       },
       bottomHeight: {
-        base: defaultImagePosition.bottomHeight,
+        base: '580px',
         sm: '300px',
         md: '350px',
         lg: '430px',

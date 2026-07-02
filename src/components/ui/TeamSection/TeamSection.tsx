@@ -398,7 +398,7 @@ export function TeamSection() {
       aria-labelledby="team-heading"
     >
       <div className="mx-auto flex h-full min-h-0 w-full max-w-[1920px] flex-col px-[18px] pb-8 pt-0 sm:px-8 lg:px-[92px] lg:pb-0">
-        <div className="relative mx-auto flex min-h-0 w-full flex-1 flex-col pt-[clamp(58px,11svh,92px)] max-lg:[@media_(orientation:landscape)]:pt-[calc(var(--header-offset)+8px)] sm:pt-24 lg:max-w-[1740px] lg:justify-center lg:pt-0">
+        <div className="relative mx-auto flex min-h-0 w-full flex-1 flex-col pt-[clamp(58px,11svh,92px)] max-lg:[@media_(orientation:landscape)]:justify-center max-lg:[@media_(orientation:landscape)]:pt-[var(--header-offset)] sm:pt-24 lg:max-w-[1740px] lg:justify-center lg:pt-0">
           <div className="relative z-50 max-w-[740px] max-lg:[@media_(orientation:landscape)]:max-w-[46vw]">
             <h2
               id="team-heading"
@@ -406,13 +406,13 @@ export function TeamSection() {
             >
               Команд<span className="text-[#66ff66]">а</span>
             </h2>
-            <p className="mt-2 max-w-[379px] text-[14px] font-medium uppercase leading-[0.99] text-white max-lg:[@media_(orientation:landscape)]:mt-1 max-lg:[@media_(orientation:landscape)]:line-clamp-2 max-lg:[@media_(orientation:landscape)]:text-[11px] sm:max-w-[673px] sm:text-[14px] lg:mt-2 lg:max-w-[740px] lg:text-[16px]">
+            <p className="mt-2 max-w-[379px] text-[14px] font-medium uppercase leading-[0.99] text-white max-lg:[@media_(orientation:landscape)]:mt-1 max-lg:[@media_(orientation:landscape)]:line-clamp-2 max-lg:[@media_(orientation:landscape)]:pt-[2px] max-lg:[@media_(orientation:landscape)]:!leading-[1.12] max-lg:[@media_(orientation:landscape)]:text-[11px] sm:max-w-[673px] sm:text-[14px] lg:mt-2 lg:max-w-[740px] lg:text-[16px]">
               Не аутсорс-лотерея, а одна команда от идеи до эфира.
               Генеральный медиаподрядчик полного цикла.
             </p>
           </div>
 
-          <div className="pointer-events-none absolute right-[-68px] top-[218px] z-40 flex justify-end max-lg:[@media_(orientation:landscape)]:right-[8px] max-lg:[@media_(orientation:landscape)]:top-[calc(var(--header-offset)+10px)] lg:right-[188px] lg:top-1/2 lg:block lg:-translate-y-[43%]">
+          <div className="pointer-events-none absolute right-[-68px] top-[218px] z-40 flex justify-end max-lg:[@media_(orientation:landscape)]:right-[clamp(3rem,12vw,7rem)] max-lg:[@media_(orientation:landscape)]:top-1/2 max-lg:[@media_(orientation:landscape)]:-translate-y-1/2 lg:right-[188px] lg:top-1/2 lg:block lg:-translate-y-[43%]">
             {activeItem.videoSrc ? (
               <video
                 key={activeItem.id}
@@ -422,7 +422,7 @@ export function TeamSection() {
                 muted
                 loop
                 playsInline
-                className="h-[520px] w-auto max-w-none object-contain max-lg:[@media_(orientation:landscape)]:h-[min(66svh,300px)] lg:h-[704px]"
+                className="h-[520px] w-auto max-w-none object-contain max-lg:[@media_(orientation:landscape)]:h-[min(76svh,320px)] lg:h-[704px]"
               />
             ) : (
               <Image
@@ -431,19 +431,19 @@ export function TeamSection() {
                 alt={`${activeItem.name}, ${activeItem.role}`}
                 loading="eager"
                 sizes="(min-width: 1280px) 388px, (min-width: 1024px) 30vw, 58vw"
-                className="h-[520px] w-auto max-w-none object-contain max-lg:[@media_(orientation:landscape)]:h-[min(66svh,300px)] lg:h-[704px]"
+                className="h-[520px] w-auto max-w-none object-contain max-lg:[@media_(orientation:landscape)]:h-[min(76svh,320px)] lg:h-[704px]"
               />
             )}
           </div>
 
-          <div className="relative z-30 mt-4 h-[390px] min-h-0 w-full max-w-full flex-none overflow-hidden max-lg:[@media_(orientation:landscape)]:mt-3 max-lg:[@media_(orientation:landscape)]:h-[144px] max-lg:[@media_(orientation:landscape)]:max-w-[52vw] sm:h-[430px] lg:mt-[17px] lg:h-auto lg:flex-none lg:overflow-visible">
+          <div className="relative z-30 mt-4 h-[390px] min-h-0 w-full max-w-full flex-none overflow-hidden max-lg:[@media_(orientation:landscape)]:mt-3 max-lg:[@media_(orientation:landscape)]:h-[144px] max-lg:[@media_(orientation:landscape)]:max-w-[54vw] sm:h-[430px] lg:mt-[17px] lg:h-auto lg:flex-none lg:overflow-visible">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute left-0 right-[4px] top-1/2 z-20 hidden h-[54px] -translate-y-1/2 border-y border-[#66ff66]/70 bg-[#66ff66]/[0.06] shadow-[0_0_42px_rgba(102,255,102,0.16)] max-lg:block max-lg:[@media_(orientation:landscape)]:h-[48px] sm:h-[70px]"
             />
             <ul
               ref={listRef}
-              className="relative z-10 h-full min-h-0 w-full max-w-full flex-1 touch-pan-y snap-y snap-mandatory overflow-y-auto overflow-x-hidden overscroll-contain py-[150px] pr-1 [mask-image:linear-gradient(to_bottom,transparent_0%,#000_12%,#000_50%,#000_88%,transparent_100%)] [scrollbar-width:none] max-lg:[@media_(orientation:landscape)]:py-[48px] sm:py-[170px] lg:h-auto lg:flex-none lg:snap-none lg:overflow-visible lg:py-0 lg:pr-0 lg:[mask-image:none] [&::-webkit-scrollbar]:hidden"
+              className="relative z-10 h-full min-h-0 w-full max-w-full flex-1 touch-pan-y snap-y snap-mandatory overflow-y-auto overflow-x-hidden overscroll-contain py-[168px] pr-1 [mask-image:linear-gradient(to_bottom,transparent_0%,#000_12%,#000_50%,#000_88%,transparent_100%)] [scrollbar-width:none] max-lg:[@media_(orientation:landscape)]:py-[48px] sm:py-[180px] lg:h-auto lg:flex-none lg:snap-none lg:overflow-visible lg:py-0 lg:pr-0 lg:[mask-image:none] [&::-webkit-scrollbar]:hidden"
               {...{ [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' }}
               onScroll={handleListScroll}
               onWheel={handleListWheel}
@@ -502,7 +502,7 @@ function TeamRow({
         onFocus={onActivate}
         onClick={onSelect}
         className={clsx(
-          'group relative flex min-h-[54px] w-full min-w-0 overflow-hidden text-left uppercase transition-colors max-lg:[@media_(orientation:landscape)]:min-h-[48px] sm:min-h-[70px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#66ff66] lg:h-[59px] lg:min-h-[59px]',
+          'group relative flex min-h-[54px] w-full min-w-0 overflow-hidden text-left uppercase transition-colors max-lg:[@media_(orientation:landscape)]:!h-[48px] max-lg:[@media_(orientation:landscape)]:!min-h-[48px] sm:min-h-[70px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#66ff66] lg:h-[59px] lg:min-h-[59px]',
           isActive ? 'text-black' : 'text-white',
         )}
       >
@@ -513,8 +513,8 @@ function TeamRow({
             isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
           )}
         />
-        <span className="relative flex w-full min-w-0 flex-col items-start gap-[4px] px-[8px] py-[6px] max-lg:[@media_(orientation:landscape)]:gap-[2px] max-lg:[@media_(orientation:landscape)]:py-[4px] sm:flex-row sm:items-start sm:gap-4 sm:px-[9px] sm:py-2 lg:h-full lg:gap-[28px] lg:px-[10px] lg:py-0 lg:pt-[11px]">
-          <span className="max-w-full truncate whitespace-nowrap text-[16px] font-medium leading-[0.99] tracking-normal max-lg:[@media_(orientation:landscape)]:text-[15px] sm:text-[22px] lg:text-[28px] max-[1400px]:text-[24px]">
+        <span className="relative flex w-full min-w-0 flex-col items-start gap-[4px] px-[8px] py-[6px] max-lg:[@media_(orientation:landscape)]:!h-full max-lg:[@media_(orientation:landscape)]:!flex-row max-lg:[@media_(orientation:landscape)]:!items-center max-lg:[@media_(orientation:landscape)]:!gap-3 max-lg:[@media_(orientation:landscape)]:!py-[3px] sm:flex-row sm:items-start sm:gap-4 sm:px-[9px] sm:py-2 lg:h-full lg:gap-[28px] lg:px-[10px] lg:py-0 lg:pt-[11px]">
+          <span className="max-w-full truncate whitespace-nowrap text-[16px] font-medium leading-[0.99] tracking-normal max-lg:[@media_(orientation:landscape)]:!leading-[1.12] max-lg:[@media_(orientation:landscape)]:text-[15px] sm:text-[22px] lg:text-[28px] max-[1400px]:text-[24px]">
             {item.name}
           </span>
           <span
