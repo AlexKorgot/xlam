@@ -15,6 +15,8 @@ const TAGLINE =
 
 const onlyBgVideo = publicAssetPath('/video/only_bg.mp4');
 const EXPANDED_PLAY_BUTTON_TAP_THRESHOLD = 10;
+const mobileXClipPath =
+  'polygon(70% 100%, 50% 66.7%, 28% 100%, 0% 100%, 32% 49.6%, 0% 0%, 38% 0%, 51.7% 25.6%, 64.5% 0%, 100% 0%, 68.4% 49.6%, 100% 100%)';
 
 gsap.registerPlugin(useGSAP);
 
@@ -456,16 +458,28 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
       >
         <div className="relative flex min-h-0 flex-1 items-center justify-center self-stretch">
           <div className="absolute left-1/2 top-1/2 h-[min(50svh,480px)] w-[min(88vw,386px)] -translate-x-1/2 -translate-y-[52%]">
+            <div
+              className="absolute inset-0 overflow-hidden bg-white/10"
+              style={{ clipPath: mobileXClipPath, WebkitClipPath: mobileXClipPath }}
+              aria-hidden="true"
+            >
+              <video
+                className="h-full w-full scale-x-[-1] object-cover brightness-125 contrast-110"
+                src={onlyBgVideo}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+              />
+            </div>
             <svg
-              className="absolute inset-0 h-full w-full overflow-visible"
+              className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
               viewBox="0 0 332 360"
               role="img"
               aria-label="Зеркальная буква Х"
             >
               <defs>
-                <clipPath id="mobile-x-hero-clip" clipPathUnits="userSpaceOnUse">
-                  <path d="M238 360 166.4 240 94 360H-8l113.6-181.6L0 0h126l45.7 92L214 0h126L227.2 178.4 340 360H238Z" />
-                </clipPath>
                 <filter id="mobile-x-hero-grain">
                   <feTurbulence
                     type="fractalNoise"
@@ -482,28 +496,10 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
                 </filter>
               </defs>
 
-              <foreignObject
-                x="-80"
-                y="-52"
-                width="492"
-                height="464"
-                clipPath="url(#mobile-x-hero-clip)"
-              >
-                <video
-                  className="h-full w-full scale-x-[-1] object-cover brightness-125 contrast-110"
-                  src={onlyBgVideo}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="auto"
-                  aria-hidden="true"
-                />
-              </foreignObject>
               <path
                 d="M238 360 166.4 240 94 360H-8l113.6-181.6L0 0h126l45.7 92L214 0h126L227.2 178.4 340 360H238Z"
                 filter="url(#mobile-x-hero-grain)"
-                fill="white"
+                fill="rgba(255,255,255,0.16)"
               />
             </svg>
           </div>
