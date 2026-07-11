@@ -1,3 +1,6 @@
+'use client';
+
+import { useEffect, useRef, useState } from "react";
 import { Container } from "@/src/components/ui/grid/Container";
 import { publicAssetPath } from "@/src/lib/publicAssetPath";
 import styles from "./WhyUsSection.module.scss";
@@ -47,8 +50,38 @@ const featureBlocks: FeatureBlockData[] = [
 ];
 
 export function WhyUsSection() {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [hasAnimatedIn, setHasAnimatedIn] = useState(false);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section || hasAnimatedIn) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) {
+          return;
+        }
+
+        setHasAnimatedIn(true);
+        observer.disconnect();
+      },
+      { threshold: 0.35 },
+    );
+
+    observer.observe(section);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasAnimatedIn]);
+
   return (
     <section
+      ref={sectionRef}
       className="relative isolate min-h-[100svh] overflow-hidden bg-black pt-[104px] font-normalidad text-white sm:pt-[128px] lg:h-[100svh] lg:pt-[150px]"
       aria-labelledby="why-us-heading"
     >
@@ -77,7 +110,7 @@ export function WhyUsSection() {
 
           <ul
             aria-label="Преимущества"
-            className={`${styles.featureList} mt-[clamp(2rem,5svh,12rem)] md:mt-7`}
+            className={`${styles.featureList} ${hasAnimatedIn ? styles.featureListAnimated : ""} mt-[clamp(2rem,5svh,12rem)] md:mt-7`}
           >
             {featureBlocks.map((feature, index) => (
               <FeatureBlock

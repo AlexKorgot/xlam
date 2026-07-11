@@ -46,6 +46,7 @@ type TextSlideImagePosition = {
 
 type TextSlideImagePositionBreakpoint =
   | 'base'
+  | 'xs'
   | 'sm'
   | 'md'
   | 'lg'
@@ -76,6 +77,7 @@ const imagePositionBreakpoints: Array<{
   key: Exclude<TextSlideImagePositionBreakpoint, 'base'>;
   minWidth: number;
 }> = [
+  { key: 'xs', minWidth:  400 },
   { key: 'sm', minWidth: 640 },
   { key: 'md', minWidth: 768 },
   { key: 'lg', minWidth: 1024 },
@@ -102,6 +104,7 @@ const slides: TextSlide[] = [
     imagePosition: {
       top: {
         base: defaultImagePosition.top,
+        xs: '0',
         sm: '0',
         md: '0',
         lg: '0',
@@ -114,6 +117,7 @@ const slides: TextSlide[] = [
       },
       bottom: {
         base: defaultImagePosition.bottom,
+        xs: '0',
         sm: '0',
         md: '0',
         lg: '0',
@@ -126,6 +130,7 @@ const slides: TextSlide[] = [
       },
       topHeight: {
         base: '480px',
+        xs: '750px',
         sm: '360px',
         md: '420px',
         lg: '520px',
@@ -138,6 +143,7 @@ const slides: TextSlide[] = [
       },
       bottomHeight: {
         base: '440px',
+        xs: '750px',
         sm: '300px',
         md: '350px',
         lg: '430px',
@@ -182,6 +188,7 @@ const slides: TextSlide[] = [
       },
       topHeight: {
         base: '500px',
+        xs: '850px',
         sm: '360px',
         md: '420px',
         lg: '520px',
@@ -194,6 +201,7 @@ const slides: TextSlide[] = [
       },
       bottomHeight: {
         base: '500px',
+        xs: '850px',
         sm: '300px',
         md: '350px',
         lg: '430px',
@@ -238,6 +246,7 @@ const slides: TextSlide[] = [
       },
       topHeight: {
         base: '460px',
+        xs: '750px',
         sm: '360px',
         md: '420px',
         lg: '520px',
@@ -250,6 +259,7 @@ const slides: TextSlide[] = [
       },
       bottomHeight: {
         base: '480px',
+        xs: '850px',
         sm: '300px',
         md: '350px',
         lg: '430px',
