@@ -117,11 +117,6 @@ const HeaderMobile = forwardRef<HeaderHandle, HeaderMobileProps>(function Header
             'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 18%, rgba(0,0,0,0.5) 58%, transparent 100%)',
         }}
       />
-      <div
-        data-header-fill
-        aria-hidden="true"
-        className="absolute inset-x-0 top-0 h-[var(--header-offset)] origin-left bg-[var(--accent)] opacity-0 shadow-[0_18px_54px_rgba(184,255,44,0.2)] [transform:scaleX(0)] transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
-      />
       <div className="relative mx-auto w-full max-w-[1740px] px-[15px]">
         <header
           ref={headerRef}

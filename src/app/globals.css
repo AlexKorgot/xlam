@@ -69,11 +69,6 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-body:has([data-route-loading="true"]) [data-header-fill] {
-  opacity: 1 !important;
-  transform: scaleX(1) !important;
-}
-
 [data-route-noise],
 [data-route-loading-noise] {
   position: fixed;

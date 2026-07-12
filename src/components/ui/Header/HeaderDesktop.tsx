@@ -161,11 +161,6 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
           />
         </>
       ) : null}
-      <div
-        data-header-fill
-        aria-hidden="true"
-        className="absolute inset-x-0 top-0 h-[var(--header-offset)] origin-left bg-[var(--accent)] opacity-0 shadow-[0_18px_54px_rgba(184,255,44,0.2)] [transform:scaleX(0)] transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
-      />
       <div className="relative mx-auto w-full max-w-[1740px] px-[15px]">
         <header
           ref={headerRef}
