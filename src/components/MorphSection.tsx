@@ -43,7 +43,13 @@ const EXPANDED_PLAY_BUTTON_TAP_THRESHOLD = 10;
 const DESKTOP_LETTERS_DESIGN_WIDTH = 1860;
 const DESKTOP_LETTERS_HORIZONTAL_GUTTER = 80;
 const DESKTOP_LETTERS_MIN_SCALE = 0.49;
-const DESKTOP_LETTERS_FULL_SCALE_WIDTH = 1800;
+const DESKTOP_LETTERS_MAX_SCALE = 1.25;
+const DESKTOP_LETTERS_GAP = 36;
+const TOP_STATIC_LETTERS_WIDTH = 214 + 211 + 237;
+const TOP_M_NEGATIVE_MARGIN = 24;
+const BOTTOM_STATIC_LETTERS_WIDTH = 168 + 201 + 64 + 237;
+const BOTTOM_E_NEGATIVE_MARGIN = 16;
+const BOTTOM_ROW_OFFSET_X = 24;
 
 const toCssPath = (path: string) => `path('${path.replace(/\s+/g, ' ').trim()}')`;
 
@@ -139,6 +145,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     bottomLeftX = -585,
 }: MorphSectionProps, ref) {
     const rootRef = useRef<HTMLDivElement | null>(null);
+    const lettersContainerRef = useRef<HTMLDivElement | null>(null);
     const lettersScaleContentRef = useRef<HTMLDivElement | null>(null);
     const topRowRef = useRef<HTMLDivElement | null>(null);
     const bottomRowRef = useRef<HTMLDivElement | null>(null);
@@ -179,23 +186,43 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
         if (el) bottomLetterRefs.current[index] = el;
     };
 
+    const topSvgWidth = topEndWidth + 6;
+    const bottomSvgX = bottomLeftX;
+    const bottomSvgWidth = 234.5 - bottomLeftX + 6;
+    const topRowVisualWidth =
+        TOP_STATIC_LETTERS_WIDTH +
+        topSvgWidth +
+        DESKTOP_LETTERS_GAP * 3 -
+        TOP_M_NEGATIVE_MARGIN;
+    const bottomRowVisualWidth =
+        bottomSvgWidth +
+        BOTTOM_STATIC_LETTERS_WIDTH +
+        DESKTOP_LETTERS_GAP * 4 -
+        BOTTOM_E_NEGATIVE_MARGIN;
+    const topRowVisualLeft = (DESKTOP_LETTERS_DESIGN_WIDTH - topRowVisualWidth) / 2;
+    const bottomRowVisualLeft =
+        (DESKTOP_LETTERS_DESIGN_WIDTH - bottomRowVisualWidth) / 2 + BOTTOM_ROW_OFFSET_X;
+    const lettersVisualLeft = Math.min(topRowVisualLeft, bottomRowVisualLeft);
+    const lettersVisualRight = Math.max(
+        topRowVisualLeft + topRowVisualWidth,
+        bottomRowVisualLeft + bottomRowVisualWidth,
+    );
+    const lettersVisualWidth = lettersVisualRight - lettersVisualLeft;
+
     useEffect(() => {
         const updateLettersScale = () => {
-            const viewportWidth = window.innerWidth;
-
-            if (viewportWidth >= DESKTOP_LETTERS_FULL_SCALE_WIDTH) {
-                setLettersScale(1);
-                return;
-            }
+            const containerWidth = lettersContainerRef.current?.clientWidth ?? window.innerWidth;
 
             const availableWidth = Math.max(
                 0,
-                viewportWidth - DESKTOP_LETTERS_HORIZONTAL_GUTTER,
+                lettersContainerRef.current
+                    ? containerWidth
+                    : containerWidth - DESKTOP_LETTERS_HORIZONTAL_GUTTER,
             );
             const nextScale = gsap.utils.clamp(
                 DESKTOP_LETTERS_MIN_SCALE,
-                1,
-                availableWidth / DESKTOP_LETTERS_DESIGN_WIDTH,
+                DESKTOP_LETTERS_MAX_SCALE,
+                availableWidth / lettersVisualWidth,
             );
 
             setLettersScale(nextScale);
@@ -204,10 +231,20 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
         updateLettersScale();
         window.addEventListener('resize', updateLettersScale);
 
+        if (typeof ResizeObserver === 'undefined' || !lettersContainerRef.current) {
+            return () => {
+                window.removeEventListener('resize', updateLettersScale);
+            };
+        }
+
+        const observer = new ResizeObserver(updateLettersScale);
+        observer.observe(lettersContainerRef.current);
+
         return () => {
             window.removeEventListener('resize', updateLettersScale);
+            observer.disconnect();
         };
-    }, []);
+    }, [lettersVisualWidth]);
 
     useEffect(() => {
         const content = lettersScaleContentRef.current;
@@ -475,22 +512,18 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
 
     const topClipId = useId().replace(/:/g, '') + '-top';
     const bottomClipId = useId().replace(/:/g, '') + '-bottom';
-
-    const topSvgWidth = topEndWidth + 6;
     const topSvgHeight = 248;
 
-    const bottomSvgX = bottomLeftX;
-    const bottomSvgWidth = 234.5 - bottomLeftX + 6;
     const bottomSvgHeight = 248;
     const lettersScaleFrameStyle = {
-        width: `${DESKTOP_LETTERS_DESIGN_WIDTH * lettersScale}px`,
+        width: `${lettersVisualWidth * lettersScale}px`,
         height: lettersScaledHeight === null ? undefined : `${lettersScaledHeight}px`,
         maxWidth: '100%',
     };
     const lettersScaleContentStyle = {
         width: `${DESKTOP_LETTERS_DESIGN_WIDTH}px`,
-        transform: `translateX(-50%) scale(${lettersScale})`,
-        transformOrigin: 'top center',
+        transform: `translateX(${-lettersVisualLeft * lettersScale}px) scale(${lettersScale})`,
+        transformOrigin: 'top left',
     };
 
     const neonPulse = (
@@ -1132,7 +1165,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
         <section
             ref={rootRef}
             className={[
-                'relative flex h-full min-h-0 w-full justify-center overflow-hidden px-6 py-[clamp(1rem,4vh,2.5rem)] md:px-10',
+                'relative flex h-full min-h-0 w-full justify-center overflow-hidden px-6 py-[clamp(1rem,4vh,2.5rem)] md:px-10 min-[1000px]:px-0',
                 className,
             ].join(' ')}
         >
@@ -1177,13 +1210,16 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     />
                 </button>
             </div>
-            <div
-                className="relative z-10 shrink-0 overflow-visible"
-                style={lettersScaleFrameStyle}
-            >
+            <div className="relative z-10 flex h-full min-h-0 w-full px-4 sm:px-8">
+                <div className="mx-auto flex h-full min-h-0 w-full max-w-[1740px] flex-col items-center justify-center px-[15px]">
+                    <div ref={lettersContainerRef} className="flex w-full flex-col items-center">
+                    <div
+                        className="relative z-10 shrink-0 overflow-visible"
+                        style={lettersScaleFrameStyle}
+                    >
                 <div
                     ref={lettersScaleContentRef}
-                    className="absolute left-1/2 top-0 flex flex-col items-center"
+                    className="absolute left-0 top-0 flex flex-col items-center"
                     style={lettersScaleContentStyle}
                 >
             <div ref={topRowRef} className="relative z-10 flex gap-[36px]">
@@ -1402,6 +1438,9 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 <p ref={textRef} className="mt-[clamp(0.875rem,3vh,3.125rem)] text-[clamp(1.15rem,2.4vw,2.5rem)] font-bold uppercase leading-[1.14] text-white">
                     Мы делаем шоу для платформ, рекламу для брендов и <br/> контент для бизнеса. Такие дела.
                 </p>
+            </div>
+                    </div>
+                </div>
             </div>
         </section>
     );
