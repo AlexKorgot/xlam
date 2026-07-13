@@ -590,10 +590,10 @@ export function ServicesSliderSection({
 
   return (
     <>
-      <FullPageSection id="services" className="items-stretch bg-black px-4 py-[clamp(1rem,4vh,3rem)] text-white sm:px-6 min-[1000px]:pt-[var(--header-offset)]">
+      <FullPageSection id="services" className="items-stretch bg-black px-4 py-[clamp(1rem,4vh,3rem)] text-white sm:px-8 min-[1000px]:pt-[var(--header-offset)]">
         <div
           ref={sectionContentRef}
-          className="flex h-full min-h-0 w-full max-w-[1570px] flex-col items-center justify-center gap-[clamp(0.75rem,2vh,2rem)]"
+          className="flex h-full min-h-0 w-full max-w-[1740px] flex-col items-center justify-center gap-[clamp(0.75rem,2vh,2rem)] px-[15px]"
         >
           <div className="embla__wrapper h-[clamp(260px,58vh,560px)] max-h-[62%] w-screen min-[1000px]:w-full">
             <div className="embla h-full">
@@ -647,7 +647,7 @@ export function ServicesSliderSection({
                         )}
                         <div
                           aria-hidden="true"
-                          className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[118px] backdrop-blur-[34px] min-[1000px]:h-[174px]"
+                          className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[118px] min-[1000px]:h-[174px]"
                           style={{
                             background:
                               'linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.16) 34%, rgba(0, 0, 0, 0.52) 66%, rgba(0, 0, 0, 0.86) 100%)',
