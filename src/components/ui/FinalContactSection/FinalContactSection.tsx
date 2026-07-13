@@ -31,8 +31,8 @@ export function FinalContactSection() {
           aria-hidden="true"
         />
 
-        <div className="relative z-40 mx-auto flex h-full w-full max-w-[1740px] flex-col px-[18px] pb-[max(18px,env(safe-area-inset-bottom))] pt-4 sm:px-5 min-[1000px]:px-[18px] min-[1000px]:pb-0 min-[1000px]:pt-14 xl:px-[50px] min-[1830px]:px-0">
-          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-0 min-[1000px]:grid-cols-[minmax(0,1048px)_minmax(280px,1fr)]">
+        <div className="relative z-40 mx-auto flex h-full w-full max-w-[1740px] flex-col pb-[max(18px,env(safe-area-inset-bottom))] pt-4 min-[1000px]:pb-0 min-[1000px]:pt-14">
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-0">
             <nav aria-label="Навигация по секциям">
               <ul className="max-w-none">
                 {menuItems.map((item) => {
@@ -40,7 +40,7 @@ export function FinalContactSection() {
                   const isActive = activeButtonId === buttonId;
 
                   return (
-                  <li key={item} className="border-t border-white/55 last:border-b">
+                  <li key={item} className="cursor-pointer border-t border-white/55 last:border-b">
                     <button
                       type="button"
                       aria-disabled="true"
@@ -74,7 +74,7 @@ export function FinalContactSection() {
                   const isActive = activeButtonId === buttonId;
 
                   return (
-                  <li key={item} className="border-t border-white/55 last:border-b">
+                  <li key={item} className="cursor-pointer border-t border-white/55 last:border-b">
                     <button
                       type="button"
                       aria-disabled="true"
