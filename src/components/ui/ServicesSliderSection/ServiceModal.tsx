@@ -327,12 +327,12 @@ export function ServiceModal({
           className="object-cover"
         />
       </div>
-      <div className="pointer-events-none absolute inset-0 bg-black/10 lg:bg-black/30" />
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-full bg-gradient-to-r from-black/10 via-black/[0.06] to-transparent lg:hidden" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[56%] bg-gradient-to-t from-black/10 via-black/[0.06] to-transparent lg:hidden" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/10 to-transparent lg:hidden" />
+      <div className="pointer-events-none absolute inset-0 bg-black/10 min-[1000px]:bg-black/30" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-full bg-gradient-to-r from-black/10 via-black/[0.06] to-transparent min-[1000px]:hidden" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[56%] bg-gradient-to-t from-black/10 via-black/[0.06] to-transparent min-[1000px]:hidden" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/10 to-transparent min-[1000px]:hidden" />
 
-      <div className={`relative z-10 flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain px-5 pb-6 pt-4 [scrollbar-color:#63ff45_rgba(255,255,255,0.16)] [scrollbar-width:thin] sm:px-8 lg:justify-end lg:overflow-hidden lg:px-12 lg:pb-10 lg:pt-12 xl:px-[54px] ${contentTransitionClass}`}>
+      <div className={`relative z-10 flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain px-5 pb-6 pt-4 [scrollbar-color:#63ff45_rgba(255,255,255,0.16)] [scrollbar-width:thin] sm:px-8 min-[1000px]:justify-end min-[1000px]:overflow-hidden min-[1000px]:px-12 min-[1000px]:pb-10 min-[1000px]:pt-12 xl:px-[54px] ${contentTransitionClass}`}>
         <div className="mx-auto mb-5 h-1 w-14 shrink-0 rounded-full bg-white/28 min-[1000px]:hidden" aria-hidden="true" />
 
         <header className="mr-auto mt-auto max-w-[40rem] pr-0 text-left min-[1000px]:mt-0 lg:max-w-[58rem] lg:pr-0">
@@ -343,20 +343,19 @@ export function ServiceModal({
           >
             {displayedState.content.title}
           </h2>
-
-          <div id={descriptionId} className="mt-7 hidden max-w-[31rem] min-[1000px]:block lg:mt-12">
-            <p className="text-[15px] font-black uppercase leading-[1.03] text-white sm:text-[18px] lg:text-[20px]">
-              {displayedState.content.subtitle}
-            </p>
-            <p className="mt-3 max-w-[29rem] text-[14px] leading-[1.08] text-white sm:text-[16px] lg:text-[17px]">
-              {displayedState.content.description}
-            </p>
-          </div>
         </header>
 
-        <div className="mt-4 grid min-h-0 gap-4 pt-0 min-[1000px]:mt-0 min-[1000px]:grid-cols-[390px_minmax(0,1fr)] min-[1000px]:items-start min-[1000px]:gap-14 min-[1000px]:pt-8 xl:grid-cols-[430px_minmax(0,1fr)] xl:gap-16">
-          <div className="order-2 mr-auto w-full max-w-[29rem] min-[1000px]:order-1 min-[1000px]:mx-0 xl:max-w-[31rem]">
-            <p className="whitespace-nowrap text-center text-[18px] font-black uppercase leading-[1.08] text-[#dedcd3] sm:text-[22px] lg:text-[24px]">
+        <div className="mt-4 grid min-h-0 gap-4 pt-0 min-[1000px]:mt-7 min-[1000px]:grid-cols-[390px_minmax(0,1fr)] min-[1000px]:items-start min-[1000px]:gap-14 min-[1000px]:pt-0 xl:grid-cols-[430px_minmax(0,1fr)] xl:gap-16">
+          <div className="order-2 mx-auto w-full max-w-[29rem] min-[1000px]:order-1 min-[1000px]:mx-0 xl:max-w-[31rem]">
+            <div id={descriptionId} className="mb-5 hidden max-w-[31rem] min-[1000px]:block">
+              <p className="text-[15px] font-black uppercase leading-[1.03] text-white sm:text-[18px] lg:text-[20px]">
+                {displayedState.content.subtitle}
+              </p>
+              <p className="mt-3 max-w-[29rem] text-[14px] leading-[1.08] text-white sm:text-[16px] lg:text-[17px]">
+                {displayedState.content.description}
+              </p>
+            </div>
+            <p className="whitespace-nowrap text-center text-[18px] font-black uppercase leading-[1.08] text-[#dedcd3] sm:text-[22px]  lg:text-[20px] xl:text-[24px]">
               {displayedState.content.ctaIntro}
             </p>
             <button
@@ -370,14 +369,14 @@ export function ServiceModal({
             </button>
           </div>
 
-          <div className="order-1 relative min-w-0 min-[1000px]:order-2">
+          <div className="order-1 relative min-w-0 min-[1000px]:order-2 min-[1000px]:self-end">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute left-0 right-1 top-1/2 z-10 h-[64px] -translate-y-1/2 bg-[#63ff45]/[0.08] shadow-[0_0_34px_rgba(99,255,69,0.14)] min-[1000px]:hidden"
             />
             <div
               ref={featureListRef}
-              className="relative z-20 h-[188px] touch-pan-y snap-y snap-mandatory overflow-y-auto overscroll-contain py-[62px] pr-1 text-left [mask-image:linear-gradient(to_bottom,transparent_0%,#000_16%,#000_50%,#000_84%,transparent_100%)] [scrollbar-width:none] min-[1000px]:grid min-[1000px]:h-auto min-[1000px]:snap-none min-[1000px]:grid-cols-[repeat(4,minmax(0,1fr))] min-[1000px]:items-start min-[1000px]:gap-x-8 min-[1000px]:overflow-visible min-[1000px]:py-0 min-[1000px]:pr-0 min-[1000px]:[mask-image:none] xl:gap-x-11 [&::-webkit-scrollbar]:hidden"
+              className="relative z-20 h-[188px] touch-pan-y snap-y snap-mandatory overflow-y-auto overscroll-contain py-[62px] pr-1 text-left [mask-image:linear-gradient(to_bottom,transparent_0%,#000_16%,#000_50%,#000_84%,transparent_100%)] [scrollbar-width:none] min-[1000px]:grid min-[1000px]:h-auto min-[1000px]:snap-none min-[1000px]:grid-cols-[repeat(2,minmax(0,1fr))] min-[1000px]:items-start min-[1000px]:gap-x-8 min-[1000px]:gap-y-6 min-[1000px]:overflow-visible min-[1000px]:py-0 min-[1000px]:pr-0 min-[1000px]:[mask-image:none] min-[1400px]:grid-cols-[repeat(4,minmax(0,1fr))] min-[1400px]:gap-x-11 [&::-webkit-scrollbar]:hidden"
               onScroll={handleFeatureListScroll}
             >
               {displayedState.content.features.map((feature, index) => {

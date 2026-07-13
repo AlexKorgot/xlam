@@ -654,8 +654,8 @@ export function ServicesSliderSection({
                           }}
                         />
                         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex w-full flex-col items-center px-1.5 text-center min-[1000px]:pb-[25px]">
-                          <p className="hidden max-w-[250px] text-[12px] leading-[1.12] min-[1000px]:block">{slide.description}</p>
-                          <h4 className="text-[22px] font-black leading-none text-[#63ff45] [text-shadow:-4px_5px_18px_rgba(0,0,0,0.82)] min-[1000px]:text-[30px]">
+                          <p className="hidden max-w-[260px] text-[12px] leading-[1.12] min-[1000px]:block mb-2">{slide.description}</p>
+                          <h4 className="text-[22px] font-black leading-none text-[#63ff45] [text-shadow:-4px_5px_18px_rgba(0,0,0,0.82)] min-[1000px]:text-[18px] min-[1430px]:text-[30px]">
                             {slide.title}
                           </h4>
                         </div>
