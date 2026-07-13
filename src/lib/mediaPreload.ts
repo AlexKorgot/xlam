@@ -35,10 +35,10 @@ import teamEvgeniyMalov from '@/src/components/ui/TeamSection/assets/evgeniy-mal
 import whyUsBalls from '@/src/components/ui/WhyUsSection/why-us-balls.png';
 import cinematicMerPreviewOne from '@/src/components/cinematic_new/assets/mer/mer1.png';
 import cinematicMerPreviewTwo from '@/src/components/cinematic_new/assets/mer/mer2.png';
-import cinematicShowPreviewOne from '@/src/components/cinematic_new/assets/mer/show1.png';
-import cinematicShowPreviewTwo from '@/src/components/cinematic_new/assets/mer/show2.png';
-import cinematicPodcastPreviewOne from '@/src/components/cinematic_new/assets/mer/podcast1.png';
-import cinematicPodcastPreviewTwo from '@/src/components/cinematic_new/assets/mer/podcast2.png';
+import cinematicShowPreviewOne from '@/src/components/cinematic_new/assets/mer/podcast1.png';
+import cinematicShowPreviewTwo from '@/src/components/cinematic_new/assets/mer/podcast2.png';
+import cinematicPodcastPreviewOne from '@/src/components/cinematic_new/assets/mer/show1.png';
+import cinematicPodcastPreviewTwo from '@/src/components/cinematic_new/assets/mer/show2.png';
 
 export type MediaPreloadKind = 'image' | 'video';
 export type MediaPreloadPriority = 'immediate' | 'idle';

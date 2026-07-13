@@ -18,6 +18,9 @@ import { cinematicSlides } from './data';
 import { getFilmStripChromeLayout } from './filmStripLayout';
 import { SliderScene, type SliderPointerAction } from './SliderScene';
 import type { CinematicOverlayState, CinematicSlide } from './types';
+import dzenLogo from './assets/line/dzen.svg';
+import merLogo from './assets/line/mer.svg';
+import nikeLogo from './assets/line/nike.svg';
 
 gsap.registerPlugin(useGSAP);
 
@@ -51,6 +54,7 @@ const openedSlideIncomingDelay =
   openedSlideTransitionDuration * (1 - openedSlideContentSwitchProgress) -
   openedSlideIncomingDuration -
   0.04;
+const tickerLogos = [nikeLogo, merLogo, dzenLogo, nikeLogo, merLogo, dzenLogo, nikeLogo];
 
 const getFocusableElements = (container: HTMLElement) =>
   Array.from(
@@ -58,6 +62,47 @@ const getFocusableElements = (container: HTMLElement) =>
       'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
     ),
   ).filter((element) => !element.hasAttribute('disabled') && !element.getAttribute('aria-hidden'));
+
+function LogoTicker() {
+  const tickerGroup = [...tickerLogos, ...tickerLogos];
+
+  return (
+    <div
+      className="pointer-events-none w-full max-w-[1740px] overflow-hidden opacity-80 [mask-image:linear-gradient(to_right,transparent_0%,#000_10%,#000_90%,transparent_100%)]"
+      aria-hidden="true"
+    >
+      <div className="flex w-max items-center [animation:cinematic-logo-ticker_18s_linear_infinite]">
+        {[0, 1].map((groupIndex) => (
+          <div
+            key={groupIndex}
+            className="flex shrink-0 items-center gap-9 pr-9 sm:gap-12 sm:pr-12"
+          >
+            {tickerGroup.map((logo, index) => (
+              <Image
+                key={`${groupIndex}-${index}-${logo.src}`}
+                src={logo}
+                alt=""
+                className="h-5 w-auto max-w-none shrink-0 object-contain sm:h-6 md:h-7"
+                draggable={false}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+      <style jsx global>{`
+        @keyframes cinematic-logo-ticker {
+          from {
+            transform: translate3d(0, 0, 0);
+          }
+
+          to {
+            transform: translate3d(-50%, 0, 0);
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
 
 function OpenedSheetBody({
   slide,
@@ -106,10 +151,8 @@ function OpenedSheetBody({
             {slide.opened.secondaryBody}
           </p>
         ) : null}
-      </div>
 
-      <div className="grid min-w-0 gap-7 min-[1920px]:pt-[clamp(7.25rem,22.5vh,15rem)]">
-        <div data-case-content className="opacity-0">
+        <div data-case-content className="mt-7 opacity-0 lg:mt-[clamp(2.2rem,5vh,4.5rem)]">
           <div className="grid w-full gap-y-[11px] lg:gap-y-3">
             <div className="grid grid-cols-3 gap-x-2 gap-y-[11px] lg:gap-x-5 lg:gap-y-3">
               {primaryServices.map((service, index) => (
@@ -126,19 +169,21 @@ function OpenedSheetBody({
 
             <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))] gap-x-2 gap-y-[11px] min-[1920px]:gap-x-3 min-[1920px]:gap-y-3">
               {secondaryServices.map((service, index) => (
-              <span
-                key={`${service}-${index + primaryServices.length}`}
-                className="flex min-h-7 min-w-0 items-center justify-center border border-white/60 px-2 py-1 text-center text-[9px] font-black uppercase leading-[1.05] text-white shadow-[0_4px_18px_rgba(0,0,0,0.38)] transition-colors duration-300 sm:text-[10px] lg:bg-transparent lg:px-3 lg:text-[12px] lg:backdrop-blur-[1px]"
-              >
-                <span className="line-clamp-2 min-w-0 break-words">
-                  {service}
+                <span
+                  key={`${service}-${index + primaryServices.length}`}
+                  className="flex min-h-7 min-w-0 items-center justify-center border border-white/60 px-2 py-1 text-center text-[9px] font-black uppercase leading-[1.05] text-white shadow-[0_4px_18px_rgba(0,0,0,0.38)] transition-colors duration-300 sm:text-[10px] lg:bg-transparent lg:px-3 lg:text-[12px] lg:backdrop-blur-[1px]"
+                >
+                  <span className="line-clamp-2 min-w-0 break-words">
+                    {service}
+                  </span>
                 </span>
-              </span>
               ))}
             </div>
           </div>
         </div>
+      </div>
 
+      <div className="grid min-w-0 gap-7 lg:self-end min-[1920px]:pt-[clamp(7.25rem,22.5vh,15rem)]">
         <div
           data-case-content
           className="grid grid-cols-1 justify-items-stretch gap-3 opacity-0 sm:grid-cols-2 sm:gap-4 lg:w-full lg:grid-cols-2 lg:gap-5"
@@ -146,7 +191,7 @@ function OpenedSheetBody({
           {previews.length > 0 ? previews.map((preview) => (
             <div
               key={typeof preview.src === 'string' ? preview.src : preview.src.src}
-              className="relative min-h-[220px] w-full max-w-[412px] overflow-hidden rounded-[6px] aspect-[16/10] sm:h-[232px] sm:aspect-auto lg:h-[clamp(260px,22vw,430px)] lg:max-w-none"
+              className="relative aspect-[412/208] w-full max-w-[412px] overflow-hidden rounded-[6px] lg:max-w-none"
             >
               <Image
                 src={preview.src}
@@ -155,13 +200,13 @@ function OpenedSheetBody({
                 loading="eager"
                 unoptimized
                 sizes="(max-width: 639px) calc(100vw - 40px), (max-width: 1023px) 50vw, 45vw"
-                className="scale-[1.12] object-cover object-center"
+                className="object-cover object-bottom"
               />
             </div>
           )) : Array.from({ length: previewPlaceholderCount }).map((_, index) => (
             <div
               key={index}
-              className="relative min-h-[220px] w-full max-w-[412px] overflow-hidden rounded-[6px] bg-transparent aspect-[16/10] sm:h-[232px] sm:aspect-auto lg:h-[clamp(260px,22vw,430px)] lg:max-w-none"
+              className="relative aspect-[412/208] w-full max-w-[412px] overflow-hidden rounded-[6px] bg-transparent lg:max-w-none"
             >
             </div>
           ))}
@@ -929,10 +974,10 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             </h3>
           </div>
 
-          <div className="pointer-events-auto flex items-center gap-5 opacity-[0.48] transition-opacity duration-300 group-hover:opacity-[0.9] focus-within:opacity-100">
+          <div className="pointer-events-auto hidden items-center gap-5 opacity-[0.48] transition-opacity duration-300 group-hover:opacity-[0.9] focus-within:opacity-100 min-[800px]:flex">
             <button
               type="button"
-              className="grid h-9 w-9 place-items-center rounded-full border border-white/18 bg-black/35 text-lg font-black text-white/58 backdrop-blur-md transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"
+              className="grid h-9 w-9 place-items-center rounded-full border border-white/18 text-lg font-black text-white/58 transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"
               onClick={handlePrevious}
               aria-label="Previous project"
             >
@@ -940,7 +985,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             </button>
             <button
               type="button"
-              className="h-9 border border-white/20 bg-black/35 px-6 text-[9px] font-black uppercase tracking-[0.28em] text-white/78 backdrop-blur-md transition-colors hover:border-[#66ff66]/60 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:px-7 md:text-[10px]"
+              className="h-9 border border-white/20 px-6 text-[9px] font-black uppercase tracking-[0.28em] text-white/78 transition-colors hover:border-[#66ff66]/60 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:px-7 md:text-[10px]"
               onClick={handleOpen}
             >
               <GlitchText>
@@ -949,13 +994,14 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             </button>
             <button
               type="button"
-              className="grid h-9 w-9 place-items-center rounded-full border border-white/18 bg-black/35 text-lg font-black text-white/58 backdrop-blur-md transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"
+              className="grid h-9 w-9 place-items-center rounded-full border border-white/18 text-lg font-black text-white/58 transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"
               onClick={handleNext}
               aria-label="Next project"
             >
               <GlitchText size="18">{nextGlyph}</GlitchText>
             </button>
           </div>
+          <LogoTicker />
         </div>
       </div>
 
@@ -1018,12 +1064,12 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
             <nav
               data-case-detail
-              className="sticky bottom-0 z-30 mt-auto grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-white/10 bg-black/64 px-5 py-3 backdrop-blur-md sm:gap-4 sm:px-7 lg:border-t-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:gap-2 [@media_(max-width:999.98px)_and_(orientation:landscape)]:px-4 [@media_(max-width:999.98px)_and_(orientation:landscape)]:py-1.5"
+              className="sticky bottom-0 z-30 mt-auto grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-white/10 px-5 py-3 sm:gap-4 sm:px-7 lg:border-t-0 lg:px-0 lg:py-0 [@media_(max-width:999.98px)_and_(orientation:landscape)]:gap-2 [@media_(max-width:999.98px)_and_(orientation:landscape)]:px-4 [@media_(max-width:999.98px)_and_(orientation:landscape)]:py-1.5"
               aria-label="Opened project navigation"
             >
               <button
                 type="button"
-                className="flex h-14 w-full min-w-0 items-center gap-3 text-left text-[11px] font-medium leading-none text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] disabled:pointer-events-none disabled:text-white/32 sm:text-sm lg:bg-black/20 lg:px-4 lg:backdrop-blur-sm [@media_(max-width:999.98px)_and_(orientation:landscape)]:h-10 [@media_(max-width:999.98px)_and_(orientation:landscape)]:gap-2"
+                className="flex h-14 w-full min-w-0 items-center gap-3 text-left text-[11px] font-medium leading-none text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] disabled:pointer-events-none disabled:text-white/32 sm:text-sm lg:px-4 [@media_(max-width:999.98px)_and_(orientation:landscape)]:h-10 [@media_(max-width:999.98px)_and_(orientation:landscape)]:gap-2"
                 onClick={handleOpenedPrevious}
                 disabled={overlayState === 'openedSliding'}
               >
@@ -1035,7 +1081,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
                 </span>
               </button>
 
-              <div className="flex h-14 min-w-0 items-center justify-center bg-black/20 px-4 text-center text-[14px] font-medium leading-none text-[#66ff66] backdrop-blur-sm sm:text-[22px] lg:bg-transparent lg:px-0 lg:backdrop-blur-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:h-10 [@media_(max-width:999.98px)_and_(orientation:landscape)]:px-2 [@media_(max-width:999.98px)_and_(orientation:landscape)]:text-[13px]">
+              <div className="flex h-14 min-w-0 items-center justify-center px-4 text-center text-[14px] font-medium leading-none text-[#66ff66] sm:text-[22px] lg:px-0 [@media_(max-width:999.98px)_and_(orientation:landscape)]:h-10 [@media_(max-width:999.98px)_and_(orientation:landscape)]:px-2 [@media_(max-width:999.98px)_and_(orientation:landscape)]:text-[13px]">
                 <span className="min-w-0 truncate leading-none">
                   <GlitchText size="22">{activeSlide.opened.navLabel}</GlitchText>
                 </span>
@@ -1043,7 +1089,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
               <button
                 type="button"
-                className="flex h-14 w-full min-w-0 items-center justify-end gap-3 text-right text-[11px] font-medium leading-none text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] disabled:pointer-events-none disabled:text-white/32 sm:text-sm lg:bg-black/20 lg:px-4 lg:backdrop-blur-sm [@media_(max-width:999.98px)_and_(orientation:landscape)]:h-10 [@media_(max-width:999.98px)_and_(orientation:landscape)]:gap-2"
+                className="flex h-14 w-full min-w-0 items-center justify-end gap-3 text-right text-[11px] font-medium leading-none text-white transition-colors hover:text-[#66ff66] focus-visible:text-[#66ff66] disabled:pointer-events-none disabled:text-white/32 sm:text-sm lg:px-4 [@media_(max-width:999.98px)_and_(orientation:landscape)]:h-10 [@media_(max-width:999.98px)_and_(orientation:landscape)]:gap-2"
                 onClick={handleOpenedNext}
                 disabled={overlayState === 'openedSliding'}
               >

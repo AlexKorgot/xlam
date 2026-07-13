@@ -412,7 +412,7 @@ export function TeamSection() {
             </p>
           </div>
 
-          <div className="pointer-events-none absolute right-[-68px] top-[218px] z-40 flex justify-end max-lg:[@media_(orientation:landscape)]:right-[clamp(3rem,12vw,7rem)] max-lg:[@media_(orientation:landscape)]:top-1/2 max-lg:[@media_(orientation:landscape)]:-translate-y-1/2 lg:right-[188px] lg:top-1/2 lg:block lg:-translate-y-[43%]">
+          <div className="pointer-events-none absolute right-[-68px] top-[218px] z-40 flex justify-end max-lg:[@media_(orientation:landscape)]:right-[clamp(3rem,12vw,7rem)] max-lg:[@media_(orientation:landscape)]:top-1/2 max-lg:[@media_(orientation:landscape)]:-translate-y-1/2 lg:right-[-92px] lg:top-1/2 lg:block lg:-translate-y-[43%] min-[1080px]:right-0 min-[1450px]:right-[188px]">
             {activeItem.videoSrc ? (
               <video
                 key={activeItem.id}
@@ -440,7 +440,7 @@ export function TeamSection() {
           <div className="relative z-30 mt-4 h-[390px] min-h-0 w-full max-w-full flex-none overflow-hidden max-lg:[@media_(orientation:landscape)]:mt-3 max-lg:[@media_(orientation:landscape)]:h-[144px] max-lg:[@media_(orientation:landscape)]:max-w-[54vw] sm:h-[430px] lg:mt-[17px] lg:h-auto lg:flex-none lg:overflow-visible">
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute left-0 right-[4px] top-1/2 z-20 hidden h-[54px] -translate-y-1/2 border-y border-[#66ff66]/70 bg-[#66ff66]/[0.06] shadow-[0_0_42px_rgba(102,255,102,0.16)] max-lg:block max-lg:[@media_(orientation:landscape)]:h-[48px] sm:h-[70px]"
+              className="pointer-events-none absolute left-0 right-[4px] top-1/2 z-20 hidden h-[54px] -translate-y-1/2 bg-[#66ff66]/[0.06] shadow-[0_0_42px_rgba(102,255,102,0.16)] max-lg:block max-lg:[@media_(orientation:landscape)]:h-[48px] sm:h-[70px]"
             />
             <ul
               ref={listRef}
@@ -492,7 +492,7 @@ function TeamRow({
       data-team-item-id={item.id}
       data-team-cycle={cycle}
       className={clsx(
-        'snap-center border-t border-white/35 last:border-b lg:border-white/55',
+        'snap-center lg:border-t lg:border-white/55 lg:last:border-b',
       )}
     >
       <button
