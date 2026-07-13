@@ -61,7 +61,7 @@ const showModalContent: ServiceModalContent = {
   subtitle: 'От идеи до премьеры: разрабатываем, снимаем и выводим шоу в эфир',
   description:
     'Вам не нужно контролировать несколько подрядчиков и сводить их работу — мы все сделаем за вас. Берем на себя весь процесс: разработка, съёмка, постпродакшн и упаковка.',
-  ctaIntro: 'Поговорим о проекте',
+  ctaIntro: 'Поговорим о вашей идее',
   ctaLabel: 'Оставить заявку',
   backgroundImage: showModalImage,
   features: [
@@ -89,7 +89,7 @@ const adsModalContent: ServiceModalContent = {
   subtitle: 'Делаем рекламу, которую пересылают друзьям ',
   description:
     'Реклама — это короткое кино, где нет случайных кадров: каждая секунда продумана, каждый образ работает на идею. Сопровождаем проект на всех стадиях — от брифа до финальной упаковки',
-  ctaIntro: 'Поговорим о проекте',
+  ctaIntro: 'Поговорим о вашей идее',
   ctaLabel: 'Оставить заявку',
   backgroundImage: adsModalImage,
   features: [
@@ -117,7 +117,7 @@ const b2bModalContent: ServiceModalContent = {
   subtitle: 'Производим системный контент: имидж, продукт, коммуникация',
   description:
     'Знаем, что бизнесу всегда нужно «вчера». Строим визуальные системы: имиджевые ролики, продуктовые видео, корпоративный контент и  материалы для внутренних и внешних коммуникаций',
-  ctaIntro: 'Поговорим о проекте',
+  ctaIntro: 'Поговорим о вашей идее',
   ctaLabel: 'Оставить заявку',
   backgroundImage: b2bModalImage,
   features: [
@@ -145,7 +145,7 @@ const brandingModalContent: ServiceModalContent = {
   subtitle: 'СОЗДАЕМ ВИЗУАЛ НОВОГО ПОКОЛЕНИЯ С ПОМОЩЬЮ ИИ',
   description:
     'ИИ-контент под задачи любой сложности: быстро — когда время критично, масштабно — когда нужен объём, нестандартно — когда обычные решения не подходят.',
-  ctaIntro: 'Поговорим о проекте',
+  ctaIntro: 'Поговорим о вашей идее',
   ctaLabel: 'Оставить заявку',
   backgroundImage: brandingModalImage,
   features: [
@@ -173,7 +173,7 @@ const brandModalContent: ServiceModalContent = {
   subtitle: 'Бренд как структура, а не набор красивых элементов',
   description:
     'Знаем, как айдентика живет в кадре, потому что сами снимаем шоу и рекламу. Делаем бренды, которые работают не только на бумаге, но и на экране. От стратегии до моушна и CGI.',
-  ctaIntro: 'Поговорим о проекте?',
+  ctaIntro: 'Поговорим о вашей идее',
   ctaLabel: 'Оставить заявку',
   backgroundImage: brandModalImage,
   features: [
@@ -651,10 +651,6 @@ export function ServicesSliderSection({
                           style={{
                             background:
                               'linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.16) 34%, rgba(0, 0, 0, 0.52) 66%, rgba(0, 0, 0, 0.86) 100%)',
-                            WebkitMaskImage:
-                              'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.14) 24%, rgba(0, 0, 0, 0.62) 48%, #000 82%, #000 100%)',
-                            maskImage:
-                              'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.14) 24%, rgba(0, 0, 0, 0.62) 48%, #000 82%, #000 100%)',
                           }}
                         />
                         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex w-full flex-col items-center px-1.5 text-center min-[1000px]:pb-[25px]">

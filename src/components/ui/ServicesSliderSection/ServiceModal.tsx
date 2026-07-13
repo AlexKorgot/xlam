@@ -354,9 +354,9 @@ export function ServiceModal({
           </div>
         </header>
 
-        <div className="mt-4 grid min-h-0 gap-4 pt-0 lg:mt-0 lg:grid-cols-[390px_minmax(0,1fr)] lg:items-end lg:gap-14 lg:pt-8 xl:grid-cols-[430px_minmax(0,1fr)] xl:gap-16">
+        <div className="mt-4 grid min-h-0 gap-4 pt-0 min-[1000px]:mt-0 min-[1000px]:grid-cols-[390px_minmax(0,1fr)] min-[1000px]:items-start min-[1000px]:gap-14 min-[1000px]:pt-8 xl:grid-cols-[430px_minmax(0,1fr)] xl:gap-16">
           <div className="order-2 mr-auto w-full max-w-[29rem] min-[1000px]:order-1 min-[1000px]:mx-0 xl:max-w-[31rem]">
-            <p className="whitespace-nowrap text-left text-[18px] font-black uppercase leading-[1.08] text-[#dedcd3] sm:text-[22px] lg:text-center lg:text-[24px]">
+            <p className="whitespace-nowrap text-center text-[18px] font-black uppercase leading-[1.08] text-[#dedcd3] sm:text-[22px] lg:text-[24px]">
               {displayedState.content.ctaIntro}
             </p>
             <button
@@ -377,7 +377,7 @@ export function ServiceModal({
             />
             <div
               ref={featureListRef}
-              className="relative z-20 h-[188px] touch-pan-y snap-y snap-mandatory overflow-y-auto overscroll-contain py-[62px] pr-1 text-left [mask-image:linear-gradient(to_bottom,transparent_0%,#000_16%,#000_50%,#000_84%,transparent_100%)] [scrollbar-width:none] min-[1000px]:grid min-[1000px]:h-auto min-[1000px]:snap-none min-[1000px]:grid-cols-4 min-[1000px]:gap-x-8 min-[1000px]:overflow-visible min-[1000px]:py-0 min-[1000px]:pr-0 min-[1000px]:[mask-image:none] xl:gap-x-11 [&::-webkit-scrollbar]:hidden"
+              className="relative z-20 h-[188px] touch-pan-y snap-y snap-mandatory overflow-y-auto overscroll-contain py-[62px] pr-1 text-left [mask-image:linear-gradient(to_bottom,transparent_0%,#000_16%,#000_50%,#000_84%,transparent_100%)] [scrollbar-width:none] min-[1000px]:grid min-[1000px]:h-auto min-[1000px]:snap-none min-[1000px]:grid-cols-[repeat(4,minmax(0,1fr))] min-[1000px]:items-start min-[1000px]:gap-x-8 min-[1000px]:overflow-visible min-[1000px]:py-0 min-[1000px]:pr-0 min-[1000px]:[mask-image:none] xl:gap-x-11 [&::-webkit-scrollbar]:hidden"
               onScroll={handleFeatureListScroll}
             >
               {displayedState.content.features.map((feature, index) => {
@@ -390,10 +390,14 @@ export function ServiceModal({
                     data-service-feature-index={index}
                     aria-pressed={isActive}
                     className={[
-                      'group relative block min-h-[64px] w-full snap-center overflow-hidden text-left uppercase transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#63ff45] min-[1000px]:min-h-0 min-[1000px]:snap-none min-[1000px]:normal-case',
+                      'group relative block min-h-[64px] w-full cursor-pointer snap-center overflow-hidden text-left uppercase transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#63ff45] min-[1000px]:min-h-0 min-[1000px]:cursor-default min-[1000px]:snap-none min-[1000px]:overflow-visible min-[1000px]:normal-case',
                       isActive ? 'text-black' : 'text-white',
                     ].join(' ')}
-                    onClick={() => centerFeature(index)}
+                    onClick={() => {
+                      if (isMobileFeaturePickerViewport()) {
+                        centerFeature(index);
+                      }
+                    }}
                   >
                     <span
                       aria-hidden="true"
@@ -415,7 +419,7 @@ export function ServiceModal({
                       </span>
                       <span
                         className={[
-                          'mt-1.5 block text-[12px] leading-[1.04] transition-colors sm:text-[13px] lg:text-[14px]',
+                          'mt-1.5 block text-[12px] leading-[1.04] transition-colors sm:text-[13px] min-[1000px]:leading-[1.12] lg:text-[14px]',
                           isActive
                             ? 'text-black min-[1000px]:text-white'
                             : 'text-white',
