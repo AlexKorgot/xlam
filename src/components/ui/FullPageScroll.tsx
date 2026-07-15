@@ -13,7 +13,8 @@ export const FULLPAGE_SCROLL_EVENT = 'fullpage-scroll-request';
 export const FULLPAGE_SECTION_REVEAL_DELAY = 0.24;
 export const FULLPAGE_TOUCH_SWIPE_THRESHOLD = 18;
 export const FULLPAGE_TOUCH_AXIS_LOCK_RATIO = 1.12;
-const FULLPAGE_BLOCKED_TRANSITION_LOCK_MS = 950;
+const FULLPAGE_BLOCKED_TRANSITION_MIN_LOCK_MS = 950;
+const FULLPAGE_BLOCKED_TRANSITION_WHEEL_QUIET_MS = 180;
 
 export const getFullPageSwipeDirection = (deltaY: number) =>
   deltaY < 0 ? 'down' : 'up';
@@ -53,6 +54,7 @@ export default function FullPageScroll({
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const fullPageHeightRef = useRef(0);
   const blockedTransitionTimeoutRef = useRef<number | null>(null);
+  const blockedTransitionStartedAtRef = useRef<number | null>(null);
 
   const getViewportHeight = useCallback(() => {
     const visualHeight = window.visualViewport?.height;
@@ -120,6 +122,33 @@ export default function FullPageScroll({
     blockedTransitionTimeoutRef.current = null;
   }, []);
 
+  const releaseBlockedTransitionLock = useCallback(() => {
+    clearBlockedTransitionTimeout();
+    blockedTransitionStartedAtRef.current = null;
+    isScrollingRef.current = false;
+  }, [clearBlockedTransitionTimeout]);
+
+  const scheduleBlockedTransitionUnlock = useCallback(() => {
+    const startedAt = blockedTransitionStartedAtRef.current;
+
+    if (startedAt === null) {
+      return;
+    }
+
+    clearBlockedTransitionTimeout();
+
+    const elapsed = window.performance.now() - startedAt;
+    const remainingMinLock = Math.max(0, FULLPAGE_BLOCKED_TRANSITION_MIN_LOCK_MS - elapsed);
+    const unlockDelay = Math.max(
+      remainingMinLock,
+      FULLPAGE_BLOCKED_TRANSITION_WHEEL_QUIET_MS,
+    );
+
+    blockedTransitionTimeoutRef.current = window.setTimeout(() => {
+      releaseBlockedTransitionLock();
+    }, unlockDelay);
+  }, [clearBlockedTransitionTimeout, releaseBlockedTransitionLock]);
+
   const scrollToSection = useCallback(
     (index: number) => {
       if (!containerRef.current || !sectionsRef.current[index] || isScrollingRef.current) {
@@ -139,10 +168,8 @@ export default function FullPageScroll({
 
     if (beforeTransitionCallback?.(startIndex, index) === false) {
       clearBlockedTransitionTimeout();
-      blockedTransitionTimeoutRef.current = window.setTimeout(() => {
-        isScrollingRef.current = false;
-        blockedTransitionTimeoutRef.current = null;
-      }, FULLPAGE_BLOCKED_TRANSITION_LOCK_MS);
+      blockedTransitionStartedAtRef.current = window.performance.now();
+      scheduleBlockedTransitionUnlock();
       return;
     }
 
@@ -213,6 +240,7 @@ export default function FullPageScroll({
       clearBlockedTransitionTimeout,
       getViewportHeight,
       sectionChangeCallback,
+      scheduleBlockedTransitionUnlock,
       syncProgress,
       transitionStartCallback,
     ],
@@ -224,7 +252,7 @@ export default function FullPageScroll({
         return;
       }
 
-      clearBlockedTransitionTimeout();
+      releaseBlockedTransitionLock();
       animationRef.current?.kill();
       isScrollingRef.current = false;
 
@@ -259,7 +287,7 @@ export default function FullPageScroll({
       sectionChangeCallback?.(index);
       syncProgressForIndex(index);
     },
-    [clearBlockedTransitionTimeout, getViewportHeight, sectionChangeCallback, syncProgressForIndex],
+    [getViewportHeight, releaseBlockedTransitionLock, sectionChangeCallback, syncProgressForIndex],
   );
 
   const handleScrollDown = useCallback(() => {
@@ -325,6 +353,15 @@ export default function FullPageScroll({
         ignoreCheck: (event) => shouldIgnoreEvent(event),
       });
 
+      const handleBlockedTransitionWheel = (event: WheelEvent) => {
+        if (blockedTransitionStartedAtRef.current === null || shouldIgnoreEvent(event)) {
+          return;
+        }
+
+        event.preventDefault();
+        scheduleBlockedTransitionUnlock();
+      };
+
       const handlePointerDown = (event: PointerEvent) => {
         if (event.pointerType !== 'touch' || shouldIgnoreEvent(event)) {
           return;
@@ -387,6 +424,7 @@ export default function FullPageScroll({
         }
       };
 
+      root.addEventListener('wheel', handleBlockedTransitionWheel, { passive: false });
       root.addEventListener('pointerdown', handlePointerDown);
       root.addEventListener('pointerup', handlePointerUp);
       root.addEventListener('pointercancel', handlePointerCancel);
@@ -397,6 +435,7 @@ export default function FullPageScroll({
 
       return () => {
         observer.kill();
+        root.removeEventListener('wheel', handleBlockedTransitionWheel);
         root.removeEventListener('pointerdown', handlePointerDown);
         root.removeEventListener('pointerup', handlePointerUp);
         root.removeEventListener('pointercancel', handlePointerCancel);
@@ -405,11 +444,18 @@ export default function FullPageScroll({
         window.visualViewport?.removeEventListener('scroll', handleResize);
         window.removeEventListener('keydown', handleKeyDown);
         touchStartRef.current = null;
-        clearBlockedTransitionTimeout();
+        releaseBlockedTransitionLock();
         animationRef.current?.kill();
       };
     },
-    { dependencies: [animationDuration, clearBlockedTransitionTimeout, syncFullPageHeight] },
+    {
+      dependencies: [
+        animationDuration,
+        releaseBlockedTransitionLock,
+        scheduleBlockedTransitionUnlock,
+        syncFullPageHeight,
+      ],
+    },
   );
 
   useGSAP(
