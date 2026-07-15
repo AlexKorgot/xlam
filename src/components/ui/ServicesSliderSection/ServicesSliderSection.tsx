@@ -236,7 +236,7 @@ export function ServicesSliderSection({
         'ОТ ИДЕИ ДО ПРЕМЬЕРЫ: РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР',
       modal: showModalContent,
       videoSrc: publicAssetPath('/video/services/3.mp4'),
-      posterSrc: publicAssetPath('/video/services/posters/3.png'),
+      posterSrc: publicAssetPath('/video/services/posters/3.jpg'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -250,7 +250,7 @@ export function ServicesSliderSection({
           'ПРОИЗВОДИМ СИСТЕМНЫЙ КОНТЕНТ: ИМИДЖ, ПРОДУКТ, КОММУНИКАЦИИ',
       modal: b2bModalContent,
       videoSrc: publicAssetPath('/video/services/2.mp4'),
-      posterSrc: publicAssetPath('/video/services/posters/2.png'),
+      posterSrc: publicAssetPath('/video/services/posters/2.jpg'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -264,7 +264,7 @@ export function ServicesSliderSection({
         'ДЕЛАЕМ РЕКЛАМУ, КОТОРУЮ ПЕРЕСЫЛАЮТ ДРУЗЬЯМ',
       modal: adsModalContent,
       videoSrc: publicAssetPath('/video/services/4.mp4'),
-      posterSrc: publicAssetPath('/video/services/posters/4.png'),
+      posterSrc: publicAssetPath('/video/services/posters/4.jpg'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -278,7 +278,7 @@ export function ServicesSliderSection({
         'СОЗДАЕМ ВИЗУАЛ НОВОГО ПОКОЛЕНИЯ С ПОМОЩЬЮ ИИ',
       modal: brandingModalContent,
       videoSrc: publicAssetPath('/video/services/1.mp4'),
-      posterSrc: publicAssetPath('/video/services/posters/1.png'),
+      posterSrc: publicAssetPath('/video/services/posters/1.jpg'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -291,7 +291,7 @@ export function ServicesSliderSection({
       description:
         'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ',
       modal: brandModalContent,
-      posterSrc: publicAssetPath('/video/services/posters/5.png'),
+      posterSrc: publicAssetPath('/video/services/posters/5.jpg'),
     },
   ];
 
