@@ -16,7 +16,7 @@ const TAGLINE =
 const onlyBgVideo = publicAssetPath('/video/only_bg.mp4');
 const EXPANDED_PLAY_BUTTON_TAP_THRESHOLD = 10;
 const mobileXClipPath =
-  'polygon(70% 100%, 50% 66.7%, 28% 100%, 0% 100%, 32% 49.6%, 0% 0%, 38% 0%, 51.7% 25.6%, 64.5% 0%, 100% 0%, 68.4% 49.6%, 100% 100%)';
+  'polygon(99.943% 100%, 66.277% 48.911%, 91.502% 0%, 65.893% 0%, 49.971% 24.158%, 34.050% 0%, 8.440% 0%, 33.666% 48.911%, 0% 100%, 39.996% 100%, 49.971% 80.693%, 59.947% 100%)';
 
 gsap.registerPlugin(useGSAP);
 
@@ -457,7 +457,7 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
         className="relative z-20 flex h-full w-full flex-col items-center px-[30px] pb-[max(2rem,env(safe-area-inset-bottom))] pt-[calc(var(--header-offset)+0.75rem)]"
       >
         <div className="relative flex min-h-0 flex-1 items-center justify-center self-stretch">
-          <div className="absolute left-1/2 top-1/2 h-[min(50svh,480px)] w-[min(88vw,386px)] -translate-x-1/2 -translate-y-[52%]">
+          <div className="absolute left-1/2 top-1/2 aspect-[376/360] w-[min(88vw,calc(50svh*376/360),376px)] -translate-x-1/2 -translate-y-[52%]">
             <div
               className="absolute inset-0 overflow-hidden bg-white/10"
               style={{ clipPath: mobileXClipPath, WebkitClipPath: mobileXClipPath }}
@@ -475,7 +475,7 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
             </div>
             <svg
               className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
-              viewBox="0 0 332 360"
+              viewBox="0 0 376 360"
               role="img"
               aria-label="Зеркальная буква Х"
             >
@@ -497,7 +497,7 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
               </defs>
 
               <path
-                d="M238 360 166.4 240 94 360H-8l113.6-181.6L0 0h126l45.7 92L214 0h126L227.2 178.4 340 360H238Z"
+                d="M375.785 360L249.201 176.079L344.048 0H247.758L187.892 86.9703L128.026 0H31.7361L126.584 176.079L0 360H150.386L187.892 290.495L225.399 360H375.785Z"
                 filter="url(#mobile-x-hero-grain)"
                 fill="rgba(255,255,255,0.16)"
               />
