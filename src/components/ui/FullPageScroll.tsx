@@ -13,6 +13,7 @@ export const FULLPAGE_SCROLL_EVENT = 'fullpage-scroll-request';
 export const FULLPAGE_SECTION_REVEAL_DELAY = 0.24;
 export const FULLPAGE_TOUCH_SWIPE_THRESHOLD = 18;
 export const FULLPAGE_TOUCH_AXIS_LOCK_RATIO = 1.12;
+const FULLPAGE_BLOCKED_TRANSITION_LOCK_MS = 950;
 
 export const getFullPageSwipeDirection = (deltaY: number) =>
   deltaY < 0 ? 'down' : 'up';
@@ -51,6 +52,7 @@ export default function FullPageScroll({
   const animationRef = useRef<gsap.core.Timeline | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const fullPageHeightRef = useRef(0);
+  const blockedTransitionTimeoutRef = useRef<number | null>(null);
 
   const getViewportHeight = useCallback(() => {
     const visualHeight = window.visualViewport?.height;
@@ -109,6 +111,15 @@ export default function FullPageScroll({
     progressCallback?.(index > 0 ? 1 : 0);
   }, [progressCallback]);
 
+  const clearBlockedTransitionTimeout = useCallback(() => {
+    if (blockedTransitionTimeoutRef.current === null) {
+      return;
+    }
+
+    window.clearTimeout(blockedTransitionTimeoutRef.current);
+    blockedTransitionTimeoutRef.current = null;
+  }, []);
+
   const scrollToSection = useCallback(
     (index: number) => {
       if (!containerRef.current || !sectionsRef.current[index] || isScrollingRef.current) {
@@ -127,7 +138,11 @@ export default function FullPageScroll({
     animationRef.current?.kill();
 
     if (beforeTransitionCallback?.(startIndex, index) === false) {
-      isScrollingRef.current = false;
+      clearBlockedTransitionTimeout();
+      blockedTransitionTimeoutRef.current = window.setTimeout(() => {
+        isScrollingRef.current = false;
+        blockedTransitionTimeoutRef.current = null;
+      }, FULLPAGE_BLOCKED_TRANSITION_LOCK_MS);
       return;
     }
 
@@ -195,6 +210,7 @@ export default function FullPageScroll({
     [
       animationDuration,
       beforeTransitionCallback,
+      clearBlockedTransitionTimeout,
       getViewportHeight,
       sectionChangeCallback,
       syncProgress,
@@ -208,6 +224,7 @@ export default function FullPageScroll({
         return;
       }
 
+      clearBlockedTransitionTimeout();
       animationRef.current?.kill();
       isScrollingRef.current = false;
 
@@ -242,7 +259,7 @@ export default function FullPageScroll({
       sectionChangeCallback?.(index);
       syncProgressForIndex(index);
     },
-    [getViewportHeight, sectionChangeCallback, syncProgressForIndex],
+    [clearBlockedTransitionTimeout, getViewportHeight, sectionChangeCallback, syncProgressForIndex],
   );
 
   const handleScrollDown = useCallback(() => {
@@ -388,10 +405,11 @@ export default function FullPageScroll({
         window.visualViewport?.removeEventListener('scroll', handleResize);
         window.removeEventListener('keydown', handleKeyDown);
         touchStartRef.current = null;
+        clearBlockedTransitionTimeout();
         animationRef.current?.kill();
       };
     },
-    { dependencies: [animationDuration, syncFullPageHeight] },
+    { dependencies: [animationDuration, clearBlockedTransitionTimeout, syncFullPageHeight] },
   );
 
   useGSAP(
