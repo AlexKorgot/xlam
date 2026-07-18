@@ -54,7 +54,7 @@ const openedSlideIncomingDelay =
   openedSlideTransitionDuration * (1 - openedSlideContentSwitchProgress) -
   openedSlideIncomingDuration -
   0.04;
-const tickerLogos = [nikeLogo, merLogo, dzenLogo, nikeLogo, merLogo, dzenLogo, nikeLogo];
+const tickerLogos = [nikeLogo, merLogo, dzenLogo, nikeLogo, merLogo, dzenLogo];
 
 const getFocusableElements = (container: HTMLElement) =>
   Array.from(
