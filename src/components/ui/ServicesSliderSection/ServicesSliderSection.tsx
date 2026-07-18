@@ -54,6 +54,7 @@ interface ServicesSliderSectionProps {
 const scrollIgnoreAttr = { [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' } as const;
 const edgeWheelThreshold = 48;
 const edgeWheelUnlockDelay = 700;
+const edgeWrapUnlockDelay = 420;
 const initialPreloadedSlideCount = 4;
 
 const showModalContent: ServiceModalContent = {
@@ -347,6 +348,9 @@ export function ServicesSliderSection({
   const wheelBridgeDeltaRef = useRef(0);
   const wheelBridgeLockRef = useRef(false);
   const wheelBridgeTimeoutRef = useRef<number | null>(null);
+  const edgeWrapLockRef = useRef(false);
+  const edgeWrapTimeoutRef = useRef<number | null>(null);
+  const lastSliderIntentRef = useRef<'up' | 'down' | null>(null);
   const sectionTouchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
@@ -453,6 +457,10 @@ export function ServicesSliderSection({
       wheelBridgeLockRef.current = false;
     };
 
+    const unlockEdgeWrap = () => {
+      edgeWrapLockRef.current = false;
+    };
+
     const queueWheelBridgeUnlock = () => {
       if (wheelBridgeTimeoutRef.current) {
         window.clearTimeout(wheelBridgeTimeoutRef.current);
@@ -461,6 +469,55 @@ export function ServicesSliderSection({
       wheelBridgeTimeoutRef.current = window.setTimeout(() => {
         unlockWheelBridge();
       }, edgeWheelUnlockDelay);
+    };
+
+    const queueEdgeWrapUnlock = () => {
+      if (edgeWrapTimeoutRef.current) {
+        window.clearTimeout(edgeWrapTimeoutRef.current);
+      }
+
+      edgeWrapTimeoutRef.current = window.setTimeout(() => {
+        unlockEdgeWrap();
+      }, edgeWrapUnlockDelay);
+    };
+
+    const wrapToOppositeEdge = (direction: 'up' | 'down') => {
+      const snapCount = emblaApi.scrollSnapList().length;
+
+      if (snapCount <= 1) {
+        return false;
+      }
+
+      if (edgeWrapLockRef.current) {
+        return true;
+      }
+
+      const targetIndex = direction === 'down' ? 0 : snapCount - 1;
+      edgeWrapLockRef.current = true;
+      resetWheelBridge();
+      emblaApi.scrollTo(targetIndex);
+      queueEdgeWrapUnlock();
+
+      return true;
+    };
+
+    const resetLastSnapToDefault = () => {
+      const snapCount = emblaApi.scrollSnapList().length;
+
+      if (
+        snapCount <= 1 ||
+        edgeWrapLockRef.current ||
+        lastSliderIntentRef.current !== 'down' ||
+        emblaApi.selectedScrollSnap() !== snapCount - 1
+      ) {
+        return;
+      }
+
+      edgeWrapLockRef.current = true;
+      lastSliderIntentRef.current = null;
+      resetWheelBridge();
+      emblaApi.scrollTo(0);
+      queueEdgeWrapUnlock();
     };
 
     const handleWheel = (event: WheelEvent) => {
@@ -479,6 +536,7 @@ export function ServicesSliderSection({
       }
 
       const direction = dominantDelta > 0 ? 'down' : 'up';
+      lastSliderIntentRef.current = direction;
       const hasScrollableSnaps = emblaApi.scrollSnapList().length > 1;
       const canScrollInsideSlider =
         direction === 'down'
@@ -487,6 +545,12 @@ export function ServicesSliderSection({
 
       if (hasScrollableSnaps && canScrollInsideSlider) {
         resetWheelBridge();
+        return;
+      }
+
+      if (wrapToOppositeEdge(direction)) {
+        event.preventDefault();
+        event.stopPropagation();
         return;
       }
 
@@ -528,7 +592,7 @@ export function ServicesSliderSection({
     };
 
     const handlePointerDown = (event: PointerEvent) => {
-      if (!allowSectionScrollOnEdges || event.pointerType !== 'touch') {
+      if (!allowSectionScrollOnEdges) {
         return;
       }
 
@@ -536,7 +600,7 @@ export function ServicesSliderSection({
     };
 
     const handlePointerUp = (event: PointerEvent) => {
-      if (!allowSectionScrollOnEdges || event.pointerType !== 'touch') {
+      if (!allowSectionScrollOnEdges) {
         return;
       }
 
@@ -552,6 +616,29 @@ export function ServicesSliderSection({
       const isVerticalSwipe =
         Math.abs(deltaY) > FULLPAGE_TOUCH_SWIPE_THRESHOLD &&
         Math.abs(deltaY) > Math.abs(deltaX) * FULLPAGE_TOUCH_AXIS_LOCK_RATIO;
+      const isHorizontalSliderSwipe =
+        Math.abs(deltaX) > FULLPAGE_TOUCH_SWIPE_THRESHOLD &&
+        Math.abs(deltaX) > Math.abs(deltaY) * FULLPAGE_TOUCH_AXIS_LOCK_RATIO;
+
+      if (isHorizontalSliderSwipe) {
+        const direction = deltaX < 0 ? 'down' : 'up';
+        lastSliderIntentRef.current = direction;
+        const canScrollInsideSlider =
+          direction === 'down'
+            ? emblaApi.canScrollNext()
+            : emblaApi.canScrollPrev();
+
+        if (!canScrollInsideSlider && wrapToOppositeEdge(direction)) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+
+        return;
+      }
+
+      if (event.pointerType !== 'touch') {
+        return;
+      }
 
       if (!isVerticalSwipe) {
         return;
@@ -570,20 +657,29 @@ export function ServicesSliderSection({
     viewportNode.addEventListener('pointerdown', handlePointerDown);
     viewportNode.addEventListener('pointerup', handlePointerUp);
     viewportNode.addEventListener('pointercancel', handlePointerCancel);
+    emblaApi.on('settle', resetLastSnapToDefault);
 
     return () => {
       viewportNode.removeEventListener('wheel', handleWheel);
       viewportNode.removeEventListener('pointerdown', handlePointerDown);
       viewportNode.removeEventListener('pointerup', handlePointerUp);
       viewportNode.removeEventListener('pointercancel', handlePointerCancel);
+      emblaApi.off('settle', resetLastSnapToDefault);
 
       if (wheelBridgeTimeoutRef.current) {
         window.clearTimeout(wheelBridgeTimeoutRef.current);
         wheelBridgeTimeoutRef.current = null;
       }
 
+      if (edgeWrapTimeoutRef.current) {
+        window.clearTimeout(edgeWrapTimeoutRef.current);
+        edgeWrapTimeoutRef.current = null;
+      }
+
       sectionTouchStartRef.current = null;
+      lastSliderIntentRef.current = null;
       unlockWheelBridge();
+      unlockEdgeWrap();
       resetWheelBridge();
     };
   }, [allowSectionScrollOnEdges, emblaApi]);
@@ -645,14 +741,6 @@ export function ServicesSliderSection({
                             priority={preloadedSlideIndexes.has(index)}
                           />
                         )}
-                        <div
-                          aria-hidden="true"
-                          className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[118px] min-[1000px]:h-[174px]"
-                          style={{
-                            background:
-                              'linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.16) 34%, rgba(0, 0, 0, 0.52) 66%, rgba(0, 0, 0, 0.86) 100%)',
-                          }}
-                        />
                         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex w-full flex-col items-center px-1.5 text-center min-[1000px]:pb-[25px]">
                           <p className="hidden max-w-[260px] text-[12px] leading-[1.12] min-[1000px]:block mb-2">{slide.description}</p>
                           <h4 className="text-[22px] font-black leading-none text-[#63ff45] [text-shadow:-4px_5px_18px_rgba(0,0,0,0.82)] min-[1000px]:text-[18px] min-[1430px]:text-[30px]">
