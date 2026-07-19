@@ -1,11 +1,19 @@
 'use client';
 
-import {forwardRef, useImperativeHandle, useRef, type CSSProperties} from 'react';
+import {
+    forwardRef,
+    useImperativeHandle,
+    useRef,
+    type CSSProperties,
+    type MouseEvent,
+} from 'react';
 import gsap from 'gsap';
 import {useGSAP} from '@gsap/react';
 import Image from 'next/image';
 import Logo from '@/src/lib/assets/logo.svg';
 import Link from "next/link";
+import {usePathname} from 'next/navigation';
+import {FULLPAGE_SCROLL_EVENT} from '@/src/components/ui/FullPageScroll';
 
 gsap.registerPlugin(useGSAP);
 
@@ -56,6 +64,7 @@ const getInitialHeaderLogoStyle = (progress: number): CSSProperties => ({
 export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewProps>(
     function AnimatedLogoNew({variant = 'desktop', initialProgress = 0}, ref) {
         const initialProgressValue = gsap.utils.clamp(0, 1, initialProgress);
+        const pathname = usePathname();
         const containerRef = useRef<HTMLDivElement>(null);
         const centerLogoRef = useRef<HTMLDivElement>(null);
         const headerPlateRef = useRef<HTMLDivElement>(null);
@@ -173,6 +182,23 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
             },
         }));
 
+        const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
+            if (pathname !== '/' && pathname !== '/main') {
+                return;
+            }
+
+            event.preventDefault();
+
+            window.dispatchEvent(
+                new CustomEvent(FULLPAGE_SCROLL_EVENT, {
+                    detail: {
+                        behavior: 'instant',
+                        targetIndex: 0,
+                    },
+                }),
+            );
+        };
+
         return (
             <div ref={containerRef} className="relative">
                 <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center">
@@ -207,7 +233,11 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
                             className={`relative mx-auto ${styles.logoWidthClass}`}
                             style={initialHeaderLogoStyle}
                         >
-                            <Link className="pointer-events-auto block" href={'/'}>
+                            <Link
+                                className="pointer-events-auto block"
+                                href={'/'}
+                                onClick={handleLogoClick}
+                            >
                                 <Image
                                 src={Logo}
                                 alt="XLAM Media"

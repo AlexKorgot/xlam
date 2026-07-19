@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent,
   type ReactNode,
@@ -33,6 +34,10 @@ type BaseModalProps = {
 };
 
 const defaultAnimationDuration = 260;
+const mobileSheetViewportGap = 16;
+const mobileSheetViewportRatio = 0.92;
+const desktopSheetViewportGap = 64;
+const desktopSheetMaxHeight = 829;
 const focusableSelector = [
   'a[href]',
   'button:not([disabled])',
@@ -67,6 +72,12 @@ export function BaseModal({
   const closeTimerRef = useRef<number | null>(null);
   const visibilityFrameRef = useRef<number | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
+  const [modalViewportHeight, setModalViewportHeight] = useState<number | null>(
+    () =>
+      typeof window === 'undefined'
+        ? null
+        : window.visualViewport?.height ?? window.innerHeight,
+  );
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [isVisible, setIsVisible] = useState(false);
   const close = useCallback(() => {
@@ -172,7 +183,31 @@ export function BaseModal({
     bodyStyle.right = '0';
     bodyStyle.width = '100%';
 
+    const syncModalViewportHeight = () => {
+      if (variant !== 'sheet') {
+        return;
+      }
+
+      const nextHeight = window.visualViewport?.height ?? window.innerHeight;
+
+      if (!nextHeight || nextHeight <= 0) {
+        return;
+      }
+
+      setModalViewportHeight((currentHeight) =>
+        currentHeight !== nextHeight ? nextHeight : currentHeight,
+      );
+    };
+
+    syncModalViewportHeight();
+    window.addEventListener('resize', syncModalViewportHeight);
+    window.visualViewport?.addEventListener('resize', syncModalViewportHeight);
+    window.visualViewport?.addEventListener('scroll', syncModalViewportHeight);
+
     return () => {
+      window.removeEventListener('resize', syncModalViewportHeight);
+      window.visualViewport?.removeEventListener('resize', syncModalViewportHeight);
+      window.visualViewport?.removeEventListener('scroll', syncModalViewportHeight);
       htmlStyle.overflow = previousHtmlStyles.overflow;
       htmlStyle.overscrollBehavior = previousHtmlStyles.overscrollBehavior;
       bodyStyle.overflow = previousBodyStyles.overflow;
@@ -184,10 +219,17 @@ export function BaseModal({
       bodyStyle.width = previousBodyStyles.width;
       window.scrollTo(0, scrollY);
     };
-  }, [shouldRender]);
+  }, [shouldRender, variant]);
 
   useEffect(() => {
     if (!isOpen) {
+      return;
+    }
+
+    if (
+      variant === 'sheet' &&
+      window.matchMedia('(max-width: 999.98px)').matches
+    ) {
       return;
     }
 
@@ -198,7 +240,7 @@ export function BaseModal({
     return () => {
       window.cancelAnimationFrame(focusFrame);
     };
-  }, [isOpen]);
+  }, [isOpen, variant]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -228,6 +270,35 @@ export function BaseModal({
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [close, closeOnEscape, isOpen, onNext, onPrevious]);
+
+  const isSheet = variant === 'sheet';
+  const sheetViewportHeight =
+    modalViewportHeight ?? (typeof window === 'undefined' ? 0 : window.innerHeight);
+  const mobileSheetHeight =
+    sheetViewportHeight > 0
+      ? Math.min(
+          sheetViewportHeight * mobileSheetViewportRatio,
+          sheetViewportHeight - mobileSheetViewportGap,
+        )
+      : null;
+  const desktopSheetHeight =
+    sheetViewportHeight > 0
+      ? Math.min(desktopSheetMaxHeight, sheetViewportHeight - desktopSheetViewportGap)
+      : null;
+  const modalViewportStyle = isSheet
+    ? ({
+        '--modal-viewport-height':
+          sheetViewportHeight > 0 ? `${sheetViewportHeight}px` : '100dvh',
+        '--modal-sheet-height':
+          mobileSheetHeight && mobileSheetHeight > 0
+            ? `${mobileSheetHeight}px`
+            : 'calc(100dvh - 1rem)',
+        '--modal-sheet-desktop-height':
+          desktopSheetHeight && desktopSheetHeight > 0
+            ? `${desktopSheetHeight}px`
+            : 'min(829px, calc(100dvh - 4rem))',
+      } as CSSProperties)
+    : undefined;
 
   if (!shouldRender) {
     return null;
@@ -267,8 +338,6 @@ export function BaseModal({
     }
   };
 
-  const isSheet = variant === 'sheet';
-
   return (
     <ModalPortal>
       <div
@@ -287,6 +356,7 @@ export function BaseModal({
         ].join(' ')}
         data-fullpage-scroll-ignore="true"
         role="dialog"
+        style={modalViewportStyle}
         aria-modal="true"
         aria-labelledby={labelledBy}
         aria-describedby={describedBy}
@@ -296,7 +366,7 @@ export function BaseModal({
         <div
           className={[
             isSheet
-              ? 'relative mx-auto flex min-h-[100svh] w-full max-w-[1920px] flex-col items-center justify-end px-0 pt-6 sm:px-4 sm:pt-8 lg:justify-center lg:px-8 lg:py-8'
+              ? 'relative mx-auto flex h-[var(--modal-viewport-height,100dvh)] min-h-0 w-full max-w-[1920px] flex-col items-center justify-end px-0 pt-6 sm:px-4 sm:pt-8 lg:justify-center lg:px-8 lg:py-8'
               : 'relative mx-auto flex min-h-[100svh] w-full max-w-[1920px] flex-col p-5 min-[1000px]:items-center min-[1000px]:justify-center min-[1000px]:px-[66px] min-[1000px]:py-[46px]',
             isSheet
               ? ''
@@ -311,7 +381,7 @@ export function BaseModal({
               'relative flex w-full flex-col overflow-hidden overflow-x-hidden',
               isSheet
                 ? [
-                    'h-[min(92svh,calc(100svh-1rem))] max-w-none rounded-t-lg border border-b-0 border-white/18 bg-[#050909]/88 shadow-[0_-28px_90px_rgba(0,0,0,0.76)] backdrop-blur-lg transition-[opacity,transform] duration-[620ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:bg-[#050909]/94 sm:backdrop-blur-xl lg:h-[min(829px,calc(100svh-4rem))] lg:max-w-[min(1756px,calc(100vw-4rem))] lg:rounded-lg lg:border-b lg:shadow-[0_30px_100px_rgba(0,0,0,0.78)]',
+                    'h-[var(--modal-sheet-height,calc(100dvh-1rem))] max-w-none rounded-t-lg border border-b-0 border-white/18 bg-[#050909]/88 shadow-[0_-28px_90px_rgba(0,0,0,0.76)] backdrop-blur-lg transition-[opacity,transform] duration-[620ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:bg-[#050909]/94 sm:backdrop-blur-xl lg:h-[var(--modal-sheet-desktop-height,min(829px,calc(100dvh-4rem)))] lg:max-w-[min(1756px,calc(100vw-4rem))] lg:rounded-lg lg:border-b lg:shadow-[0_30px_100px_rgba(0,0,0,0.78)]',
                     isVisible
                       ? 'translate-y-0 scale-100 opacity-100'
                       : 'translate-y-full opacity-0 lg:translate-y-0 lg:scale-100',
