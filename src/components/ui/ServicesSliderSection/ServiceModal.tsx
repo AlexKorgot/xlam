@@ -1,6 +1,7 @@
 'use client';
 
 import Image, { type StaticImageData } from 'next/image';
+import useEmblaCarousel from 'embla-carousel-react';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { GlitchBrandXIcon } from '@/src/components/ui/GlitchBrandXIcon';
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
@@ -73,9 +74,16 @@ export function ServiceModal({
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
   const contentSwitchTimeoutRef = useRef<number | null>(null);
   const contentSwitchFrameRef = useRef<number | null>(null);
-  const featureListRef = useRef<HTMLDivElement | null>(null);
-  const featureScrollStopTimeoutRef = useRef<number | null>(null);
-  const isFeatureSnapScrollingRef = useRef(false);
+  const [featureEmblaRef, featureEmblaApi] = useEmblaCarousel({
+    axis: 'y',
+    loop: true,
+    align: 'center',
+    containScroll: false,
+    dragFree: false,
+    skipSnaps: false,
+    slidesToScroll: 1,
+    duration: 24,
+  });
 
   const clearContentSwitchTimers = () => {
     if (contentSwitchTimeoutRef.current !== null) {
@@ -89,110 +97,21 @@ export function ServiceModal({
     }
   };
 
-  const clearFeatureScrollTimeout = () => {
-    if (featureScrollStopTimeoutRef.current === null) {
+  const syncActiveFeatureIndex = useCallback(() => {
+    if (!featureEmblaApi) {
       return;
     }
 
-    window.clearTimeout(featureScrollStopTimeoutRef.current);
-    featureScrollStopTimeoutRef.current = null;
-  };
+    setActiveFeatureIndex(featureEmblaApi.selectedScrollSnap());
+  }, [featureEmblaApi]);
 
-  const isMobileFeaturePickerViewport = () =>
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 999.98px)').matches;
-
-  const scrollFeatureToListCenter = (row: HTMLElement, behavior: ScrollBehavior) => {
-    const list = featureListRef.current;
-
-    if (!list) {
-      return;
-    }
-
-    const targetScrollTop = row.offsetTop - (list.clientHeight - row.offsetHeight) / 2;
-
-    list.scrollTo({
-      top: Math.max(0, targetScrollTop),
-      behavior,
-    });
-  };
-
-  const selectCenteredFeature = useCallback((snapToFeature = true) => {
-    const list = featureListRef.current;
-
-    if (!list || !isMobileFeaturePickerViewport()) {
-      return;
-    }
-
-    const listRect = list.getBoundingClientRect();
-    const listCenterY = listRect.top + listRect.height / 2;
-    const rows = Array.from(list.querySelectorAll<HTMLElement>('[data-service-feature-index]'));
-    let closestRow: HTMLElement | null = null;
-    let closestDistance = Number.POSITIVE_INFINITY;
-
-    for (const row of rows) {
-      const rowRect = row.getBoundingClientRect();
-      const rowCenterY = rowRect.top + rowRect.height / 2;
-      const distance = Math.abs(rowCenterY - listCenterY);
-
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestRow = row;
-      }
-    }
-
-    const nextIndex = Number(closestRow?.dataset.serviceFeatureIndex);
-
-    if (!Number.isFinite(nextIndex)) {
-      return;
-    }
-
-    if (snapToFeature && closestRow) {
-      isFeatureSnapScrollingRef.current = true;
-      scrollFeatureToListCenter(closestRow, 'smooth');
-
-      window.setTimeout(() => {
-        isFeatureSnapScrollingRef.current = false;
-      }, 260);
-    }
-
-    setActiveFeatureIndex(nextIndex);
-  }, []);
-
-  const scheduleCenteredFeatureSelection = useCallback(
-    (delay = 150) => {
-      clearFeatureScrollTimeout();
-
-      featureScrollStopTimeoutRef.current = window.setTimeout(() => {
-        featureScrollStopTimeoutRef.current = null;
-        selectCenteredFeature();
-      }, delay);
-    },
-    [selectCenteredFeature],
-  );
-
-  const centerFeature = useCallback((index: number, behavior: ScrollBehavior = 'smooth') => {
-    if (!isMobileFeaturePickerViewport()) {
-      setActiveFeatureIndex(index);
-      return;
-    }
-
-    const row = featureListRef.current?.querySelector<HTMLElement>(
-      `[data-service-feature-index="${index}"]`,
-    );
-
-    if (!row) {
-      setActiveFeatureIndex(index);
-      return;
-    }
-
-    isFeatureSnapScrollingRef.current = true;
-    scrollFeatureToListCenter(row, behavior);
+  const centerFeature = useCallback((index: number) => {
     setActiveFeatureIndex(index);
 
-    window.setTimeout(() => {
-      isFeatureSnapScrollingRef.current = false;
-    }, 260);
-  }, []);
+    if (featureEmblaApi) {
+      featureEmblaApi.scrollTo(index);
+    }
+  }, [featureEmblaApi]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -227,33 +146,39 @@ export function ServiceModal({
   useEffect(
     () => () => {
       clearContentSwitchTimers();
-      clearFeatureScrollTimeout();
     },
     [],
   );
 
   useEffect(() => {
-    if (!isOpen) {
-      return undefined;
-    }
-
-    const centerInitialFeature = window.setTimeout(() => {
-      centerFeature(0, 'auto');
-    }, 0);
-
-    return () => {
-      window.clearTimeout(centerInitialFeature);
-      clearFeatureScrollTimeout();
-    };
-  }, [centerFeature, displayedState.content, isOpen]);
-
-  const handleFeatureListScroll = () => {
-    if (!isMobileFeaturePickerViewport() || isFeatureSnapScrollingRef.current) {
+    if (!featureEmblaApi) {
       return;
     }
 
-    scheduleCenteredFeatureSelection();
-  };
+    featureEmblaApi.on('select', syncActiveFeatureIndex);
+    featureEmblaApi.on('reInit', syncActiveFeatureIndex);
+
+    return () => {
+      featureEmblaApi.off('select', syncActiveFeatureIndex);
+      featureEmblaApi.off('reInit', syncActiveFeatureIndex);
+    };
+  }, [featureEmblaApi, syncActiveFeatureIndex]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    featureEmblaApi?.scrollTo(0, true);
+
+    const resetFrame = window.requestAnimationFrame(() => {
+      setActiveFeatureIndex(0);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(resetFrame);
+    };
+  }, [displayedState.content, featureEmblaApi, isOpen]);
 
   const contentTransitionClass = [
     'transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
@@ -375,10 +300,55 @@ export function ServiceModal({
               className="pointer-events-none absolute left-0 right-1 top-1/2 z-10 h-[64px] -translate-y-1/2 bg-[#63ff45]/[0.08] shadow-[0_0_34px_rgba(99,255,69,0.14)] min-[1000px]:hidden"
             />
             <div
-              ref={featureListRef}
-              className="relative z-20 h-[188px] touch-pan-y snap-y snap-mandatory overflow-y-auto overscroll-contain py-[62px] pr-1 text-left [mask-image:linear-gradient(to_bottom,transparent_0%,#000_16%,#000_50%,#000_84%,transparent_100%)] [scrollbar-width:none] min-[1000px]:grid min-[1000px]:h-auto min-[1000px]:snap-none min-[1000px]:grid-cols-[repeat(2,minmax(0,1fr))] min-[1000px]:items-start min-[1000px]:gap-x-8 min-[1000px]:gap-y-6 min-[1000px]:overflow-visible min-[1000px]:py-0 min-[1000px]:pr-0 min-[1000px]:[mask-image:none] min-[1400px]:grid-cols-[repeat(4,minmax(0,1fr))] min-[1400px]:gap-x-11 [&::-webkit-scrollbar]:hidden"
-              onScroll={handleFeatureListScroll}
+              ref={featureEmblaRef}
+              className="relative z-20 h-[188px] touch-pan-y overflow-hidden pr-1 text-left [mask-image:linear-gradient(to_bottom,transparent_0%,#000_16%,#000_50%,#000_84%,transparent_100%)] min-[1000px]:hidden"
             >
+              <div className="flex h-full flex-col">
+                {displayedState.content.features.map((feature, index) => {
+                  const isActive = index === activeFeatureIndex;
+
+                  return (
+                    <button
+                      key={feature.title}
+                      type="button"
+                      aria-pressed={isActive}
+                      className={[
+                        'group relative block min-h-[64px] w-full flex-[0_0_64px] cursor-pointer overflow-hidden text-left uppercase transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#63ff45]',
+                        isActive ? 'text-black' : 'text-white',
+                      ].join(' ')}
+                      onClick={() => centerFeature(index)}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={[
+                          'absolute inset-y-0 left-0 right-0 bg-[linear-gradient(90deg,#63ff45_0%,#63ff45_73%,#000_97%)] transition-opacity duration-200',
+                          isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+                        ].join(' ')}
+                      />
+                      <span className="relative flex min-h-[64px] w-full min-w-0 flex-col justify-center px-2 py-2">
+                        <span
+                          className={[
+                            'block text-[14px] font-black uppercase leading-none transition-colors sm:text-[15px]',
+                            isActive ? 'text-black' : 'text-[#63ff45]',
+                          ].join(' ')}
+                        >
+                          {feature.title}
+                        </span>
+                        <span
+                          className={[
+                            'mt-1.5 block text-[12px] leading-[1.04] transition-colors sm:text-[13px]',
+                            isActive ? 'text-black' : 'text-white',
+                          ].join(' ')}
+                        >
+                          {feature.description}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="relative z-20 hidden text-left min-[1000px]:grid min-[1000px]:grid-cols-[repeat(2,minmax(0,1fr))] min-[1000px]:items-start min-[1000px]:gap-x-8 min-[1000px]:gap-y-6 min-[1400px]:grid-cols-[repeat(4,minmax(0,1fr))] min-[1400px]:gap-x-11">
               {displayedState.content.features.map((feature, index) => {
                 const isActive = index === activeFeatureIndex;
 
@@ -386,42 +356,23 @@ export function ServiceModal({
                   <button
                     key={feature.title}
                     type="button"
-                    data-service-feature-index={index}
                     aria-pressed={isActive}
-                    className={[
-                      'group relative block min-h-[64px] w-full cursor-pointer snap-center overflow-hidden text-left uppercase transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#63ff45] min-[1000px]:min-h-0 min-[1000px]:cursor-default min-[1000px]:snap-none min-[1000px]:overflow-visible min-[1000px]:normal-case',
-                      isActive ? 'text-black' : 'text-white',
-                    ].join(' ')}
-                    onClick={() => {
-                      if (isMobileFeaturePickerViewport()) {
-                        centerFeature(index);
-                      }
-                    }}
+                    className="group relative block w-full cursor-default overflow-visible text-left normal-case transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#63ff45]"
+                    onClick={() => setActiveFeatureIndex(index)}
                   >
-                    <span
-                      aria-hidden="true"
-                      className={[
-                        'absolute inset-y-0 left-0 right-0 bg-[linear-gradient(90deg,#63ff45_0%,#63ff45_73%,#000_97%)] transition-opacity duration-200 min-[1000px]:hidden',
-                        isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
-                      ].join(' ')}
-                    />
-                    <span className="relative flex min-h-[64px] w-full min-w-0 flex-col justify-center px-2 py-2 min-[1000px]:block min-[1000px]:min-h-0 min-[1000px]:p-0">
+                    <span className="relative block w-full min-w-0">
                       <span
                         className={[
-                          'block text-[14px] font-black uppercase leading-none transition-colors sm:text-[15px] lg:text-[17px]',
-                          isActive
-                            ? 'text-black min-[1000px]:text-[#63ff45]'
-                            : 'text-[#63ff45]',
+                          'block text-[17px] font-black uppercase leading-none transition-colors',
+                          isActive ? 'text-[#63ff45]' : 'text-[#63ff45]',
                         ].join(' ')}
                       >
                         {feature.title}
                       </span>
                       <span
                         className={[
-                          'mt-1.5 block text-[12px] leading-[1.04] transition-colors sm:text-[13px] min-[1000px]:leading-[1.12] lg:text-[14px]',
-                          isActive
-                            ? 'text-black min-[1000px]:text-white'
-                            : 'text-white',
+                          'mt-1.5 block text-[14px] leading-[1.12] transition-colors',
+                          isActive ? 'text-white' : 'text-white',
                         ].join(' ')}
                       >
                         {feature.description}
