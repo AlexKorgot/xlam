@@ -1,7 +1,6 @@
 'use client';
 
 import Image, { type StaticImageData } from 'next/image';
-import useEmblaCarousel from 'embla-carousel-react';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { GlitchBrandXIcon } from '@/src/components/ui/GlitchBrandXIcon';
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
@@ -43,6 +42,12 @@ type DisplayedModalState = {
 };
 
 const contentSwitchExitDuration = 180;
+const featurePickerCycles = [-2, -1, 0, 1, 2] as const;
+const featurePickerScrollStopDelay = 140;
+const featurePickerSnapReleaseDelay = 260;
+
+const isMobileFeaturePickerViewport = () =>
+  typeof window !== 'undefined' && window.matchMedia('(max-width: 999.98px)').matches;
 
 export function ServiceModal({
   isOpen,
@@ -74,16 +79,9 @@ export function ServiceModal({
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
   const contentSwitchTimeoutRef = useRef<number | null>(null);
   const contentSwitchFrameRef = useRef<number | null>(null);
-  const [featureEmblaRef, featureEmblaApi] = useEmblaCarousel({
-    axis: 'y',
-    loop: true,
-    align: 'center',
-    containScroll: false,
-    dragFree: false,
-    skipSnaps: false,
-    slidesToScroll: 1,
-    duration: 24,
-  });
+  const featureListRef = useRef<HTMLUListElement | null>(null);
+  const featureScrollStopTimeoutRef = useRef<number | null>(null);
+  const isFeatureSnapScrollingRef = useRef(false);
 
   const clearContentSwitchTimers = () => {
     if (contentSwitchTimeoutRef.current !== null) {
@@ -97,21 +95,154 @@ export function ServiceModal({
     }
   };
 
-  const syncActiveFeatureIndex = useCallback(() => {
-    if (!featureEmblaApi) {
+  const clearFeatureScrollStopTimer = () => {
+    if (featureScrollStopTimeoutRef.current === null) {
       return;
     }
 
-    setActiveFeatureIndex(featureEmblaApi.selectedScrollSnap());
-  }, [featureEmblaApi]);
+    window.clearTimeout(featureScrollStopTimeoutRef.current);
+    featureScrollStopTimeoutRef.current = null;
+  };
+
+  const scrollFeatureRowToCenter = useCallback((
+    row: HTMLLIElement,
+    behavior: ScrollBehavior,
+  ) => {
+    const list = featureListRef.current;
+
+    if (!list) {
+      return;
+    }
+
+    const targetScrollTop =
+      row.offsetTop - (list.clientHeight - row.offsetHeight) / 2;
+
+    list.scrollTo({
+      top: Math.max(0, targetScrollTop),
+      behavior,
+    });
+  }, []);
+
+  const getCenteredFeatureRow = useCallback(() => {
+    const list = featureListRef.current;
+
+    if (!list) {
+      return null;
+    }
+
+    const listRect = list.getBoundingClientRect();
+    const listCenterY = listRect.top + listRect.height / 2;
+    const rows = Array.from(
+      list.querySelectorAll<HTMLLIElement>('[data-feature-index]'),
+    );
+    let closestRow: HTMLLIElement | null = null;
+    let closestDistance = Number.POSITIVE_INFINITY;
+
+    for (const row of rows) {
+      const rowRect = row.getBoundingClientRect();
+      const rowCenterY = rowRect.top + rowRect.height / 2;
+      const distance = Math.abs(rowCenterY - listCenterY);
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestRow = row;
+      }
+    }
+
+    return closestRow;
+  }, []);
 
   const centerFeature = useCallback((index: number) => {
+    const list = featureListRef.current;
+
+    if (!list || !isMobileFeaturePickerViewport()) {
+      setActiveFeatureIndex(index);
+      return;
+    }
+
+    const rows = Array.from(
+      list.querySelectorAll<HTMLLIElement>(`[data-feature-index="${index}"]`),
+    );
+    const listRect = list.getBoundingClientRect();
+    const listCenterY = listRect.top + listRect.height / 2;
+    let closestRow: HTMLLIElement | null = null;
+    let closestDistance = Number.POSITIVE_INFINITY;
+
+    for (const row of rows) {
+      const rowRect = row.getBoundingClientRect();
+      const rowCenterY = rowRect.top + rowRect.height / 2;
+      const distance = Math.abs(rowCenterY - listCenterY);
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestRow = row;
+      }
+    }
+
+    if (!closestRow) {
+      setActiveFeatureIndex(index);
+      return;
+    }
+
+    isFeatureSnapScrollingRef.current = true;
+    clearFeatureScrollStopTimer();
+    scrollFeatureRowToCenter(closestRow, 'smooth');
     setActiveFeatureIndex(index);
 
-    if (featureEmblaApi) {
-      featureEmblaApi.scrollTo(index);
+    window.setTimeout(() => {
+      isFeatureSnapScrollingRef.current = false;
+    }, featurePickerSnapReleaseDelay);
+  }, [scrollFeatureRowToCenter]);
+
+  const selectCenteredFeature = useCallback((snapToFeature = true) => {
+    if (!isMobileFeaturePickerViewport()) {
+      return;
     }
-  }, [featureEmblaApi]);
+
+    const centeredRow = getCenteredFeatureRow();
+    const nextIndex = Number(centeredRow?.dataset.featureIndex);
+
+    if (!centeredRow || Number.isNaN(nextIndex)) {
+      return;
+    }
+
+    setActiveFeatureIndex(nextIndex);
+
+    const centerCycleRow = featureListRef.current?.querySelector<HTMLLIElement>(
+      `[data-feature-index="${nextIndex}"][data-feature-cycle="0"]`,
+    );
+
+    if (snapToFeature && centerCycleRow) {
+      isFeatureSnapScrollingRef.current = true;
+      scrollFeatureRowToCenter(centerCycleRow, 'auto');
+
+      window.setTimeout(() => {
+        isFeatureSnapScrollingRef.current = false;
+      }, 0);
+    }
+  }, [getCenteredFeatureRow, scrollFeatureRowToCenter]);
+
+  const scheduleCenteredFeatureSelection = useCallback(() => {
+    clearFeatureScrollStopTimer();
+
+    featureScrollStopTimeoutRef.current = window.setTimeout(() => {
+      featureScrollStopTimeoutRef.current = null;
+      selectCenteredFeature();
+    }, featurePickerScrollStopDelay);
+  }, [selectCenteredFeature]);
+
+  const mobileFeatureItems = useMemo(
+    () =>
+      featurePickerCycles.flatMap((cycle) =>
+        displayedState.content.features.map((feature, index) => ({
+          cycle,
+          feature,
+          index,
+          key: `${cycle}-${feature.title}`,
+        })),
+      ),
+    [displayedState.content.features],
+  );
 
   useEffect(() => {
     if (!isOpen) {
@@ -146,39 +277,46 @@ export function ServiceModal({
   useEffect(
     () => () => {
       clearContentSwitchTimers();
+      clearFeatureScrollStopTimer();
     },
     [],
   );
-
-  useEffect(() => {
-    if (!featureEmblaApi) {
-      return;
-    }
-
-    featureEmblaApi.on('select', syncActiveFeatureIndex);
-    featureEmblaApi.on('reInit', syncActiveFeatureIndex);
-
-    return () => {
-      featureEmblaApi.off('select', syncActiveFeatureIndex);
-      featureEmblaApi.off('reInit', syncActiveFeatureIndex);
-    };
-  }, [featureEmblaApi, syncActiveFeatureIndex]);
 
   useEffect(() => {
     if (!isOpen) {
       return;
     }
 
-    featureEmblaApi?.scrollTo(0, true);
-
     const resetFrame = window.requestAnimationFrame(() => {
       setActiveFeatureIndex(0);
+      const firstCenterRow = featureListRef.current?.querySelector<HTMLLIElement>(
+        '[data-feature-index="0"][data-feature-cycle="0"]',
+      );
+
+      if (firstCenterRow) {
+        scrollFeatureRowToCenter(firstCenterRow, 'auto');
+      }
     });
 
     return () => {
       window.cancelAnimationFrame(resetFrame);
     };
-  }, [displayedState.content, featureEmblaApi, isOpen]);
+  }, [displayedState.content, isOpen, scrollFeatureRowToCenter]);
+
+  const handleFeatureListScroll = () => {
+    if (!isMobileFeaturePickerViewport() || isFeatureSnapScrollingRef.current) {
+      return;
+    }
+
+    const centeredRow = getCenteredFeatureRow();
+    const nextIndex = Number(centeredRow?.dataset.featureIndex);
+
+    if (!Number.isNaN(nextIndex)) {
+      setActiveFeatureIndex(nextIndex);
+    }
+
+    scheduleCenteredFeatureSelection();
+  };
 
   const contentTransitionClass = [
     'transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
@@ -299,17 +437,22 @@ export function ServiceModal({
               aria-hidden="true"
               className="pointer-events-none absolute left-0 right-1 top-1/2 z-10 h-[64px] -translate-y-1/2 bg-[#63ff45]/[0.08] shadow-[0_0_34px_rgba(99,255,69,0.14)] min-[1000px]:hidden"
             />
-            <div
-              ref={featureEmblaRef}
-              className="relative z-20 h-[188px] touch-pan-y overflow-hidden pr-1 text-left [mask-image:linear-gradient(to_bottom,transparent_0%,#000_16%,#000_50%,#000_84%,transparent_100%)] min-[1000px]:hidden"
+            <ul
+              ref={featureListRef}
+              className="relative z-20 flex h-[188px] touch-pan-y snap-y snap-mandatory flex-col overflow-y-auto overflow-x-hidden overscroll-contain py-[62px] pr-1 text-left [mask-image:linear-gradient(to_bottom,transparent_0%,#000_16%,#000_50%,#000_84%,transparent_100%)] [scrollbar-width:none] min-[1000px]:hidden [&::-webkit-scrollbar]:hidden"
+              onScroll={handleFeatureListScroll}
             >
-              <div className="flex h-full flex-col">
-                {displayedState.content.features.map((feature, index) => {
-                  const isActive = index === activeFeatureIndex;
+              {mobileFeatureItems.map(({ cycle, feature, index, key }) => {
+                const isActive = index === activeFeatureIndex;
 
-                  return (
+                return (
+                  <li
+                    key={key}
+                    className="snap-center"
+                    data-feature-cycle={cycle}
+                    data-feature-index={index}
+                  >
                     <button
-                      key={feature.title}
                       type="button"
                       aria-pressed={isActive}
                       className={[
@@ -344,10 +487,10 @@ export function ServiceModal({
                         </span>
                       </span>
                     </button>
-                  );
-                })}
-              </div>
-            </div>
+                  </li>
+                );
+              })}
+            </ul>
             <div className="relative z-20 hidden text-left min-[1000px]:grid min-[1000px]:grid-cols-[repeat(2,minmax(0,1fr))] min-[1000px]:items-start min-[1000px]:gap-x-8 min-[1000px]:gap-y-6 min-[1400px]:grid-cols-[repeat(4,minmax(0,1fr))] min-[1400px]:gap-x-11">
               {displayedState.content.features.map((feature, index) => {
                 const isActive = index === activeFeatureIndex;
