@@ -905,7 +905,7 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
                         alt=""
                         aria-hidden="true"
                         unoptimized
-                        loading={item.key === 'greenBrick' ? 'eager' : 'lazy'}
+                        loading="eager"
                         className={item.imageClassName}
                         sizes="(max-width: 1710px) 100vw, 1710px"
                       />

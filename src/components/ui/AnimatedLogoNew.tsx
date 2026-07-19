@@ -184,7 +184,6 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
                         <Image
                             src={Logo}
                             alt="XLAM Media"
-                            preload
                             loading="eager"
                             fetchPriority="high"
                             unoptimized

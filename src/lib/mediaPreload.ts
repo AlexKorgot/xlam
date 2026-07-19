@@ -39,6 +39,9 @@ import cinematicShowPreviewOne from '@/src/components/cinematic_new/assets/mer/p
 import cinematicShowPreviewTwo from '@/src/components/cinematic_new/assets/mer/podcast2.png';
 import cinematicPodcastPreviewOne from '@/src/components/cinematic_new/assets/mer/show1.png';
 import cinematicPodcastPreviewTwo from '@/src/components/cinematic_new/assets/mer/show2.png';
+import cinematicDzenLogo from '@/src/components/cinematic_new/assets/line/dzen.svg';
+import cinematicMerLogo from '@/src/components/cinematic_new/assets/line/mer.svg';
+import cinematicNikeLogo from '@/src/components/cinematic_new/assets/line/nike.svg';
 
 export type MediaPreloadKind = 'image' | 'video';
 export type MediaPreloadPriority = 'immediate' | 'idle';
@@ -56,7 +59,7 @@ const imageSrc = (asset: ImageAsset) =>
 
 const image = (
   asset: ImageAsset,
-  priority: MediaPreloadPriority = 'idle',
+  priority: MediaPreloadPriority = 'immediate',
 ): MediaPreloadItem => ({
   src: imageSrc(asset),
   kind: 'image',
@@ -101,7 +104,7 @@ export const mediaPreloadManifest: MediaPreloadItem[] = [
   image(servicesBrandModal),
   image(servicesBrandingModal),
   image(servicesShowModal),
-  image(publicAssetPath('/video/services/posters/5.png')),
+  image(publicAssetPath('/video/services/posters/5.jpg')),
   image(teamPersonOne),
   image(teamPersonTwo),
   image(teamPersonThree),
@@ -115,12 +118,14 @@ export const mediaPreloadManifest: MediaPreloadItem[] = [
   image(cinematicShowPreviewTwo),
   image(cinematicPodcastPreviewOne),
   image(cinematicPodcastPreviewTwo),
+  image(cinematicDzenLogo),
+  image(cinematicMerLogo),
+  image(cinematicNikeLogo),
 
   video('/video/balls.mp4'),
   video('/video/Mer.mp4'),
   video('/video/now.mp4'),
   video('/video/vote.mp4'),
-  video('/video/timessquarenightwide.mp4'),
   video('/video/services/1.mp4'),
   video('/video/services/2.mp4'),
   video('/video/services/3.mp4'),

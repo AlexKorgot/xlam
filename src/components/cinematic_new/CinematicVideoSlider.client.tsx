@@ -82,6 +82,7 @@ function LogoTicker() {
                 key={`${groupIndex}-${index}-${logo.src}`}
                 src={logo}
                 alt=""
+                loading="eager"
                 className="h-5 w-auto max-w-none shrink-0 object-contain sm:h-6 md:h-7"
                 draggable={false}
               />
