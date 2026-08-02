@@ -13,7 +13,6 @@
   display: flex;
   min-height: 44px;
   width: 100%;
-  max-width: 425.862px;
   align-items: center;
   justify-content: center;
   border: 1.346px solid #fff;
@@ -97,6 +96,18 @@
     font-size: 16px;
     background: transparent;
     backdrop-filter: none;
+  }
+}
+
+@media (max-width: 999px) and (orientation: landscape) {
+  .featureList {
+    gap: clamp(3px, 1svh, 6px);
+  }
+
+  .featureBlock {
+    min-height: clamp(24px, 7svh, 32px);
+    padding: clamp(2px, 1svh, 5px) 8px;
+    font-size: clamp(9px, 2.8svh, 12px);
   }
 }
 

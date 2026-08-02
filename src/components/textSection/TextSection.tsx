@@ -95,7 +95,7 @@ const defaultImagePosition: TextSlideImagePosition = {
   bottomHeight: 'clamp(260px, 38.02vw, 730px)',
 };
 
-const slides: TextSlide[] = [
+const baseSlides: TextSlide[] = [
   {
     id: 'smooth',
     lines: ['В идеальном мире все гладко,', 'но гладкое', 'не запоминается'],
@@ -216,7 +216,7 @@ const slides: TextSlide[] = [
   },
   {
     id: 'idea',
-    lines: ['Если ваш бренд готов', 'Перестать быть аккуратным', 'и стать настоящим', 'Welcome'],
+    lines: ['Если ваш бренд готов', 'Перестать быть аккуратным', 'и стать настоящим'],
     topImage: GrayTop,
     bottomImage: GrayBottom,
     imagePosition: {
@@ -271,6 +271,16 @@ const slides: TextSlide[] = [
         '6xl': '1300px',
       },
     },
+  },
+];
+
+const ideaSlide = baseSlides[baseSlides.length - 1];
+const slides: TextSlide[] = [
+  ...baseSlides,
+  {
+    ...ideaSlide,
+    id: 'welcome',
+    lines: ['Welcome'],
   },
 ];
 
@@ -605,7 +615,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
 
   useGSAP(
     () => {
-      if (incomingIndex === null) {
+      if (incomingIndex === null || !incomingSlide) {
         return;
       }
 
@@ -633,6 +643,10 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
       const artMotionScale = reduceMotion ? 1 : 1.34;
       const isMobileViewport = window.matchMedia('(max-width: 639.98px)').matches;
       const textEnterY = reduceMotion ? 0 : isMobileViewport ? 8 : 36;
+      const keepArtworkStatic =
+        activeSlide.topImage === incomingSlide.topImage &&
+        activeSlide.bottomImage === incomingSlide.bottomImage &&
+        activeSlide.imagePosition === incomingSlide.imagePosition;
       const timeline = gsap.timeline({
         defaults: {
           ease: 'power3.inOut',
@@ -649,18 +663,26 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
         scale: textEnterScale,
         filter: reduceMotion ? 'none' : 'blur(10px)',
       });
-      gsap.set(incomingTopRef.current, {
-        autoAlpha: 0,
-        y: -artEnterDistance,
-        scale: artMotionScale,
-        transformOrigin: '50% 100%',
-      });
-      gsap.set(incomingBottomRef.current, {
-        autoAlpha: 0,
-        y: artEnterDistance,
-        scale: artMotionScale,
-        transformOrigin: '50% 0%',
-      });
+      if (keepArtworkStatic) {
+        gsap.set([incomingTopRef.current, incomingBottomRef.current], {
+          autoAlpha: 1,
+          y: 0,
+          scale: 1,
+        });
+      } else {
+        gsap.set(incomingTopRef.current, {
+          autoAlpha: 0,
+          y: -artEnterDistance,
+          scale: artMotionScale,
+          transformOrigin: '50% 100%',
+        });
+        gsap.set(incomingBottomRef.current, {
+          autoAlpha: 0,
+          y: artEnterDistance,
+          scale: artMotionScale,
+          transformOrigin: '50% 0%',
+        });
+      }
 
       timeline
         .to(
@@ -675,28 +697,6 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
           0,
         )
         .to(
-          activeTopRef.current,
-          {
-            autoAlpha: 0,
-            y: -artExitDistance,
-            scale: artMotionScale,
-            transformOrigin: '50% 100%',
-            duration: duration * 1.08,
-          },
-          0,
-        )
-        .to(
-          activeBottomRef.current,
-          {
-            autoAlpha: 0,
-            y: artExitDistance,
-            scale: artMotionScale,
-            transformOrigin: '50% 0%',
-            duration: duration * 1.08,
-          },
-          0,
-        )
-        .to(
           incomingTextRef.current,
           {
             autoAlpha: 1,
@@ -706,27 +706,53 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
             duration: duration * 0.9,
           },
           0,
-        )
-        .to(
-          incomingTopRef.current,
-          {
-            autoAlpha: 1,
-            y: 0,
-            scale: 1,
-            duration: duration * 0.96,
-          },
-          0,
-        )
-        .to(
-          incomingBottomRef.current,
-          {
-            autoAlpha: 1,
-            y: 0,
-            scale: 1,
-            duration: duration * 0.96,
-          },
-          0,
         );
+
+      if (!keepArtworkStatic) {
+        timeline
+          .to(
+            activeTopRef.current,
+            {
+              autoAlpha: 0,
+              y: -artExitDistance,
+              scale: artMotionScale,
+              transformOrigin: '50% 100%',
+              duration: duration * 1.08,
+            },
+            0,
+          )
+          .to(
+            activeBottomRef.current,
+            {
+              autoAlpha: 0,
+              y: artExitDistance,
+              scale: artMotionScale,
+              transformOrigin: '50% 0%',
+              duration: duration * 1.08,
+            },
+            0,
+          )
+          .to(
+            incomingTopRef.current,
+            {
+              autoAlpha: 1,
+              y: 0,
+              scale: 1,
+              duration: duration * 0.96,
+            },
+            0,
+          )
+          .to(
+            incomingBottomRef.current,
+            {
+              autoAlpha: 1,
+              y: 0,
+              scale: 1,
+              duration: duration * 0.96,
+            },
+            0,
+          );
+      }
 
       return () => {
         timeline.kill();

@@ -105,13 +105,13 @@ export function WhyUsSection() {
   return (
     <section
       ref={sectionRef}
-      className="relative isolate min-h-[100svh] overflow-hidden bg-black pt-[104px] font-normalidad text-white sm:pt-[128px] lg:h-[100svh] lg:pt-[150px]"
+      className="relative isolate min-h-[100svh] overflow-hidden bg-black pt-[104px] font-normalidad text-white sm:pt-[128px] max-[999px]:[@media_(orientation:landscape)]:!pt-[60px] lg:h-[100svh] lg:pt-[150px]"
       aria-labelledby="why-us-heading"
     >
       <video
         aria-hidden="true"
         autoPlay
-        className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-contain"
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover min-[1000px]:object-contain"
         muted
         playsInline
         preload="metadata"
@@ -133,7 +133,7 @@ export function WhyUsSection() {
 
           <ul
             aria-label="Преимущества"
-            className={`${styles.featureList} ${hasAnimatedIn ? styles.featureListAnimated : ""} mt-[clamp(2rem,5svh,12rem)] md:mt-7`}
+            className={`${styles.featureList} ${hasAnimatedIn ? styles.featureListAnimated : ""} mt-[clamp(2rem,5svh,12rem)] max-[999px]:[@media_(orientation:landscape)]:!mt-[clamp(8px,2svh,16px)] md:mt-7`}
           >
             {featureBlocks.map((feature, index) => (
               <FeatureBlock

@@ -96,7 +96,7 @@ const HeaderMobile = forwardRef<HeaderHandle, HeaderMobileProps>(function Header
   }));
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 px-4 pt-5 sm:px-8 sm:pt-7 min-[1000px]:hidden">
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 px-4 pt-5 sm:px-8 sm:pt-7 max-[999px]:[@media_(orientation:landscape)]:!px-4 max-[999px]:[@media_(orientation:landscape)]:!pt-3 min-[1000px]:hidden">
       <div
         aria-hidden="true"
         className="absolute inset-x-0 top-0 h-[calc(var(--header-offset)+4rem)] bg-transparent"
