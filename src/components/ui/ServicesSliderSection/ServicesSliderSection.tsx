@@ -613,7 +613,7 @@ export function ServicesSliderSection({
                     <button
                       type="button"
                       key={slide.id}
-                      className="embla__slide relative h-full min-w-0 flex-none basis-[calc((100%+9px)/2)] cursor-pointer border-0 bg-transparent pb-0 pl-[9px] pr-0 pt-0 text-left text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45] min-[600px]:basis-[calc((100%+9px)/3)] min-[1000px]:basis-1/4 min-[1000px]:pl-[22px]"
+                      className="group embla__slide relative h-full min-w-0 flex-none basis-[calc((100%+9px)/2)] cursor-pointer border-0 bg-transparent pb-0 pl-[9px] pr-0 pt-0 text-left text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45] min-[600px]:basis-[calc((100%+9px)/3)] min-[1000px]:basis-1/4 min-[1000px]:pl-[22px]"
                       aria-label={`Открыть услугу ${slide.title}`}
                       onClick={() => openModal(index)}
                       onMouseEnter={
@@ -649,9 +649,13 @@ export function ServicesSliderSection({
                             loading="eager"
                           />
                         )}
+                        <div
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[64%] bg-[linear-gradient(0deg,#66ff66_0%,#66ff66_34%,rgba(102,255,102,0.62)_58%,rgba(102,255,102,0.16)_82%,rgba(102,255,102,0)_100%)] opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 group-focus-visible:opacity-100 min-[1000px]:hidden"
+                        />
                         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex w-full flex-col items-center px-1.5 text-center min-[1000px]:pb-[25px]">
                           <p className="hidden max-w-[260px] text-[12px] leading-[1.12] min-[1000px]:block mb-2">{slide.description}</p>
-                          <h4 className="text-[22px] font-black leading-none text-[#63ff45] [text-shadow:-4px_5px_18px_rgba(0,0,0,0.82)] min-[1000px]:text-[18px] min-[1430px]:text-[30px]">
+                          <h4 className="text-[22px] font-black leading-none text-[#63ff45] [text-shadow:-4px_5px_18px_rgba(0,0,0,0.82)] transition-colors duration-200 group-hover:text-black group-focus-visible:text-black min-[1000px]:text-[18px] min-[1000px]:group-hover:text-[#63ff45] min-[1000px]:group-focus-visible:text-[#63ff45] min-[1430px]:text-[30px]">
                             {slide.title}
                           </h4>
                         </div>

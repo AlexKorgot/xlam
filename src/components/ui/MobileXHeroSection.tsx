@@ -389,7 +389,7 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
       className="relative isolate flex h-full min-h-0 w-full overflow-hidden bg-black font-normalidad text-white min-[1000px]:hidden"
     >
       <video
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full scale-x-[-1] object-cover"
         src={onlyBgVideo}
         autoPlay
         muted
@@ -464,7 +464,7 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
               aria-hidden="true"
             >
               <video
-                className="h-full w-full scale-x-[-1] object-cover brightness-125 contrast-110"
+                className="h-full w-full object-cover brightness-125 contrast-110"
                 src={onlyBgVideo}
                 autoPlay
                 muted

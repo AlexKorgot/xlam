@@ -34,42 +34,6 @@
   animation-delay: calc(720ms + var(--feature-delay));
 }
 
-.featureBlock:nth-child(1) {
-  --feature-delay: 0ms;
-}
-
-.featureBlock:nth-child(2) {
-  --feature-delay: 95ms;
-}
-
-.featureBlock:nth-child(3) {
-  --feature-delay: 190ms;
-}
-
-.featureBlock:nth-child(4) {
-  --feature-delay: 285ms;
-}
-
-.featureBlock:nth-child(5) {
-  --feature-delay: 380ms;
-}
-
-.featureBlock:nth-child(6) {
-  --feature-delay: 475ms;
-}
-
-.featureBlock:nth-child(7) {
-  --feature-delay: 570ms;
-}
-
-.featureBlock:nth-child(8) {
-  --feature-delay: 665ms;
-}
-
-.featureBlock:nth-child(9) {
-  --feature-delay: 760ms;
-}
-
 .cardEquipment {
   grid-column: 1;
   grid-row: 1;
@@ -137,14 +101,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .featureBlock {
-    opacity: 1;
-    transform: none;
-    animation: none;
-  }
-}
-
-@media (min-width: 1001px) {
   .featureBlock {
     opacity: 1;
     transform: none;

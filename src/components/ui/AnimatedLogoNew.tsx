@@ -6,14 +6,17 @@ import {
     useRef,
     type CSSProperties,
     type MouseEvent,
+    type PointerEvent,
 } from 'react';
 import gsap from 'gsap';
 import {useGSAP} from '@gsap/react';
-import Image from 'next/image';
-import Logo from '@/src/lib/assets/logo.svg';
 import Link from "next/link";
 import {usePathname} from 'next/navigation';
 import {FULLPAGE_SCROLL_EVENT} from '@/src/components/ui/FullPageScroll';
+import {
+    GlitchLogo,
+    type GlitchLogoHandle,
+} from '@/src/components/ui/GlitchLogo';
 
 gsap.registerPlugin(useGSAP);
 
@@ -69,8 +72,12 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
         const centerLogoRef = useRef<HTMLDivElement>(null);
         const headerPlateRef = useRef<HTMLDivElement>(null);
         const headerLogoRef = useRef<HTMLDivElement>(null);
+        const centerGlitchRef = useRef<GlitchLogoHandle>(null);
+        const headerGlitchRef = useRef<GlitchLogoHandle>(null);
         const timelineRef = useRef<gsap.core.Timeline | null>(null);
         const progressRef = useRef(initialProgressValue);
+        const heroGlitchArmedRef = useRef(initialProgressValue >= 1);
+        const initialHeroGlitchPlayedRef = useRef(false);
         const styles = logoVariants[variant];
         const initialCenterLogoStyle = getInitialCenterLogoStyle(initialProgressValue);
         const initialHeaderLogoStyle = getInitialHeaderLogoStyle(initialProgressValue);
@@ -179,8 +186,40 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
             setProgress(progress: number) {
                 progressRef.current = gsap.utils.clamp(0, 1, progress);
                 timelineRef.current?.progress(progressRef.current);
+
+                if (progressRef.current >= 0.999) {
+                    heroGlitchArmedRef.current = true;
+                } else if (progressRef.current <= 0.001 && heroGlitchArmedRef.current) {
+                    const isActiveVariant = variant === 'desktop'
+                        ? window.matchMedia('(min-width: 1000px)').matches
+                        : window.matchMedia('(max-width: 999.98px)').matches;
+
+                    if (isActiveVariant && centerGlitchRef.current) {
+                        heroGlitchArmedRef.current = false;
+                        centerGlitchRef.current.play();
+                    }
+                }
             },
-        }));
+        }), [variant]);
+
+        useGSAP(() => {
+            if (initialProgressValue > 0.001 || initialHeroGlitchPlayedRef.current) {
+                return;
+            }
+
+            const frame = window.requestAnimationFrame(() => {
+                const isActiveVariant = variant === 'desktop'
+                    ? window.matchMedia('(min-width: 1000px)').matches
+                    : window.matchMedia('(max-width: 999.98px)').matches;
+
+                if (isActiveVariant) {
+                    initialHeroGlitchPlayedRef.current = true;
+                    centerGlitchRef.current?.play();
+                }
+            });
+
+            return () => window.cancelAnimationFrame(frame);
+        }, {scope: containerRef, dependencies: [initialProgressValue, variant]});
 
         const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
             if (pathname !== '/' && pathname !== '/main') {
@@ -199,6 +238,14 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
             );
         };
 
+        const handleHeaderLogoPointerEnter = (event: PointerEvent<HTMLAnchorElement>) => {
+            if (event.pointerType === 'touch' || progressRef.current < 0.999) {
+                return;
+            }
+
+            headerGlitchRef.current?.play();
+        };
+
         return (
             <div ref={containerRef} className="relative">
                 <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center">
@@ -207,17 +254,13 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
                         className={styles.centerWidthClass}
                         style={initialCenterLogoStyle}
                     >
-                        <Image
-                            src={Logo}
-                            alt="XLAM Media"
-                            loading="eager"
-                            fetchPriority="high"
-                            unoptimized
+                        <GlitchLogo
+                            ref={centerGlitchRef}
+                            intensity="hero"
                             width={1100}
                             height={560}
                             sizes="(max-width: 768px) 68vw, 32rem"
                             className="w-full"
-                            style={{height: 'auto'}}
                         />
                     </div>
                 </div>
@@ -237,18 +280,16 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
                                 className="pointer-events-auto block"
                                 href={'/'}
                                 onClick={handleLogoClick}
+                                onPointerEnter={handleHeaderLogoPointerEnter}
                             >
-                                <Image
-                                src={Logo}
-                                alt="XLAM Media"
-                                unoptimized
-                                loading="eager"
-                                fetchPriority="high"
-                                width={220}
-                                height={112}
-                                sizes="4.35rem"
-                                className={styles.imageClassName}
-                            />
+                                <GlitchLogo
+                                    ref={headerGlitchRef}
+                                    intensity="header"
+                                    width={220}
+                                    height={112}
+                                    sizes="4.35rem"
+                                    className={styles.imageClassName}
+                                />
                             </Link>
                         </div>
                     </div>

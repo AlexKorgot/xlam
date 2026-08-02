@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Container } from "@/src/components/ui/grid/Container";
 import { publicAssetPath } from "@/src/lib/publicAssetPath";
 import styles from "./WhyUsSection.module.scss";
@@ -49,9 +49,32 @@ const featureBlocks: FeatureBlockData[] = [
   },
 ];
 
+const FEATURE_REVEAL_STEP_MS = 95;
+
+function createRandomRevealDelays(count: number) {
+  const order = Array.from({ length: count }, (_, index) => index);
+
+  for (let index = order.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [order[index], order[randomIndex]] = [order[randomIndex], order[index]];
+  }
+
+  if (order.length > 1 && order.every((value, index) => value === index)) {
+    [order[0], order[1]] = [order[1], order[0]];
+  }
+
+  const delays = Array<number>(count);
+  order.forEach((featureIndex, revealIndex) => {
+    delays[featureIndex] = revealIndex * FEATURE_REVEAL_STEP_MS;
+  });
+
+  return delays;
+}
+
 export function WhyUsSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
-  const [hasAnimatedIn, setHasAnimatedIn] = useState(false);
+  const [revealDelays, setRevealDelays] = useState<number[] | null>(null);
+  const hasAnimatedIn = revealDelays !== null;
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -66,7 +89,7 @@ export function WhyUsSection() {
           return;
         }
 
-        setHasAnimatedIn(true);
+        setRevealDelays(createRandomRevealDelays(featureBlocks.length));
         observer.disconnect();
       },
       { threshold: 0.35 },
@@ -88,7 +111,7 @@ export function WhyUsSection() {
       <video
         aria-hidden="true"
         autoPlay
-        className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-contain"
         muted
         playsInline
         preload="metadata"
@@ -117,6 +140,7 @@ export function WhyUsSection() {
                 key={`${feature.label}-${index}`}
                 label={feature.label}
                 className={feature.className}
+                revealDelayMs={revealDelays?.[index]}
               />
             ))}
           </ul>
@@ -129,13 +153,20 @@ export function WhyUsSection() {
 function FeatureBlock({
   label,
   className,
+  revealDelayMs,
 }: {
   label: string;
   className?: string;
+  revealDelayMs?: number;
 }) {
+  const revealStyle = typeof revealDelayMs === "number"
+    ? ({ "--feature-delay": `${revealDelayMs}ms` } as CSSProperties)
+    : undefined;
+
   return (
     <li
       className={`${styles.featureBlock} ${className ?? ""}`}
+      style={revealStyle}
     >
       <span className="text-balance">{label}</span>
     </li>
