@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import FullPageSection from '@/src/components/ui/FullPageSection';
 import { useContactModal } from '@/src/components/ui/contact-modal';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
@@ -14,10 +14,29 @@ const menuItems = [
 ];
 
 const socialItems = ['Youtube', 'Rutube', 'Вконтакте', 'Max'];
+const mobileVideoSrc = publicAssetPath('/video/mobile.mp4');
+const desktopVideoSrc = publicAssetPath('/video/desktop.mp4');
 
 export function FinalContactSection() {
   const [activeButtonId, setActiveButtonId] = useState<string | null>(null);
+  const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const { openContactModal } = useContactModal();
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(
+      '(max-width: 999.98px) and (orientation: portrait)',
+    );
+    const updateVideoSrc = () => {
+      setVideoSrc(mediaQuery.matches ? mobileVideoSrc : desktopVideoSrc);
+    };
+
+    updateVideoSrc();
+    mediaQuery.addEventListener('change', updateVideoSrc);
+
+    return () => {
+      mediaQuery.removeEventListener('change', updateVideoSrc);
+    };
+  }, []);
 
   return (
     <FullPageSection id="final-contact" fullBleed reserveHeader className="items-stretch bg-black">
@@ -99,23 +118,20 @@ export function FinalContactSection() {
           </div>
 
           <div className="relative min-h-0 w-full flex-1 [container-type:size]">
-            <div className="pointer-events-none absolute left-1/2 top-0 z-0 aspect-[9/16] w-[88vw] max-w-[49.5svh] [transform:translate(-50%,-41%)] max-[999px]:[@media_(orientation:portrait)]:w-[145vw] max-[999px]:[@media_(orientation:portrait)]:max-w-[64svh] max-[999px]:[@media_(orientation:landscape)]:w-[72vw] max-[999px]:[@media_(orientation:landscape)]:max-w-[78svh] min-[1000px]:aspect-video min-[1000px]:max-w-[1600px] min-[1000px]:[transform:translate(-50%,min(-27%,calc(100cqh_-_100%)))]">
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="auto"
-                className="absolute inset-0 z-0 block h-full w-full"
-                aria-hidden="true"
-              >
-                <source
-                  src={publicAssetPath('/video/mobile.mp4')}
-                  type="video/mp4"
-                  media="(max-width: 999px)"
+            <div className="pointer-events-none absolute left-1/2 top-0 z-0 aspect-[9/16] w-[88vw] max-w-[49.5svh] [transform:translate(-50%,-41%)] max-[999px]:[@media_(orientation:portrait)]:w-[145vw] max-[999px]:[@media_(orientation:portrait)]:max-w-[64svh] max-[999px]:[@media_(orientation:landscape)]:aspect-video max-[999px]:[@media_(orientation:landscape)]:w-[88vw] max-[999px]:[@media_(orientation:landscape)]:max-w-[120svh] max-[999px]:[@media_(orientation:landscape)]:[transform:translate(-50%,min(-27%,calc(100cqh_-_100%)))] min-[1000px]:aspect-video min-[1000px]:max-w-[1600px] min-[1000px]:[transform:translate(-50%,min(-27%,calc(100cqh_-_100%)))]">
+              {videoSrc ? (
+                <video
+                  key={videoSrc}
+                  src={videoSrc}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="auto"
+                  className="absolute inset-0 z-0 block h-full w-full"
+                  aria-hidden="true"
                 />
-                <source src={publicAssetPath('/video/desktop.mp4')} type="video/mp4" />
-              </video>
+              ) : null}
 
               <div
                 aria-hidden="true"
@@ -125,7 +141,7 @@ export function FinalContactSection() {
               <button
                 type="button"
                 onClick={openContactModal}
-                className="pointer-events-auto absolute left-[28%] top-[43%] z-20 h-[23%] w-[52%] cursor-pointer rounded-[6px] bg-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#66ff66] min-[1000px]:left-[38%] min-[1000px]:top-[27%] min-[1000px]:h-[38%] min-[1000px]:w-[26%]"
+                className="pointer-events-auto absolute left-[28%] top-[43%] z-20 h-[23%] w-[52%] cursor-pointer rounded-[6px] bg-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#66ff66] max-[999px]:[@media_(orientation:landscape)]:left-[38%] max-[999px]:[@media_(orientation:landscape)]:top-[27%] max-[999px]:[@media_(orientation:landscape)]:h-[38%] max-[999px]:[@media_(orientation:landscape)]:w-[26%] min-[1000px]:left-[38%] min-[1000px]:top-[27%] min-[1000px]:h-[38%] min-[1000px]:w-[26%]"
                 aria-label="Открыть форму обратной связи"
               />
             </div>
