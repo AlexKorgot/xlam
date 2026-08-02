@@ -27,6 +27,7 @@ interface GlitchLogoProps {
 
 const HERO_WORDMARK_BOTTOM = '49.54%';
 const HERO_MEDIA_TOP = '55.75%';
+const HERO_MEDIA_PLATE_CLIP = 'inset(55.75% 0.42% 3.18% 0 round 1.62%)';
 
 const layerStyle: CSSProperties = {
   position: 'absolute',
@@ -65,6 +66,8 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
     const redRef = useRef<HTMLDivElement>(null);
     const blueRef = useRef<HTMLDivElement>(null);
     const greenRef = useRef<HTMLDivElement>(null);
+    const mediaBlackRef = useRef<HTMLDivElement>(null);
+    const mediaGreenRef = useRef<HTMLDivElement>(null);
     const timelineRef = useRef<gsap.core.Timeline | null>(null);
     const imageReadyRef = useRef(false);
     const queuedPlayRef = useRef(false);
@@ -97,6 +100,14 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
 
         const slices = [topRef.current, bottomRef.current];
         const channels = [redRef.current, blueRef.current, greenRef.current];
+        const mediaLayers = intensity === 'hero'
+          ? [mediaBlackRef.current, mediaGreenRef.current]
+          : [];
+
+        if (mediaLayers.some((layer) => !layer)) {
+          return;
+        }
+
         const k = intensity === 'hero' ? 1.5 : 0.7;
 
         gsap.set(slices, {
@@ -106,16 +117,17 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
           transformOrigin: intensity === 'hero' ? 'center 25.23%' : 'center center',
         });
         gsap.set(channels, { x: 0, autoAlpha: 0 });
+        gsap.set(mediaLayers, { autoAlpha: 0 });
 
-        timelineRef.current = gsap
-          .timeline({
-            paused: true,
-            defaults: { ease: 'power4.inOut' },
-            onComplete: () => {
-              gsap.set(slices, { x: 0, skewX: 0, opacity: 1 });
-              gsap.set(channels, { x: 0, autoAlpha: 0 });
-            },
-          })
+        const timeline = gsap.timeline({
+              paused: true,
+              defaults: { ease: 'power4.inOut' },
+              onComplete: () => {
+                gsap.set(slices, { x: 0, skewX: 0, opacity: 1 });
+                gsap.set(channels, { x: 0, autoAlpha: 0 });
+                gsap.set(mediaLayers, { autoAlpha: 0 });
+              },
+            })
           .to(slices, { skewX: 15, duration: 0.1 })
           .to(slices, { skewX: 0, duration: 0.04 })
           .to(slices, { opacity: 0.2, duration: 0.04 })
@@ -138,6 +150,22 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
           .set(greenRef.current, { autoAlpha: 0 }, 0.26)
           .to(topRef.current, { x: 0, duration: 0.2 })
           .to(bottomRef.current, { x: 0, duration: 0.2 });
+
+        if (intensity === 'hero' && mediaBlackRef.current && mediaGreenRef.current) {
+          timeline
+            .set(mediaBlackRef.current, { autoAlpha: 1 }, 0)
+            .set(mediaBlackRef.current, { autoAlpha: 0 }, 0.04)
+            .set(mediaGreenRef.current, { autoAlpha: 1 }, 0.04)
+            .set(mediaGreenRef.current, { autoAlpha: 0 }, 0.09)
+            .set(mediaBlackRef.current, { autoAlpha: 1 }, 0.09)
+            .set(mediaBlackRef.current, { autoAlpha: 0 }, 0.14)
+            .set(mediaGreenRef.current, { autoAlpha: 1 }, 0.14)
+            .set(mediaGreenRef.current, { autoAlpha: 0 }, 0.26)
+            .set(mediaBlackRef.current, { autoAlpha: 1 }, 0.26)
+            .set(mediaBlackRef.current, { autoAlpha: 0 }, 0.32);
+        }
+
+        timelineRef.current = timeline;
 
         flushQueuedPlay();
 
@@ -266,6 +294,33 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
           >
             <span style={createColorMaskStyle('#66ff66')} />
           </div>
+          {isHero ? (
+            <>
+              <div
+                ref={mediaBlackRef}
+                aria-hidden="true"
+                style={{
+                  ...layerStyle,
+                  zIndex: 2,
+                  clipPath: `inset(${HERO_MEDIA_TOP} 0 0)`,
+                  filter: 'invert(1)',
+                }}
+              >
+                <Image {...imageProps} alt="" />
+              </div>
+              <div
+                ref={mediaGreenRef}
+                aria-hidden="true"
+                style={{
+                  ...layerStyle,
+                  zIndex: 2,
+                  backgroundColor: '#66ff66',
+                  clipPath: HERO_MEDIA_PLATE_CLIP,
+                  mixBlendMode: 'multiply',
+                }}
+              />
+            </>
+          ) : null}
         </div>
       </div>
     );
