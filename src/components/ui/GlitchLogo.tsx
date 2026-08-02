@@ -36,10 +36,34 @@ const layerStyle: CSSProperties = {
   pointerEvents: 'none',
 };
 
+const sliceLayerStyle: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  zIndex: 1,
+  pointerEvents: 'none',
+};
+
+const createColorMaskStyle = (color: string): CSSProperties => ({
+  position: 'absolute',
+  inset: 0,
+  backgroundColor: color,
+  WebkitMaskImage: `url(${Logo.src})`,
+  maskImage: `url(${Logo.src})`,
+  WebkitMaskPosition: 'center',
+  maskPosition: 'center',
+  WebkitMaskRepeat: 'no-repeat',
+  maskRepeat: 'no-repeat',
+  WebkitMaskSize: '100% 100%',
+  maskSize: '100% 100%',
+});
+
 export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
   function GlitchLogo({ intensity, width, height, sizes, className }, ref) {
     const rootRef = useRef<HTMLDivElement>(null);
+    const topRef = useRef<HTMLDivElement>(null);
+    const bottomRef = useRef<HTMLDivElement>(null);
     const redRef = useRef<HTMLDivElement>(null);
+    const blueRef = useRef<HTMLDivElement>(null);
     const greenRef = useRef<HTMLDivElement>(null);
     const timelineRef = useRef<gsap.core.Timeline | null>(null);
     const imageReadyRef = useRef(false);
@@ -61,69 +85,59 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
 
     useGSAP(
       () => {
-        if (!redRef.current || !greenRef.current) {
+        if (
+          !topRef.current ||
+          !bottomRef.current ||
+          !redRef.current ||
+          !blueRef.current ||
+          !greenRef.current
+        ) {
           return;
         }
 
-        const channels = [redRef.current, greenRef.current];
-        const redAlpha = intensity === 'hero' ? 0.9 : 0.72;
-        const greenAlpha = intensity === 'hero' ? 0.82 : 0.62;
-        const channelFrames = intensity === 'hero'
-          ? [
-              ['inset(3% 0 82%)', 'inset(21% 0 66%)'],
-              ['inset(28% 0 57%)', 'inset(8% 0 74%)'],
-              [`inset(39% 0 ${HERO_WORDMARK_BOTTOM})`, 'inset(0 0 87%)'],
-            ]
-          : [
-              ['inset(4% 0 80%)', 'inset(23% 0 61%)'],
-              ['inset(43% 0 38%)', 'inset(64% 0 18%)'],
-              ['inset(14% 0 63%)', 'inset(49% 0 30%)'],
-            ];
+        const slices = [topRef.current, bottomRef.current];
+        const channels = [redRef.current, blueRef.current, greenRef.current];
+        const k = intensity === 'hero' ? 1.5 : 0.7;
 
-        gsap.set(channels, { autoAlpha: 0 });
+        gsap.set(slices, {
+          x: 0,
+          skewX: 0,
+          opacity: 1,
+          transformOrigin: intensity === 'hero' ? 'center 25.23%' : 'center center',
+        });
+        gsap.set(channels, { x: 0, autoAlpha: 0 });
 
         timelineRef.current = gsap
           .timeline({
             paused: true,
+            defaults: { ease: 'power4.inOut' },
             onComplete: () => {
-              gsap.set(channels, { autoAlpha: 0 });
+              gsap.set(slices, { x: 0, skewX: 0, opacity: 1 });
+              gsap.set(channels, { x: 0, autoAlpha: 0 });
             },
           })
-          .set(
-            redRef.current,
-            { autoAlpha: redAlpha, clipPath: channelFrames[0][0] },
-            0,
-          )
-          .set(
-            greenRef.current,
-            { autoAlpha: greenAlpha, clipPath: channelFrames[0][1] },
-            0.025,
-          )
-          .set(redRef.current, { autoAlpha: 0 }, 0.07)
-          .set(greenRef.current, { autoAlpha: 0 }, 0.095)
-          .set(
-            redRef.current,
-            { autoAlpha: redAlpha * 0.78, clipPath: channelFrames[1][0] },
-            0.13,
-          )
-          .set(
-            greenRef.current,
-            { autoAlpha: greenAlpha * 0.82, clipPath: channelFrames[1][1] },
-            0.155,
-          )
-          .set(redRef.current, { autoAlpha: 0 }, 0.215)
-          .set(greenRef.current, { autoAlpha: 0 }, 0.235)
-          .set(
-            redRef.current,
-            { autoAlpha: redAlpha * 0.62, clipPath: channelFrames[2][0] },
-            0.28,
-          )
-          .set(
-            greenRef.current,
-            { autoAlpha: greenAlpha * 0.7, clipPath: channelFrames[2][1] },
-            0.305,
-          )
-          .set(channels, { autoAlpha: 0 }, 0.38);
+          .to(slices, { skewX: 15, duration: 0.1 })
+          .to(slices, { skewX: 0, duration: 0.04 })
+          .to(slices, { opacity: 0.2, duration: 0.04 })
+          .to(slices, { opacity: 1, duration: 0.04 })
+          .to(slices, { x: -4 * k, duration: 0.04 })
+          .to(slices, { x: 0, duration: 0.04 })
+          .to(slices, { x: 2 * k, duration: 0.015 })
+          .to(slices, { x: -2 * k, duration: 0.015 })
+          .to(slices, { x: 0, duration: 0.015 })
+          .add('split', 0)
+          .to(topRef.current, { x: -3 * k, duration: 0.18 }, 'split')
+          .to(bottomRef.current, { x: 3 * k, duration: 0.18 }, 'split')
+          .set(redRef.current, { x: -3 * k, autoAlpha: 0.78 }, 'split')
+          .set(blueRef.current, { x: 2.5 * k, autoAlpha: 0.72 }, 'split')
+          .set(greenRef.current, { x: 1 * k, autoAlpha: 1 }, 'split')
+          .set(redRef.current, { autoAlpha: 0 }, 0.08)
+          .set(blueRef.current, { autoAlpha: 0 }, 0.12)
+          .set(greenRef.current, { autoAlpha: 0 }, 0.14)
+          .set(greenRef.current, { x: 0, autoAlpha: 1 }, 0.14)
+          .set(greenRef.current, { autoAlpha: 0 }, 0.26)
+          .to(topRef.current, { x: 0, duration: 0.2 })
+          .to(bottomRef.current, { x: 0, duration: 0.2 });
 
         flushQueuedPlay();
 
@@ -166,13 +180,22 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
       loading: 'eager',
     } as const;
     const isHero = intensity === 'hero';
-    const heroChannelClipPath = `inset(0 0 ${HERO_WORDMARK_BOTTOM})`;
-    const redClipPath = isHero ? heroChannelClipPath : 'inset(8% 0 47%)';
-    const greenClipPath = isHero ? heroChannelClipPath : 'inset(48% 0 10%)';
+    const channelClipPath = isHero
+      ? `inset(0 0 ${HERO_WORDMARK_BOTTOM})`
+      : 'inset(0)';
+    const topClipPath = isHero ? 'inset(0 0 78.81%)' : 'inset(0 0 58%)';
+    const bottomClipPath = isHero
+      ? `inset(20.69% 0 ${HERO_WORDMARK_BOTTOM})`
+      : 'inset(41% 0 0)';
 
     return (
-      <div ref={rootRef} className="relative w-full">
-        {isHero && (
+      <div
+        ref={rootRef}
+        className="relative w-full"
+        role={isHero ? undefined : 'img'}
+        aria-label={isHero ? undefined : 'XLAM Media'}
+      >
+        {isHero ? (
           <Image
             {...imageProps}
             alt="XLAM Media"
@@ -180,49 +203,68 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
             onLoad={handleBaseImageLoad}
             style={{ clipPath: `inset(${HERO_MEDIA_TOP} 0 0)` }}
           />
-        )}
-
-        <div
-          className={isHero
-            ? 'absolute inset-0 w-full'
-            : 'relative w-full'}
-        >
+        ) : (
           <Image
             {...imageProps}
-            alt={isHero ? '' : 'XLAM Media'}
-            aria-hidden={isHero ? 'true' : undefined}
+            alt=""
+            aria-hidden="true"
             fetchPriority="high"
-            onLoad={isHero ? undefined : handleBaseImageLoad}
-            style={isHero
-              ? { clipPath: `inset(0 0 ${HERO_WORDMARK_BOTTOM})` }
-              : undefined}
+            onLoad={handleBaseImageLoad}
+            style={{ visibility: 'hidden' }}
           />
+        )}
+
+        <div className="absolute inset-0 w-full">
+          <div
+            ref={topRef}
+            aria-hidden="true"
+            style={{ ...sliceLayerStyle, clipPath: topClipPath }}
+          >
+            <Image {...imageProps} alt="" />
+          </div>
+          <div
+            ref={bottomRef}
+            aria-hidden="true"
+            style={{ ...sliceLayerStyle, clipPath: bottomClipPath }}
+          >
+            <Image {...imageProps} alt="" />
+          </div>
 
           <div
             ref={redRef}
             aria-hidden="true"
             style={{
               ...layerStyle,
-              clipPath: redClipPath,
-              filter:
-                'brightness(0) saturate(100%) invert(14%) sepia(99%) saturate(7494%) hue-rotate(359deg) brightness(105%) contrast(116%)',
-              mixBlendMode: 'multiply',
+              zIndex: 0,
+              clipPath: channelClipPath,
+              mixBlendMode: 'screen',
             }}
           >
-            <Image {...imageProps} alt="" />
+            <span style={createColorMaskStyle('#ff0000')} />
+          </div>
+          <div
+            ref={blueRef}
+            aria-hidden="true"
+            style={{
+              ...layerStyle,
+              zIndex: 0,
+              clipPath: channelClipPath,
+              mixBlendMode: 'screen',
+            }}
+          >
+            <span style={createColorMaskStyle('#2f7cff')} />
           </div>
           <div
             ref={greenRef}
             aria-hidden="true"
             style={{
               ...layerStyle,
-              clipPath: greenClipPath,
-              filter:
-                'brightness(0) saturate(100%) invert(76%) sepia(88%) saturate(1846%) hue-rotate(76deg) brightness(109%) contrast(119%)',
-              mixBlendMode: 'multiply',
+              zIndex: 0,
+              clipPath: channelClipPath,
+              mixBlendMode: 'screen',
             }}
           >
-            <Image {...imageProps} alt="" />
+            <span style={createColorMaskStyle('#66ff66')} />
           </div>
         </div>
       </div>
