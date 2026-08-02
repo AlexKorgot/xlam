@@ -1,10 +1,9 @@
 'use client';
 
 import clsx from 'clsx';
-import Image from 'next/image';
 import { useState } from 'react';
-import teleImage from '@/src/lib/assets/tele.png';
 import FullPageSection from '@/src/components/ui/FullPageSection';
+import { useContactModal } from '@/src/components/ui/contact-modal';
 
 const menuItems = [
   'Услуги',
@@ -17,22 +16,13 @@ const socialItems = ['Youtube', 'Rutube', 'Вконтакте', 'Max'];
 
 export function FinalContactSection() {
   const [activeButtonId, setActiveButtonId] = useState<string | null>(null);
+  const { openContactModal } = useContactModal();
 
   return (
     <FullPageSection id="final-contact" fullBleed reserveHeader className="items-stretch bg-black">
       <div className="relative isolate h-full w-full overflow-hidden bg-black font-normalidad text-white">
-        <Image
-          src={teleImage}
-          alt=""
-          loading="eager"
-          unoptimized
-          sizes="(max-width: 639px) 178vw, (max-width: 899px) 142vw, 114vw"
-          className="pointer-events-none absolute bottom-[-2.5svh] left-1/2 z-50 h-auto w-[178vw] max-w-none -translate-x-[49%] select-none object-contain sm:bottom-[-5svh] sm:w-[142vw] min-[1000px]:bottom-0 min-[1000px]:h-full min-[1000px]:w-auto min-[1000px]:min-w-[114.6vw]"
-          aria-hidden="true"
-        />
-
-        <div className="relative z-40 mx-auto flex h-full w-full max-w-[1740px] flex-col pb-[max(18px,env(safe-area-inset-bottom))] pt-4 min-[1000px]:pb-0 min-[1000px]:pt-14">
-          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-0">
+        <div className="relative z-40 mx-auto flex h-full w-full max-w-[1740px] flex-col pb-[max(18px,env(safe-area-inset-bottom))] pt-4 max-[999px]:[@media_(orientation:landscape)]:pb-0 max-[999px]:[@media_(orientation:landscape)]:pt-1 min-[1000px]:pb-0 min-[1000px]:pt-14">
+          <div className="relative z-20 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-0">
             <nav aria-label="Навигация по секциям">
               <ul className="max-w-none">
                 {menuItems.map((item) => {
@@ -48,7 +38,7 @@ export function FinalContactSection() {
                       onPointerDown={() => setActiveButtonId(buttonId)}
                       onFocus={() => setActiveButtonId(buttonId)}
                       className={clsx(
-                        'group relative flex h-[41px] w-full cursor-pointer items-center overflow-hidden px-3 text-left text-[16px] font-medium uppercase leading-none transition-colors hover:text-black focus-visible:text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#66ff66] sm:h-[52px] sm:text-[20px] min-[1000px]:h-[69px] min-[1000px]:px-3 min-[1000px]:text-[28px]',
+                        'group relative flex h-[41px] w-full cursor-pointer items-center overflow-hidden px-3 text-left text-[16px] font-medium uppercase leading-none transition-colors hover:text-black focus-visible:text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#66ff66] sm:h-[52px] sm:text-[20px] max-[999px]:[@media_(orientation:landscape)]:h-[30px] max-[999px]:[@media_(orientation:landscape)]:px-2 max-[999px]:[@media_(orientation:landscape)]:text-[13px] min-[1000px]:h-[69px] min-[1000px]:px-3 min-[1000px]:text-[28px]',
                         isActive ? 'text-black' : 'text-white',
                       )}
                     >
@@ -59,7 +49,9 @@ export function FinalContactSection() {
                           isActive ? 'opacity-100' : 'opacity-0',
                         )}
                       />
-                      <span className="pointer-events-none relative z-10">{item}</span>
+                      <span className="pointer-events-none relative z-10 origin-left transition-transform duration-300 ease-out group-hover:scale-[1.2] group-focus-visible:scale-[1.2]">
+                        {item}
+                      </span>
                     </button>
                   </li>
                   );
@@ -82,7 +74,7 @@ export function FinalContactSection() {
                       onPointerDown={() => setActiveButtonId(buttonId)}
                       onFocus={() => setActiveButtonId(buttonId)}
                       className={clsx(
-                        'group relative flex h-[41px] w-full cursor-pointer items-center justify-end overflow-hidden px-3 text-right text-[15px] font-medium uppercase leading-none transition-colors hover:text-black focus-visible:text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#66ff66] sm:h-[52px] sm:text-[18px] min-[1000px]:h-[69px] min-[1000px]:text-[28px]',
+                        'group relative flex h-[41px] w-full cursor-pointer items-center justify-end overflow-hidden px-3 text-right text-[15px] font-medium uppercase leading-none transition-colors hover:text-black focus-visible:text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#66ff66] sm:h-[52px] sm:text-[18px] max-[999px]:[@media_(orientation:landscape)]:h-[30px] max-[999px]:[@media_(orientation:landscape)]:px-2 max-[999px]:[@media_(orientation:landscape)]:text-[12px] min-[1000px]:h-[69px] min-[1000px]:text-[28px]',
                         isActive ? 'text-black' : 'text-white',
                       )}
                       aria-label={`${item}: ссылка будет добавлена позже`}
@@ -94,7 +86,9 @@ export function FinalContactSection() {
                           isActive ? 'opacity-100' : 'opacity-0',
                         )}
                       />
-                      <span className="pointer-events-none relative z-10">{item}</span>
+                      <span className="pointer-events-none relative z-10 origin-right transition-transform duration-300 ease-out group-hover:scale-[1.2] group-focus-visible:scale-[1.2]">
+                        {item}
+                      </span>
                     </button>
                   </li>
                   );
@@ -103,12 +97,34 @@ export function FinalContactSection() {
             </div>
           </div>
 
-          <button
-            type="button"
-            aria-disabled="true"
-            className="absolute left-1/2 top-[42svh] z-30 h-[8svh] w-[36vw] max-w-[360px] -translate-x-1/2 -rotate-[-2deg] rounded-[6px] opacity-0 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#66ff66] sm:top-[39svh] sm:h-[7svh] sm:w-[27vw] min-[1000px]:top-[38.2%] min-[1000px]:h-[7.2%] min-[1000px]:w-[18.2%]"
-            aria-label="Оставить заявку"
-          />
+          <div className="relative min-h-0 w-full flex-1 [container-type:size]">
+            <div className="pointer-events-none absolute left-1/2 top-0 z-0 aspect-[9/16] w-[88vw] max-w-[49.5svh] [transform:translate(-50%,-41%)] max-[999px]:[@media_(orientation:portrait)]:w-[145vw] max-[999px]:[@media_(orientation:portrait)]:max-w-[64svh] max-[999px]:[@media_(orientation:landscape)]:w-[72vw] max-[999px]:[@media_(orientation:landscape)]:max-w-[78svh] min-[1000px]:aspect-video min-[1000px]:max-w-[1600px] min-[1000px]:[transform:translate(-50%,min(-27%,calc(100cqh_-_100%)))]">
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                className="absolute inset-0 z-0 block h-full w-full"
+                aria-hidden="true"
+              >
+                <source src="/video/mobile.mp4" type="video/mp4" media="(max-width: 999px)" />
+                <source src="/video/desktop.mp4" type="video/mp4" />
+              </video>
+
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 z-10 bg-[linear-gradient(90deg,#000_0%,rgba(0,0,0,0.96)_3%,rgba(0,0,0,0.82)_8%,rgba(0,0,0,0.6)_14%,rgba(0,0,0,0.38)_21%,rgba(0,0,0,0.18)_28%,rgba(0,0,0,0)_35%,rgba(0,0,0,0)_65%,rgba(0,0,0,0.18)_72%,rgba(0,0,0,0.38)_79%,rgba(0,0,0,0.6)_86%,rgba(0,0,0,0.82)_92%,rgba(0,0,0,0.96)_97%,#000_100%)]"
+              />
+
+              <button
+                type="button"
+                onClick={openContactModal}
+                className="pointer-events-auto absolute left-[28%] top-[43%] z-20 h-[23%] w-[52%] cursor-pointer rounded-[6px] bg-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#66ff66] min-[1000px]:left-[38%] min-[1000px]:top-[27%] min-[1000px]:h-[38%] min-[1000px]:w-[26%]"
+                aria-label="Открыть форму обратной связи"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </FullPageSection>

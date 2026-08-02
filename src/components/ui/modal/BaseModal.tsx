@@ -367,7 +367,7 @@ export function BaseModal({
           className={[
             isSheet
               ? 'relative mx-auto flex h-[var(--modal-viewport-height,100dvh)] min-h-0 w-full max-w-[1920px] flex-col items-center justify-end px-0 pt-6 sm:px-4 sm:pt-8 lg:justify-center lg:px-8 lg:py-8'
-              : 'relative mx-auto flex min-h-[100svh] w-full max-w-[1920px] flex-col p-5 min-[1000px]:items-center min-[1000px]:justify-center min-[1000px]:px-[66px] min-[1000px]:py-[46px]',
+              : 'relative mx-auto flex h-[100dvh] min-h-0 w-full max-w-[1920px] flex-col items-center justify-center p-0 min-[1000px]:h-auto min-[1000px]:min-h-[100svh] min-[1000px]:px-[66px] min-[1000px]:py-[46px]',
             isSheet
               ? ''
               : [
@@ -386,7 +386,7 @@ export function BaseModal({
                       ? 'translate-y-0 scale-100 opacity-100'
                       : 'translate-y-full opacity-0 lg:translate-y-0 lg:scale-100',
                   ].join(' ')
-                : 'h-[calc(100svh-128px)] min-h-[620px] max-w-[1756px] lg:h-[min(829px,calc(100svh-251px))]',
+                : 'h-[100dvh] min-h-0 max-w-[1756px] min-[1000px]:h-[calc(100svh-128px)] min-[1000px]:min-h-[620px] lg:h-[min(829px,calc(100svh-251px))]',
             ].join(' ')}
           >
             {showCloseButton ? (

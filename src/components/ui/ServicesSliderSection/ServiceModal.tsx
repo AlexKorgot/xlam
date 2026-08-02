@@ -464,14 +464,20 @@ export function ServiceModal({
                       <span
                         aria-hidden="true"
                         className={[
-                          'absolute inset-y-0 left-0 right-0 bg-[linear-gradient(90deg,#63ff45_0%,#63ff45_73%,#000_97%)] transition-opacity duration-200',
-                          isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+                          'absolute inset-y-0 left-0 right-0 overflow-hidden bg-[linear-gradient(90deg,#63ff45_0%,#63ff45_32%,rgba(99,255,69,0.68)_54%,rgba(0,0,0,0.16)_76%,rgba(0,0,0,0.3)_90%,rgba(0,0,0,0.2)_100%)] transition-opacity duration-200',
+                          isActive
+                            ? 'opacity-100'
+                            : 'opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100',
                         ].join(' ')}
-                      />
+                      >
+                        <span
+                          className="absolute inset-y-0 right-0 w-[54%] bg-[linear-gradient(90deg,rgba(0,0,0,0)_0%,rgba(0,0,0,0.18)_40%,rgba(0,0,0,0.44)_72%,rgba(0,0,0,0.24)_90%,rgba(0,0,0,0.16)_100%)] backdrop-blur-[4px] [mask-image:linear-gradient(90deg,transparent_0%,#000_55%,#000_78%,rgba(0,0,0,0.35)_100%)] [-webkit-mask-image:linear-gradient(90deg,transparent_0%,#000_55%,#000_78%,rgba(0,0,0,0.35)_100%)]"
+                        />
+                      </span>
                       <span className="relative flex min-h-[64px] w-full min-w-0 flex-col justify-center px-2 py-2">
                         <span
                           className={[
-                            'block text-[14px] font-black uppercase leading-none transition-colors sm:text-[15px]',
+                            'block text-[14px] font-black uppercase leading-none transition-colors group-hover:text-black group-focus-visible:text-black sm:text-[15px]',
                             isActive ? 'text-black' : 'text-[#63ff45]',
                           ].join(' ')}
                         >
@@ -480,7 +486,7 @@ export function ServiceModal({
                         <span
                           className={[
                             'mt-1.5 block text-[12px] leading-[1.04] transition-colors sm:text-[13px]',
-                            isActive ? 'text-black' : 'text-white',
+                            'text-white',
                           ].join(' ')}
                         >
                           {feature.description}
