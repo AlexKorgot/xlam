@@ -246,13 +246,22 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
             headerGlitchRef.current?.play();
         };
 
+        const handleHeroLogoPointerEnter = (event: PointerEvent<HTMLDivElement>) => {
+            if (event.pointerType === 'touch' || progressRef.current > 0.001) {
+                return;
+            }
+
+            centerGlitchRef.current?.play();
+        };
+
         return (
             <div ref={containerRef} className="relative">
                 <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center">
                     <div
                         ref={centerLogoRef}
-                        className={styles.centerWidthClass}
+                        className={`${styles.centerWidthClass} pointer-events-auto`}
                         style={initialCenterLogoStyle}
+                        onPointerEnter={handleHeroLogoPointerEnter}
                     >
                         <GlitchLogo
                             ref={centerGlitchRef}

@@ -165,7 +165,7 @@ export default function BurgerButton() {
                 className={clsx(
                     'absolute right-0 top-0 z-50 overflow-x-hidden overflow-y-hidden overscroll-contain bg-white transition-[width,height,border-radius] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] [scrollbar-width:none] max-[999px]:[@media_(orientation:landscape)]:max-h-[calc(100dvh-3.5rem)] max-[999px]:[@media_(orientation:landscape)]:[overflow-y:auto] [&::-webkit-scrollbar]:hidden',
                     isOpen
-                        ? 'h-[388px] w-[262px] rounded-none max-[999px]:[@media_(orientation:landscape)]:h-[180px] max-[999px]:[@media_(orientation:landscape)]:w-[min(420px,calc(100vw-2rem))]'
+                        ? 'h-[388px] w-[262px] rounded-none max-[999px]:[@media_(orientation:landscape)]:h-[206px] max-[999px]:[@media_(orientation:landscape)]:w-[min(520px,calc(100vw-2rem))]'
                         : 'h-[42px] w-[42px] rounded-[21px]',
                 )}
             >
@@ -220,8 +220,9 @@ export default function BurgerButton() {
                             key={item.targetId}
                             type="button"
                             className={clsx(
-                                'w-full border-t border-black px-[31px] py-[14px] text-left text-[18px] uppercase text-black max-[999px]:[@media_(orientation:landscape)]:px-4 max-[999px]:[@media_(orientation:landscape)]:py-[7px] max-[999px]:[@media_(orientation:landscape)]:text-[14px] max-[999px]:[@media_(orientation:landscape)]:leading-none',
-                                index % 2 === 1 && 'max-[999px]:[@media_(orientation:landscape)]:border-l',
+                                'w-full border-t border-black px-[31px] py-[14px] text-left text-[18px] uppercase text-black max-[999px]:[@media_(orientation:landscape)]:flex max-[999px]:[@media_(orientation:landscape)]:h-10 max-[999px]:[@media_(orientation:landscape)]:items-center max-[999px]:[@media_(orientation:landscape)]:px-4 max-[999px]:[@media_(orientation:landscape)]:py-0 max-[999px]:[@media_(orientation:landscape)]:text-[14px] max-[999px]:[@media_(orientation:landscape)]:leading-none',
+                                index < 4 && index % 2 === 1 && 'max-[999px]:[@media_(orientation:landscape)]:border-l',
+                                index === 4 && 'max-[999px]:[@media_(orientation:landscape)]:col-span-2',
                             )}
                             onClick={() => handleSectionClick(item.targetId)}
                         >
@@ -230,7 +231,7 @@ export default function BurgerButton() {
                     ))}
                     <button
                         type="button"
-                        className="w-full border-y border-black px-[31px] py-[14px] text-left text-[18px] font-semibold uppercase text-black max-[999px]:[@media_(orientation:landscape)]:col-span-2 max-[999px]:[@media_(orientation:landscape)]:px-4 max-[999px]:[@media_(orientation:landscape)]:py-[7px] max-[999px]:[@media_(orientation:landscape)]:text-[14px] max-[999px]:[@media_(orientation:landscape)]:leading-none"
+                        className="w-full border-y border-black px-[31px] py-[14px] text-left text-[18px] font-semibold uppercase text-black max-[999px]:[@media_(orientation:landscape)]:col-span-2 max-[999px]:[@media_(orientation:landscape)]:flex max-[999px]:[@media_(orientation:landscape)]:h-11 max-[999px]:[@media_(orientation:landscape)]:items-center max-[999px]:[@media_(orientation:landscape)]:px-4 max-[999px]:[@media_(orientation:landscape)]:py-0 max-[999px]:[@media_(orientation:landscape)]:text-[14px] max-[999px]:[@media_(orientation:landscape)]:leading-none"
                         onClick={handleContactClick}
                     >
                         Оставить заявку

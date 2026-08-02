@@ -41,7 +41,7 @@ export function FinalContactSection() {
   return (
     <FullPageSection id="final-contact" fullBleed reserveHeader className="items-stretch bg-black">
       <div className="relative isolate h-full w-full overflow-hidden bg-black font-normalidad text-white">
-        <div className="relative z-40 mx-auto flex h-full w-full max-w-[1740px] flex-col pb-[max(18px,env(safe-area-inset-bottom))] pt-4 max-[999px]:[@media_(orientation:landscape)]:pb-0 max-[999px]:[@media_(orientation:landscape)]:pt-1 min-[1000px]:pb-0 min-[1000px]:pt-14">
+        <div className="relative z-40 mx-auto flex h-full w-full max-w-[1740px] flex-col px-5 pb-[max(18px,env(safe-area-inset-bottom))] pt-4 max-[999px]:[@media_(orientation:landscape)]:pb-0 max-[999px]:[@media_(orientation:landscape)]:pt-1 min-[1000px]:px-0 min-[1000px]:pb-0 min-[1000px]:pt-14">
           <div className="relative z-20 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-0">
             <nav aria-label="Навигация по секциям">
               <ul className="max-w-none">
