@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { useState } from 'react';
 import FullPageSection from '@/src/components/ui/FullPageSection';
 import { useContactModal } from '@/src/components/ui/contact-modal';
+import { publicAssetPath } from '@/src/lib/publicAssetPath';
 
 const menuItems = [
   'Услуги',
@@ -108,8 +109,12 @@ export function FinalContactSection() {
                 className="absolute inset-0 z-0 block h-full w-full"
                 aria-hidden="true"
               >
-                <source src="/video/mobile.mp4" type="video/mp4" media="(max-width: 999px)" />
-                <source src="/video/desktop.mp4" type="video/mp4" />
+                <source
+                  src={publicAssetPath('/video/mobile.mp4')}
+                  type="video/mp4"
+                  media="(max-width: 999px)"
+                />
+                <source src={publicAssetPath('/video/desktop.mp4')} type="video/mp4" />
               </video>
 
               <div
