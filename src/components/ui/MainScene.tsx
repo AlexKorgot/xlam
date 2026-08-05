@@ -1,6 +1,13 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useRef,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import FullPageScroll, {
   FULLPAGE_SECTION_REVEAL_DELAY,
 } from '@/src/components/ui/FullPageScroll';
@@ -9,25 +16,84 @@ import {
   SecondSectionDesign,
   type SecondSectionDesignHandle,
 } from '@/src/components/ui/SecondSectionDesign';
-import { ServicesSliderSection } from '@/src/components/ui/ServicesSliderSection/ServicesSliderSection';
 import MorphSection, {
   type MorphSectionHandle,
 } from '@/src/components/MorphSection';
 import { useHeaderProgress } from '@/src/components/ui/Header/HeaderProvider';
-import { CinematicVideoSlider } from '@/src/components/cinematic_new';
-import { TextSection } from '@/src/components/textSection';
 import {
   MobileXHeroSection,
   type MobileXHeroSectionHandle,
 } from '@/src/components/ui/MobileXHeroSection';
-import {WhyUsSection} from "@/src/components/ui/WhyUsSection";
-import {TeamSection} from "@/src/components/ui/TeamSection";
-import { FinalContactSection } from '@/src/components/ui/FinalContactSection/FinalContactSection';
 import { mediaAssetPath } from '@/src/lib/mediaAssetPath';
+import { useNearViewport } from '@/src/lib/useNearViewport';
 
 const SECOND_SECTION_INDEX = 1;
 const MORPH_SECTION_INDEX = 2;
 const MORPH_VIDEO_SRC = mediaAssetPath('/only_bg.mp4');
+
+const ServicesSliderSection = lazy(() =>
+  import('@/src/components/ui/ServicesSliderSection/ServicesSliderSection').then(
+    ({ ServicesSliderSection: Component }) => ({ default: Component }),
+  ),
+);
+const WhyUsSection = lazy(() =>
+  import('@/src/components/ui/WhyUsSection/WhyUsSection').then(
+    ({ WhyUsSection: Component }) => ({ default: Component }),
+  ),
+);
+const CinematicVideoSlider = lazy(() =>
+  import('@/src/components/cinematic_new/CinematicVideoSlider.client').then(
+    ({ CinematicVideoSlider: Component }) => ({ default: Component }),
+  ),
+);
+const TextSection = lazy(() =>
+  import('@/src/components/textSection/TextSection').then(
+    ({ TextSection: Component }) => ({ default: Component }),
+  ),
+);
+const TeamSection = lazy(() =>
+  import('@/src/components/ui/TeamSection/TeamSection').then(
+    ({ TeamSection: Component }) => ({ default: Component }),
+  ),
+);
+const FinalContactSection = lazy(() =>
+  import('@/src/components/ui/FinalContactSection/FinalContactSection').then(
+    ({ FinalContactSection: Component }) => ({ default: Component }),
+  ),
+);
+
+type DeferredSectionProps = {
+  children: ReactNode;
+  fallbackClassName?: string;
+  sectionId: string;
+};
+
+const DeferredSection = ({
+  children,
+  fallbackClassName = 'bg-black',
+  sectionId,
+}: DeferredSectionProps) => {
+  const sectionRef = useRef<HTMLDivElement | null>(null);
+  const shouldLoad = useNearViewport(sectionRef, '180% 0px');
+
+  const fallback = (
+    <div
+      className={`h-full w-full ${fallbackClassName}`}
+      aria-hidden="true"
+    />
+  );
+
+  return (
+    <div
+      ref={sectionRef}
+      data-fullpage-section-id={sectionId}
+      className={`w-full ${fallbackClassName}`}
+      style={{ height: 'var(--fullpage-height, 100svh)' } as CSSProperties}
+    >
+      {shouldLoad ? <Suspense fallback={fallback}>{children}</Suspense> : fallback}
+    </div>
+  );
+};
 
 const isDesktopMorphViewport = () =>
   typeof window !== 'undefined' && window.matchMedia('(min-width: 1000px)').matches;
@@ -191,22 +257,29 @@ export const MainScene = () => {
           />
         </FullPageSection>
 
-        <ServicesSliderSection allowSectionScrollOnEdges />
+        <DeferredSection sectionId="services">
+          <ServicesSliderSection allowSectionScrollOnEdges />
+        </DeferredSection>
 
-        <FullPageSection id="why" fullBleed className="items-stretch bg-black">
+        <DeferredSection sectionId="why">
           <WhyUsSection />
-        </FullPageSection>
-        <FullPageSection id="projects" className="items-stretch bg-black">
+        </DeferredSection>
+
+        <DeferredSection sectionId="projects">
           <CinematicVideoSlider />
-        </FullPageSection>
+        </DeferredSection>
 
-        <TextSection intervalMs={0} />
+        <DeferredSection sectionId="text-section" fallbackClassName="bg-white">
+          <TextSection intervalMs={0} />
+        </DeferredSection>
 
-        <FullPageSection id="about" fullBleed className="items-stretch bg-black">
+        <DeferredSection sectionId="about">
           <TeamSection />
-        </FullPageSection>
+        </DeferredSection>
 
-        <FinalContactSection />
+        <DeferredSection sectionId="final-contact">
+          <FinalContactSection />
+        </DeferredSection>
 
       </FullPageScroll>
     </div>

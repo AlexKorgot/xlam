@@ -481,7 +481,9 @@ export default function FullPageScroll({
       const targetIndexFromId =
         typeof customEvent.detail?.targetId === 'string'
           ? sectionsRef.current.findIndex(
-              (section) => section.id === customEvent.detail?.targetId,
+              (section) =>
+                section.id === customEvent.detail?.targetId ||
+                section.dataset.fullpageSectionId === customEvent.detail?.targetId,
             )
           : -1;
       const targetIndex =
