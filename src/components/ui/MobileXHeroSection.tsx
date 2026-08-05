@@ -10,11 +10,13 @@ import { useGSAP } from '@gsap/react';
 import { useContactModal } from '@/src/components/ui/contact-modal';
 import { mediaAssetPath } from '@/src/lib/mediaAssetPath';
 import { useNearViewport } from '@/src/lib/useNearViewport';
+import { useVideoPreload } from '@/src/lib/videoPreload';
 
 const TAGLINE =
   'Мы делаем шоу для платформ, рекламу для брендов и контент для бизнеса. Такие дела.';
 
 const onlyBgVideo = mediaAssetPath('/only_bg.mp4');
+const mobileVideoPreloadSources = [onlyBgVideo] as const;
 const EXPANDED_PLAY_BUTTON_TAP_THRESHOLD = 10;
 const mobileXClipPath =
   'polygon(99.943% 100%, 66.277% 48.911%, 91.502% 0%, 65.893% 0%, 49.971% 24.158%, 34.050% 0%, 8.440% 0%, 33.666% 48.911%, 0% 100%, 39.996% 100%, 49.971% 80.693%, 59.947% 100%)';
@@ -45,7 +47,12 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
   const isExpandedVideoVisibleRef = useRef(false);
   const isExpandedVideoPlayingRef = useRef(false);
   const shouldSuppressExpandedPlayClickRef = useRef(false);
+  const shouldPreloadVideo = useNearViewport(rootRef, '120% 0px');
   const shouldLoadVideo = useNearViewport(rootRef);
+  useVideoPreload(mobileVideoPreloadSources, {
+    enabled: shouldPreloadVideo,
+    mediaQuery: '(max-width: 999.98px)',
+  });
   useGSAP(
     () => {
       gsap.set(expandedVideoFrameRef.current, {
@@ -418,7 +425,7 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
       >
         <video
           ref={expandedVideoRef}
-          className="h-full w-full scale-x-[-1] object-cover brightness-110 contrast-110"
+          className="h-full w-full object-cover brightness-110 contrast-110"
           src={shouldLoadVideo ? onlyBgVideo : undefined}
           muted
           playsInline

@@ -12,6 +12,7 @@ export type CinematicSlide = {
   year: string;
   accent: string;
   videoSrc: string;
+  posterSrc: string;
   videoObjectPosition?: [number, number];
   opened: {
     titleLead: string;

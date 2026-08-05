@@ -1,6 +1,14 @@
 'use client';
 
-import {forwardRef, useEffect, useId, useImperativeHandle, useRef, useState} from 'react';
+import {
+    forwardRef,
+    useEffect,
+    useId,
+    useImperativeHandle,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import type {
     CSSProperties,
     MouseEvent as ReactMouseEvent,
@@ -8,6 +16,8 @@ import type {
 } from 'react';
 import gsap from 'gsap';
 import {useGSAP} from '@gsap/react';
+import {useNearViewport} from '@/src/lib/useNearViewport';
+import {useVideoPreload} from '@/src/lib/videoPreload';
 
 export interface MorphSectionHandle {
     playForward: () => void;
@@ -22,6 +32,8 @@ export interface MorphSectionHandle {
 
 type MorphSectionProps = {
     videoSrc: string;
+    topVideoSrc?: string;
+    bottomVideoSrc?: string;
     autoPlayTimeline?: boolean;
     className?: string;
     topEndWidth?: number;
@@ -139,6 +151,8 @@ function buildMPathLeftWithOffset(leftX: number, offsetX: number) {
 
 const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function MorphSection({
     videoSrc,
+    topVideoSrc = videoSrc,
+    bottomVideoSrc = videoSrc,
     autoPlayTimeline = true,
     className = '',
     topEndWidth = 820,
@@ -161,6 +175,11 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     const isExpandedVideoPlayingRef = useRef(false);
     const [lettersScale, setLettersScale] = useState(1);
     const [lettersScaledHeight, setLettersScaledHeight] = useState<number | null>(null);
+    const shouldPreloadVideo = useNearViewport(rootRef, '120% 0px');
+    const videoPreloadSources = useMemo(
+        () => [topVideoSrc, bottomVideoSrc, videoSrc],
+        [topVideoSrc, bottomVideoSrc, videoSrc],
+    );
     const topVideoRef = useRef<HTMLVideoElement | null>(null);
     const topVideoClipRef = useRef<HTMLDivElement | null>(null);
     const topClipPathRef = useRef<SVGPathElement | null>(null);
@@ -177,6 +196,11 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     const bottomLetterRefs = useRef<SVGPathElement[]>([]);
 
     const textRef = useRef<HTMLParagraphElement | null>(null);
+
+    useVideoPreload(videoPreloadSources, {
+        enabled: shouldPreloadVideo,
+        mediaQuery: '(min-width: 1000px)',
+    });
 
     const setTopLetterRef = (el: SVGPathElement | null, index: number) => {
         if (el) topLetterRefs.current[index] = el;
@@ -294,13 +318,18 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     };
 
     const playLetterVideos = (reset = false) => {
-        [topVideoRef.current, bottomVideoRef.current].forEach((video) => {
+        const letterVideos: Array<[HTMLVideoElement | null, string]> = [
+            [topVideoRef.current, topVideoSrc],
+            [bottomVideoRef.current, bottomVideoSrc],
+        ];
+
+        letterVideos.forEach(([video, src]) => {
             if (!video) {
                 return;
             }
 
             if (!video.getAttribute('src')) {
-                video.src = videoSrc;
+                video.src = src;
                 video.load();
             }
 
@@ -950,7 +979,16 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 expandedVideoTimelineRef.current = null;
             };
         },
-        {scope: rootRef, dependencies: [autoPlayTimeline, topEndWidth, bottomLeftX]}
+        {
+            scope: rootRef,
+            dependencies: [
+                autoPlayTimeline,
+                topEndWidth,
+                bottomLeftX,
+                topVideoSrc,
+                bottomVideoSrc,
+            ],
+        }
     );
 
     useImperativeHandle(ref, () => ({

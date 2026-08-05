@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { ContactModal } from './ContactModal';
+import { ContactModalNew } from './ContactModalNew';
 import type { ContactModalContextValue } from './contactModal.types';
 
 const ContactModalContext = createContext<ContactModalContextValue | null>(null);
@@ -40,7 +40,7 @@ export function ContactModalProvider({ children }: ContactModalProviderProps) {
   return (
     <ContactModalContext.Provider value={value}>
       {children}
-      <ContactModal isOpen={isContactModalOpen} onClose={closeContactModal} />
+      <ContactModalNew isOpen={isContactModalOpen} onClose={closeContactModal} />
     </ContactModalContext.Provider>
   );
 }

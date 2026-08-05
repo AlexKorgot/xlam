@@ -30,6 +30,8 @@ import { useNearViewport } from '@/src/lib/useNearViewport';
 const SECOND_SECTION_INDEX = 1;
 const MORPH_SECTION_INDEX = 2;
 const MORPH_VIDEO_SRC = mediaAssetPath('/only_bg.mp4');
+const MORPH_TOP_VIDEO_SRC = '/video_reels/top_video.mp4';
+const MORPH_BOTTOM_VIDEO_SRC = '/video_reels/bottom_video.mp4';
 
 const ServicesSliderSection = lazy(() =>
   import('@/src/components/ui/ServicesSliderSection/ServicesSliderSection').then(
@@ -251,6 +253,8 @@ export const MainScene = () => {
               ref={morphSectionRef}
               className={'hidden flex-col items-center min-[1000px]:flex'}
               videoSrc={MORPH_VIDEO_SRC}
+              topVideoSrc={MORPH_TOP_VIDEO_SRC}
+              bottomVideoSrc={MORPH_BOTTOM_VIDEO_SRC}
               autoPlayTimeline={false}
               topEndWidth={1040}
               bottomLeftX={-795}

@@ -1,5 +1,13 @@
 import gsap from 'gsap';
 import * as THREE from 'three';
+import {
+  acquirePreloadedVideo,
+  releasePreloadedVideo,
+} from '@/src/lib/videoPreload';
+import {
+  acquirePreloadedImage,
+  releasePreloadedImage,
+} from '@/src/lib/imagePreload';
 import { VideoPlane, type VideoPlaneLayout } from './VideoPlane';
 import {
   clamp,
@@ -23,6 +31,15 @@ type SlideVideo = {
   index: number;
   video: HTMLVideoElement;
   texture: THREE.VideoTexture;
+  posterTexture: THREE.Texture;
+  posterImage: HTMLImageElement;
+  handlePosterLoad: () => void;
+  handlePosterError: () => void;
+  textureTween: gsap.core.Tween | null;
+  textureState: 'poster' | 'transitioning' | 'video';
+  isPosterSettled: boolean;
+  isVideoReady: boolean;
+  videoMediaSize: THREE.Vector2;
   handleMetadata: () => void;
   lastRole: FilmStripSlideRole;
 };
@@ -112,16 +129,41 @@ export class SliderScene {
     this.slides.forEach((slide, index) => {
       const video = this.createVideoElement(slide.videoSrc);
       const texture = this.createVideoTexture(video);
-      const mediaSize = new THREE.Vector2(16, 9);
+      const videoMediaSize = new THREE.Vector2(16, 9);
+      const posterMediaSize = new THREE.Vector2(16, 9);
       let hasPrimedPreview = false;
+      const posterResource = this.createPosterTexture(
+        slide.posterSrc,
+        (loadedPosterTexture, width, height) => {
+          const slideVideo = this.slideVideos[index];
+
+          if (!slideVideo || this.isDestroyed) {
+            return;
+          }
+
+          if (loadedPosterTexture && width > 0 && height > 0) {
+            posterMediaSize.set(width, height);
+
+            if (slideVideo.textureState === 'poster') {
+              this.planes[index]?.setTexture(loadedPosterTexture, posterMediaSize);
+            }
+          }
+
+          slideVideo.isPosterSettled = true;
+          this.revealVideoTexture(index);
+        },
+      );
+      const posterTexture = posterResource.texture;
+      const plane = new VideoPlane(posterTexture, this.viewport);
+      plane.setTexture(posterTexture, posterMediaSize);
+      plane.setObjectPosition(slide.videoObjectPosition ?? [0.5, 0.58]);
+
       const handleMetadata = () => {
-        if (!this.isVideoDrawable(video) && video.readyState < HTMLMediaElement.HAVE_METADATA) {
+        if (video.readyState < HTMLMediaElement.HAVE_METADATA) {
           return;
         }
 
-        mediaSize.set(video.videoWidth || 16, video.videoHeight || 9);
-        this.planes[index]?.setTexture(texture, mediaSize);
-        texture.needsUpdate = true;
+        videoMediaSize.set(video.videoWidth || 16, video.videoHeight || 9);
 
         if (index !== this.activeIndex && !hasPrimedPreview && video.readyState >= HTMLMediaElement.HAVE_METADATA) {
           hasPrimedPreview = true;
@@ -132,9 +174,22 @@ export class SliderScene {
             // Seeking can fail before the browser has enough metadata; the slide will stay paused.
           }
         }
+
+        if (!this.isVideoDrawable(video)) {
+          return;
+        }
+
+        const slideVideo = this.slideVideos[index];
+
+        if (!slideVideo) {
+          return;
+        }
+
+        texture.needsUpdate = true;
+        slideVideo.isVideoReady = true;
+        slideVideo.videoMediaSize.copy(videoMediaSize);
+        this.revealVideoTexture(index);
       };
-      const plane = new VideoPlane(texture, this.viewport);
-      plane.setObjectPosition(slide.videoObjectPosition ?? [0.5, 0.58]);
 
       video.addEventListener('loadedmetadata', handleMetadata);
       video.addEventListener('loadeddata', handleMetadata);
@@ -148,6 +203,15 @@ export class SliderScene {
         index,
         video,
         texture,
+        posterTexture,
+        posterImage: posterResource.image,
+        handlePosterLoad: posterResource.handleLoad,
+        handlePosterError: posterResource.handleError,
+        textureTween: null,
+        textureState: 'poster',
+        isPosterSettled: false,
+        isVideoReady: false,
+        videoMediaSize,
         handleMetadata,
         lastRole: index === 0 ? 'center' : this.getSlideRole(centeredOffset(index, this.slidePosition, this.slides.length)),
       });
@@ -418,15 +482,31 @@ export class SliderScene {
       plane.dispose(false);
     });
 
-    this.slideVideos.forEach(({ video, texture, handleMetadata }) => {
+    this.slideVideos.forEach(({
+      index,
+      video,
+      texture,
+      posterTexture,
+      posterImage,
+      textureTween,
+      handleMetadata,
+      handlePosterLoad,
+      handlePosterError,
+    }) => {
+      textureTween?.kill();
       video.removeEventListener('loadedmetadata', handleMetadata);
       video.removeEventListener('loadeddata', handleMetadata);
       video.removeEventListener('canplay', handleMetadata);
       video.removeEventListener('seeked', handleMetadata);
+      posterImage.removeEventListener('load', handlePosterLoad);
+      posterImage.removeEventListener('error', handlePosterError);
       video.pause();
+      releasePreloadedVideo(this.slides[index].videoSrc, video, { crossOrigin: 'anonymous' });
+      releasePreloadedImage(this.slides[index].posterSrc, posterImage, { crossOrigin: 'anonymous' });
       video.removeAttribute('src');
       video.load();
       texture.dispose();
+      posterTexture.dispose();
     });
 
     this.renderer.dispose();
@@ -501,15 +581,64 @@ export class SliderScene {
   }
 
   private createVideoElement(src: string) {
-    const video = document.createElement('video');
-    video.src = src;
+    const video = acquirePreloadedVideo(src, { crossOrigin: 'anonymous' });
     video.muted = true;
     video.loop = true;
     video.playsInline = true;
     video.preload = 'auto';
-    video.crossOrigin = 'anonymous';
 
     return video;
+  }
+
+  private createPosterTexture(
+    src: string,
+    handleSettled: (texture: THREE.Texture | null, width: number, height: number) => void,
+  ) {
+    const image = acquirePreloadedImage(src, { crossOrigin: 'anonymous' });
+    const texture = new THREE.Texture();
+
+    (texture as THREE.Texture & { image: HTMLImageElement }).image = image;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+
+    let isSettled = false;
+    const handleLoad = () => {
+      if (isSettled || this.isDestroyed) {
+        return;
+      }
+
+      isSettled = true;
+      image.removeEventListener('load', handleLoad);
+      image.removeEventListener('error', handleError);
+      texture.needsUpdate = true;
+      handleSettled(texture, image.naturalWidth, image.naturalHeight);
+    };
+    const handleError = () => {
+      if (isSettled) {
+        return;
+      }
+
+      isSettled = true;
+      image.removeEventListener('load', handleLoad);
+      image.removeEventListener('error', handleError);
+      handleSettled(null, 0, 0);
+    };
+
+    image.addEventListener('load', handleLoad, { once: true });
+    image.addEventListener('error', handleError, { once: true });
+
+    if (image.complete) {
+      queueMicrotask(image.naturalWidth > 0 ? handleLoad : handleError);
+    }
+
+    return {
+      image,
+      texture,
+      handleLoad,
+      handleError,
+    };
   }
 
   private createVideoTexture(video: HTMLVideoElement) {
@@ -528,6 +657,40 @@ export class SliderScene {
         video.videoWidth > 0 &&
         video.videoHeight > 0
     );
+  }
+
+  private revealVideoTexture(index: number) {
+    const slideVideo = this.slideVideos[index];
+    const plane = this.planes[index];
+
+    if (
+      !slideVideo ||
+      !plane ||
+      !slideVideo.isPosterSettled ||
+      !slideVideo.isVideoReady ||
+      slideVideo.textureState !== 'poster'
+    ) {
+      return;
+    }
+
+    slideVideo.textureState = 'transitioning';
+    plane.setNextTexture(slideVideo.texture, slideVideo.videoMediaSize);
+    slideVideo.textureTween?.kill();
+    slideVideo.textureTween = gsap.to(plane.uniforms.uTextureMix, {
+      value: 1,
+      duration: this.reducedMotion ? 0.01 : 0.36,
+      ease: 'sine.out',
+      overwrite: 'auto',
+      onComplete: () => {
+        if (this.isDestroyed) {
+          return;
+        }
+
+        plane.setTexture(slideVideo.texture, slideVideo.videoMediaSize);
+        slideVideo.textureState = 'video';
+        slideVideo.textureTween = null;
+      },
+    });
   }
 
   private async playActiveVideo() {

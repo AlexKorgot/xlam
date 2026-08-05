@@ -19,6 +19,8 @@ import { getFilmStripChromeLayout } from './filmStripLayout';
 import type { SliderScene, SliderPointerAction } from './SliderScene';
 import type { CinematicOverlayState, CinematicSlide } from './types';
 import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
+import { useImagePreload } from '@/src/lib/imagePreload';
+import { useVideoPreload } from '@/src/lib/videoPreload';
 
 const dzenLogo = remoteImageAsset('/dzen.svg', 147, 44);
 const merLogo = remoteImageAsset('/mer.svg', 163, 35);
@@ -57,6 +59,8 @@ const openedSlideIncomingDelay =
   openedSlideIncomingDuration -
   0.04;
 const tickerLogos = [nikeLogo, merLogo, dzenLogo, nikeLogo, merLogo, dzenLogo];
+const cinematicVideoPreloadSources = cinematicSlides.map((slide) => slide.videoSrc);
+const cinematicPosterPreloadSources = cinematicSlides.map((slide) => slide.posterSrc);
 
 const getFocusableElements = (container: HTMLElement) =>
   Array.from(
@@ -266,6 +270,13 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   const isOpened = overlayState === 'opened' || overlayState === 'opening' || overlayState === 'openedSliding';
   const isDetailsLayerVisible = isOpened || overlayState === 'closing';
   const isChromeVisible = overlayState === 'slider' || overlayState === 'sliding';
+
+  useImagePreload(cinematicPosterPreloadSources, { crossOrigin: 'anonymous' });
+  useVideoPreload(cinematicVideoPreloadSources, {
+    enabled: true,
+    mediaQuery: '(min-width: 0px)',
+    crossOrigin: 'anonymous',
+  });
 
   const handleOpen = useCallback(() => {
     openTriggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;

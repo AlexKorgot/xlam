@@ -11,6 +11,9 @@ const podcastPreview2 = remoteImageAsset('/show2.png', 412, 208);
 const merVideo = mediaAssetPath('/Mer.mp4');
 const nowVideo = mediaAssetPath('/now.mp4');
 const voteVideo = mediaAssetPath('/vote.mp4');
+const merPoster = mediaAssetPath('/mer.jpg');
+const nowPoster = mediaAssetPath('/stidno.jpg');
+const votePoster = mediaAssetPath('/vibor.jpg');
 const mainVideoObjectPosition: [number, number] = [0.5, 0.58];
 const productionDescription =
   'Полный цикл продакшена: разработка концепции, подбор ведущих и гостей, организация съемок, продакшн и пост-продакшн. Мы превращаем идею в полноценный формат, готовый к публикации на YouTube, ТВ или платформах.';
@@ -28,6 +31,7 @@ export const cinematicSlides: CinematicSlide[] = [
     year: '2026',
     accent: '#66ff66',
     videoSrc: merVideo,
+    posterSrc: merPoster,
     videoObjectPosition: mainVideoObjectPosition,
     opened: {
       titleLead: 'Комедийный сериал',
@@ -53,6 +57,7 @@ export const cinematicSlides: CinematicSlide[] = [
     year: '2026',
     accent: '#7cff55',
     videoSrc: nowVideo,
+    posterSrc: nowPoster,
     videoObjectPosition: mainVideoObjectPosition,
     opened: {
       titleLead: 'Юмористическое шоу',
@@ -79,6 +84,7 @@ export const cinematicSlides: CinematicSlide[] = [
     year: '2026',
     accent: '#55ff88',
     videoSrc: voteVideo,
+    posterSrc: votePoster,
     videoObjectPosition: mainVideoObjectPosition,
     opened: {
       titleLead: 'шоу-подкаст',
