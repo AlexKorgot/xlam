@@ -1,15 +1,16 @@
-import { publicAssetPath } from '@/src/lib/publicAssetPath';
+import { mediaAssetPath, remoteImageAsset } from '@/src/lib/mediaAssetPath';
 import type { CinematicSlide } from './types';
-import merPreview1 from './assets/mer/mer1.png';
-import merPreview2 from './assets/mer/mer2.png';
-import showPreview1 from './assets/mer/podcast1.png';
-import showPreview2 from './assets/mer/podcast2.png';
-import podcastPreview1 from './assets/mer/show1.png';
-import podcastPreview2 from './assets/mer/show2.png';
 
-const merVideo = publicAssetPath('/video/Mer.mp4');
-const nowVideo = publicAssetPath('/video/now.mp4');
-const voteVideo = publicAssetPath('/video/vote.mp4');
+const merPreview1 = remoteImageAsset('/mer1.png', 412, 208);
+const merPreview2 = remoteImageAsset('/mer2.png', 412, 208);
+const showPreview1 = remoteImageAsset('/podcast1.png', 412, 208);
+const showPreview2 = remoteImageAsset('/podcast2.png', 412, 208);
+const podcastPreview1 = remoteImageAsset('/show1.png', 412, 208);
+const podcastPreview2 = remoteImageAsset('/show2.png', 412, 208);
+
+const merVideo = mediaAssetPath('/Mer.mp4');
+const nowVideo = mediaAssetPath('/now.mp4');
+const voteVideo = mediaAssetPath('/vote.mp4');
 const mainVideoObjectPosition: [number, number] = [0.5, 0.58];
 const productionDescription =
   'Полный цикл продакшена: разработка концепции, подбор ведущих и гостей, организация съемок, продакшн и пост-продакшн. Мы превращаем идею в полноценный формат, готовый к публикации на YouTube, ТВ или платформах.';

@@ -9,7 +9,9 @@ import {
 import Image from 'next/image';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import Logo from '@/src/lib/assets/logo.svg';
+import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
+
+const Logo = remoteImageAsset('/logo.svg', 110, 56);
 
 gsap.registerPlugin(useGSAP);
 

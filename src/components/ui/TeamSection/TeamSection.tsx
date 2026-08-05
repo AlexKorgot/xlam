@@ -10,12 +10,14 @@ import {
   FULLPAGE_TOUCH_SWIPE_THRESHOLD,
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
-import personImageOne from './assets/07A kopia_13 1.png';
-import personImageTwo from './assets/07A kopia_13 1 (1).png';
-import personImageThree from './assets/07A kopia_13 1 (2).png';
-import personImageFour from './assets/07A kopia_13 1 (3).png';
-import personImageFive from './assets/07A kopia_13 1 (4).png';
-import evgeniyMalovImage from './assets/evgeniy-malov.png';
+import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
+
+const personImageOne = remoteImageAsset('/07A kopia_13 1.png', 388, 704);
+const personImageTwo = remoteImageAsset('/07A kopia_13 1 (1).png', 388, 704);
+const personImageThree = remoteImageAsset('/07A kopia_13 1 (2).png', 388, 704);
+const personImageFour = remoteImageAsset('/07A kopia_13 1 (3).png', 388, 704);
+const personImageFive = remoteImageAsset('/07A kopia_13 1 (4).png', 388, 704);
+const evgeniyMalovImage = remoteImageAsset('/evgeniy-malov.png', 648, 1176);
 
 type TeamMemberId =
   | 'aysar'
@@ -429,7 +431,7 @@ export function TeamSection() {
                 key={activeItem.id}
                 src={activeItem.image}
                 alt={`${activeItem.name}, ${activeItem.role}`}
-                loading="eager"
+                loading="lazy"
                 unoptimized
                 sizes="(min-width: 1280px) 388px, (min-width: 1024px) 30vw, 58vw"
                 className="h-[520px] w-auto max-w-none object-contain max-lg:[@media_(orientation:landscape)]:h-[min(76svh,320px)] lg:h-[704px]"

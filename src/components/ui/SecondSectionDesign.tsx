@@ -14,14 +14,16 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import Image, { type StaticImageData } from 'next/image';
 import FullPageSection from '@/src/components/ui/FullPageSection';
-import Spring from '@/src/lib/assets/main/spring.png';
-import Sphere from '@/src/lib/assets/main/circle.png';
-import StoneM from '@/src/lib/assets/main/m.png';
-import GreenBrick from '@/src/lib/assets/main/lego_green.png';
-import FurryX from '@/src/lib/assets/main/x.png';
-import Shield from '@/src/lib/assets/main/sield.png';
-import Tube from '@/src/lib/assets/main/tube.png';
-import DarkBrick from '@/src/lib/assets/main/lego_dark.png';
+import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
+
+const Spring = remoteImageAsset('/spring.png', 2160, 2160);
+const Sphere = remoteImageAsset('/circle.png', 485, 485);
+const StoneM = remoteImageAsset('/m.png', 810, 626);
+const GreenBrick = remoteImageAsset('/lego_green.png', 2160, 2160);
+const FurryX = remoteImageAsset('/x.png', 1024, 1024);
+const Shield = remoteImageAsset('/sield.png', 500, 500);
+const Tube = remoteImageAsset('/tube.png', 2160, 2160);
+const DarkBrick = remoteImageAsset('/lego_dark.png', 2160, 2160);
 
 export interface SecondSectionDesignHandle {
   setProgress: (progress: number) => void;
@@ -905,7 +907,7 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
                         alt=""
                         aria-hidden="true"
                         unoptimized
-                        loading="eager"
+                        loading="lazy"
                         className={item.imageClassName}
                         sizes="(max-width: 1710px) 100vw, 1710px"
                       />

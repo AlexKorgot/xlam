@@ -21,13 +21,15 @@ import {
   FULLPAGE_TOUCH_SWIPE_THRESHOLD,
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
-import GeneralBackground from './assets/img/general_bg.png';
-import BlueTop from './assets/img/blue_top.png';
-import BlueBottom from './assets/img/blue_bottom.png';
-import GreenTop from './assets/img/green_top.png';
-import GreenBottom from './assets/img/green_bottom.png';
-import GrayTop from './assets/img/gray_top.png';
-import GrayBottom from './assets/img/gray_bottom.png';
+import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
+
+const GeneralBackground = remoteImageAsset('/general_bg.png', 1920, 1080);
+const BlueTop = remoteImageAsset('/blue_top.png', 1920, 890);
+const BlueBottom = remoteImageAsset('/blue_bottom.png', 1920, 730);
+const GreenTop = remoteImageAsset('/green_top.png', 1920, 970);
+const GreenBottom = remoteImageAsset('/green_bottom.png', 1920, 840);
+const GrayTop = remoteImageAsset('/gray_top.png', 1920, 930);
+const GrayBottom = remoteImageAsset('/gray_bottom.png', 1920, 820);
 
 type TextSlide = {
   id: string;
@@ -783,7 +785,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
             alt=""
             aria-hidden="true"
             fill
-            loading="eager"
+            loading="lazy"
             unoptimized
             className="object-cover"
             sizes="100vw"
@@ -857,7 +859,7 @@ function SlideArtwork({
           alt=""
           aria-hidden="true"
           fill
-          loading="eager"
+          loading="lazy"
           unoptimized
           className="object-cover object-bottom"
           sizes="100vw"
@@ -874,7 +876,7 @@ function SlideArtwork({
           alt=""
           aria-hidden="true"
           fill
-          loading="eager"
+          loading="lazy"
           unoptimized
           className="object-cover object-top"
           sizes="100vw"

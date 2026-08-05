@@ -29,6 +29,7 @@ const sans = localFont({
   ],
   variable: '--app-font-default',
   display: 'swap',
+  preload: false,
 })
 
 export const viewport = {

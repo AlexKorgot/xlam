@@ -9,7 +9,9 @@ import {
 } from 'react';
 import { GlitchBrandXIcon } from '@/src/components/ui/GlitchBrandXIcon';
 import { BaseModal } from '@/src/components/ui/modal';
-import blueBottomImage from '@/src/components/textSection/assets/img/modal_bottom.png';
+import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
+
+const blueBottomImage = remoteImageAsset('/modal_bottom.png', 378, 215);
 
 type ContactModalProps = {
   isOpen: boolean;

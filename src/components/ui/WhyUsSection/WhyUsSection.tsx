@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Container } from "@/src/components/ui/grid/Container";
-import { publicAssetPath } from "@/src/lib/publicAssetPath";
+import { mediaAssetPath } from "@/src/lib/mediaAssetPath";
+import { useNearViewport } from "@/src/lib/useNearViewport";
 import styles from "./WhyUsSection.module.scss";
 
 type FeatureBlockData = {
@@ -75,6 +76,7 @@ export function WhyUsSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [revealDelays, setRevealDelays] = useState<number[] | null>(null);
   const hasAnimatedIn = revealDelays !== null;
+  const shouldLoadVideo = useNearViewport(sectionRef);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -114,10 +116,9 @@ export function WhyUsSection() {
         className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover min-[1000px]:object-contain"
         muted
         playsInline
-        preload="metadata"
-      >
-        <source src={publicAssetPath("/video/balls.mp4")} type="video/mp4" />
-      </video>
+        preload="none"
+        src={shouldLoadVideo ? mediaAssetPath("/balls.mp4") : undefined}
+      />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(0,0,0,0.14)_28%,rgba(0,0,0,0.62)_58%,rgba(0,0,0,0.82)_100%)] lg:hidden"

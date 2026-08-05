@@ -8,7 +8,8 @@ import {
   FULLPAGE_TOUCH_SWIPE_THRESHOLD,
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
-import { publicAssetPath } from '@/src/lib/publicAssetPath';
+import { mediaAssetPath, remoteImageAsset } from '@/src/lib/mediaAssetPath';
+import { useNearViewport } from '@/src/lib/useNearViewport';
 import useEmblaCarousel from 'embla-carousel-react';
 import WheelGesturesPlugin from 'embla-carousel-wheel-gestures';
 import Image from 'next/image';
@@ -19,15 +20,16 @@ import {
   useState,
   type RefObject,
 } from 'react';
-import adsModalImage from './assets/ads-modal.png';
-import b2bModalImage from './assets/b2b-modal.png';
-import brandModalImage from './assets/brand.png';
-import brandingModalImage from './assets/branding-modal.png';
-import showModalImage from './assets/show-modal.png';
 import {
   ServiceModal,
   type ServiceModalContent,
 } from './ServiceModal';
+
+const adsModalImage = remoteImageAsset('/ads-modal.png', 1756, 829);
+const b2bModalImage = remoteImageAsset('/b2b-modal.png', 1756, 829);
+const brandModalImage = remoteImageAsset('/brand.png', 1756, 829);
+const brandingModalImage = remoteImageAsset('/branding-modal.png', 1756, 829);
+const showModalImage = remoteImageAsset('/show-modal.png', 1800, 860);
 
 type ServiceVideoRef = RefObject<HTMLVideoElement | null>;
 
@@ -224,8 +226,8 @@ export function ServicesSliderSection({
       description:
         'ОТ ИДЕИ ДО ПРЕМЬЕРЫ: РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР',
       modal: showModalContent,
-      videoSrc: publicAssetPath('/video/services/3.mp4'),
-      posterSrc: publicAssetPath('/video/services/posters/3.jpg'),
+      videoSrc: mediaAssetPath('/3.mp4'),
+      posterSrc: mediaAssetPath('/3.jpg'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -238,8 +240,8 @@ export function ServicesSliderSection({
       description:
           'ПРОИЗВОДИМ СИСТЕМНЫЙ КОНТЕНТ: ИМИДЖ, ПРОДУКТ, КОММУНИКАЦИИ',
       modal: b2bModalContent,
-      videoSrc: publicAssetPath('/video/services/2.mp4'),
-      posterSrc: publicAssetPath('/video/services/posters/2.jpg'),
+      videoSrc: mediaAssetPath('/2.mp4'),
+      posterSrc: mediaAssetPath('/2.jpg'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -252,8 +254,8 @@ export function ServicesSliderSection({
       description:
         'ДЕЛАЕМ РЕКЛАМУ, КОТОРУЮ ПЕРЕСЫЛАЮТ ДРУЗЬЯМ',
       modal: adsModalContent,
-      videoSrc: publicAssetPath('/video/services/4.mp4'),
-      posterSrc: publicAssetPath('/video/services/posters/4.jpg'),
+      videoSrc: mediaAssetPath('/4.mp4'),
+      posterSrc: mediaAssetPath('/4.jpg'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -266,8 +268,8 @@ export function ServicesSliderSection({
       description:
         'СОЗДАЕМ ВИЗУАЛ НОВОГО ПОКОЛЕНИЯ С ПОМОЩЬЮ ИИ',
       modal: brandingModalContent,
-      videoSrc: publicAssetPath('/video/services/1.mp4'),
-      posterSrc: publicAssetPath('/video/services/posters/1.jpg'),
+      videoSrc: mediaAssetPath('/1.mp4'),
+      posterSrc: mediaAssetPath('/1.jpg'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -280,7 +282,7 @@ export function ServicesSliderSection({
       description:
         'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ',
       modal: brandModalContent,
-      posterSrc: publicAssetPath('/video/services/posters/5.jpg'),
+      posterSrc: mediaAssetPath('/5.jpg'),
     },
   ];
 
@@ -333,6 +335,8 @@ export function ServicesSliderSection({
   }, []);
 
   const wheelBridgeDirectionRef = useRef<'up' | 'down' | null>(null);
+  const sectionContentRef = useRef<HTMLDivElement | null>(null);
+  const shouldLoadVideos = useNearViewport(sectionContentRef);
   const wheelBridgeDeltaRef = useRef(0);
   const wheelBridgeLockRef = useRef(false);
   const wheelBridgeTimeoutRef = useRef<number | null>(null);
@@ -600,7 +604,7 @@ export function ServicesSliderSection({
   return (
     <>
       <FullPageSection id="services" className="items-stretch bg-black px-4 py-[clamp(1rem,4vh,3rem)] text-white sm:px-8 min-[1000px]:pt-[var(--header-offset)]">
-        <div className="flex h-full min-h-0 w-full max-w-[1740px] flex-col items-center justify-center gap-[clamp(0.75rem,2vh,2rem)] px-[15px]">
+        <div ref={sectionContentRef} className="flex h-full min-h-0 w-full max-w-[1740px] flex-col items-center justify-center gap-[clamp(0.75rem,2vh,2rem)] px-[15px]">
           <div className="embla__wrapper h-[clamp(260px,58vh,560px)] max-h-[62%] w-screen min-[1000px]:w-full">
             <div className="embla h-full">
               <div
@@ -632,12 +636,12 @@ export function ServicesSliderSection({
                           <video
                             ref={slide.videoRefConfig.ref}
                             className="pointer-events-none h-full w-full object-cover"
-                            src={slide.videoSrc}
+                            src={shouldLoadVideos ? slide.videoSrc : undefined}
                             poster={slide.posterSrc}
                             playsInline
                             loop
                             muted
-                            preload="auto"
+                            preload="none"
                           />
                         ) : (
                           <Image
@@ -646,7 +650,7 @@ export function ServicesSliderSection({
                             alt=""
                             fill
                             sizes="(min-width: 1000px) 25vw, (min-width: 600px) 33vw, 50vw"
-                            loading="eager"
+                            loading="lazy"
                           />
                         )}
                         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex w-full flex-col items-center px-1.5 text-center min-[1000px]:pb-[25px]">

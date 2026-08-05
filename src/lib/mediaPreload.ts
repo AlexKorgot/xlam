@@ -1,47 +1,48 @@
 import type { StaticImageData } from 'next/image';
-import { publicAssetPath } from '@/src/lib/publicAssetPath';
-import logo from '@/src/lib/assets/logo.svg';
+import { mediaAssetPath, remoteImageAsset } from '@/src/lib/mediaAssetPath';
 import logoBig from '@/src/lib/assets/logo_big.svg';
 import sliderBackground from '@/src/lib/assets/slider_bg.png';
 import teleImage from '@/src/lib/assets/tele.png';
 import headerPlateImage from '@/src/lib/assets/main/rectangle.png';
-import springImage from '@/src/lib/assets/main/spring.png';
-import sphereImage from '@/src/lib/assets/main/circle.png';
-import stoneMImage from '@/src/lib/assets/main/m.png';
-import greenBrickImage from '@/src/lib/assets/main/lego_green.png';
-import furryXImage from '@/src/lib/assets/main/x.png';
-import shieldImage from '@/src/lib/assets/main/sield.png';
-import tubeImage from '@/src/lib/assets/main/tube.png';
-import darkBrickImage from '@/src/lib/assets/main/lego_dark.png';
-import textGeneralBackground from '@/src/components/textSection/assets/img/general_bg.png';
-import textBlueTop from '@/src/components/textSection/assets/img/blue_top.png';
-import textBlueBottom from '@/src/components/textSection/assets/img/blue_bottom.png';
-import textGreenTop from '@/src/components/textSection/assets/img/green_top.png';
-import textGreenBottom from '@/src/components/textSection/assets/img/green_bottom.png';
-import textGrayTop from '@/src/components/textSection/assets/img/gray_top.png';
-import textGrayBottom from '@/src/components/textSection/assets/img/gray_bottom.png';
-import textModalBottom from '@/src/components/textSection/assets/img/modal_bottom.png';
-import servicesAdsModal from '@/src/components/ui/ServicesSliderSection/assets/ads-modal.png';
-import servicesB2bModal from '@/src/components/ui/ServicesSliderSection/assets/b2b-modal.png';
-import servicesBrandModal from '@/src/components/ui/ServicesSliderSection/assets/brand.png';
-import servicesBrandingModal from '@/src/components/ui/ServicesSliderSection/assets/branding-modal.png';
-import servicesShowModal from '@/src/components/ui/ServicesSliderSection/assets/show-modal.png';
-import teamPersonOne from '@/src/components/ui/TeamSection/assets/07A kopia_13 1.png';
-import teamPersonTwo from '@/src/components/ui/TeamSection/assets/07A kopia_13 1 (1).png';
-import teamPersonThree from '@/src/components/ui/TeamSection/assets/07A kopia_13 1 (2).png';
-import teamPersonFour from '@/src/components/ui/TeamSection/assets/07A kopia_13 1 (3).png';
-import teamPersonFive from '@/src/components/ui/TeamSection/assets/07A kopia_13 1 (4).png';
-import teamEvgeniyMalov from '@/src/components/ui/TeamSection/assets/evgeniy-malov.png';
 import whyUsBalls from '@/src/components/ui/WhyUsSection/why-us-balls.png';
-import cinematicMerPreviewOne from '@/src/components/cinematic_new/assets/mer/mer1.png';
-import cinematicMerPreviewTwo from '@/src/components/cinematic_new/assets/mer/mer2.png';
-import cinematicShowPreviewOne from '@/src/components/cinematic_new/assets/mer/podcast1.png';
-import cinematicShowPreviewTwo from '@/src/components/cinematic_new/assets/mer/podcast2.png';
-import cinematicPodcastPreviewOne from '@/src/components/cinematic_new/assets/mer/show1.png';
-import cinematicPodcastPreviewTwo from '@/src/components/cinematic_new/assets/mer/show2.png';
-import cinematicDzenLogo from '@/src/components/cinematic_new/assets/line/dzen.svg';
-import cinematicMerLogo from '@/src/components/cinematic_new/assets/line/mer.svg';
-import cinematicNikeLogo from '@/src/components/cinematic_new/assets/line/nike.svg';
+
+const logo = remoteImageAsset('/logo.svg', 110, 56);
+const springImage = remoteImageAsset('/spring.png', 2160, 2160);
+const sphereImage = remoteImageAsset('/circle.png', 485, 485);
+const stoneMImage = remoteImageAsset('/m.png', 810, 626);
+const greenBrickImage = remoteImageAsset('/lego_green.png', 2160, 2160);
+const furryXImage = remoteImageAsset('/x.png', 1024, 1024);
+const shieldImage = remoteImageAsset('/sield.png', 500, 500);
+const tubeImage = remoteImageAsset('/tube.png', 2160, 2160);
+const darkBrickImage = remoteImageAsset('/lego_dark.png', 2160, 2160);
+const textGeneralBackground = remoteImageAsset('/general_bg.png', 1920, 1080);
+const textBlueTop = remoteImageAsset('/blue_top.png', 1920, 890);
+const textBlueBottom = remoteImageAsset('/blue_bottom.png', 1920, 730);
+const textGreenTop = remoteImageAsset('/green_top.png', 1920, 970);
+const textGreenBottom = remoteImageAsset('/green_bottom.png', 1920, 840);
+const textGrayTop = remoteImageAsset('/gray_top.png', 1920, 930);
+const textGrayBottom = remoteImageAsset('/gray_bottom.png', 1920, 820);
+const textModalBottom = remoteImageAsset('/modal_bottom.png', 378, 215);
+const servicesAdsModal = remoteImageAsset('/ads-modal.png', 1756, 829);
+const servicesB2bModal = remoteImageAsset('/b2b-modal.png', 1756, 829);
+const servicesBrandModal = remoteImageAsset('/brand.png', 1756, 829);
+const servicesBrandingModal = remoteImageAsset('/branding-modal.png', 1756, 829);
+const servicesShowModal = remoteImageAsset('/show-modal.png', 1800, 860);
+const teamPersonOne = remoteImageAsset('/07A kopia_13 1.png', 388, 704);
+const teamPersonTwo = remoteImageAsset('/07A kopia_13 1 (1).png', 388, 704);
+const teamPersonThree = remoteImageAsset('/07A kopia_13 1 (2).png', 388, 704);
+const teamPersonFour = remoteImageAsset('/07A kopia_13 1 (3).png', 388, 704);
+const teamPersonFive = remoteImageAsset('/07A kopia_13 1 (4).png', 388, 704);
+const teamEvgeniyMalov = remoteImageAsset('/evgeniy-malov.png', 648, 1176);
+const cinematicMerPreviewOne = remoteImageAsset('/mer1.png', 412, 208);
+const cinematicMerPreviewTwo = remoteImageAsset('/mer2.png', 412, 208);
+const cinematicShowPreviewOne = remoteImageAsset('/podcast1.png', 412, 208);
+const cinematicShowPreviewTwo = remoteImageAsset('/podcast2.png', 412, 208);
+const cinematicPodcastPreviewOne = remoteImageAsset('/show1.png', 412, 208);
+const cinematicPodcastPreviewTwo = remoteImageAsset('/show2.png', 412, 208);
+const cinematicDzenLogo = remoteImageAsset('/dzen.svg', 147, 44);
+const cinematicMerLogo = remoteImageAsset('/mer.svg', 163, 35);
+const cinematicNikeLogo = remoteImageAsset('/nike.svg', 104, 37);
 
 export type MediaPreloadKind = 'image' | 'video';
 export type MediaPreloadPriority = 'immediate' | 'idle';
@@ -70,7 +71,7 @@ const video = (
   path: `/${string}`,
   priority: MediaPreloadPriority = 'idle',
 ): MediaPreloadItem => ({
-  src: publicAssetPath(path),
+  src: mediaAssetPath(path),
   kind: 'video',
   priority,
 });
@@ -78,7 +79,7 @@ const video = (
 export const mediaPreloadManifest: MediaPreloadItem[] = [
   image(logo, 'immediate'),
   image(logoBig, 'immediate'),
-  video('/video/only_bg.mp4', 'immediate'),
+  video('/only_bg.mp4', 'immediate'),
 
   image(sliderBackground),
   image(teleImage),
@@ -104,7 +105,7 @@ export const mediaPreloadManifest: MediaPreloadItem[] = [
   image(servicesBrandModal),
   image(servicesBrandingModal),
   image(servicesShowModal),
-  image(publicAssetPath('/video/services/posters/5.jpg')),
+  image(mediaAssetPath('/5.jpg')),
   image(teamPersonOne),
   image(teamPersonTwo),
   image(teamPersonThree),
@@ -122,12 +123,12 @@ export const mediaPreloadManifest: MediaPreloadItem[] = [
   image(cinematicMerLogo),
   image(cinematicNikeLogo),
 
-  video('/video/balls.mp4'),
-  video('/video/Mer.mp4'),
-  video('/video/now.mp4'),
-  video('/video/vote.mp4'),
-  video('/video/services/1.mp4'),
-  video('/video/services/2.mp4'),
-  video('/video/services/3.mp4'),
-  video('/video/services/4.mp4'),
+  video('/balls.mp4'),
+  video('/Mer.mp4'),
+  video('/now.mp4'),
+  video('/vote.mp4'),
+  video('/1.mp4'),
+  video('/2.mp4'),
+  video('/3.mp4'),
+  video('/4.mp4'),
 ];

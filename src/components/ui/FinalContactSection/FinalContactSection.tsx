@@ -1,10 +1,11 @@
 'use client';
 
 import clsx from 'clsx';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import FullPageSection from '@/src/components/ui/FullPageSection';
 import { useContactModal } from '@/src/components/ui/contact-modal';
-import { publicAssetPath } from '@/src/lib/publicAssetPath';
+import { mediaAssetPath } from '@/src/lib/mediaAssetPath';
+import { useNearViewport } from '@/src/lib/useNearViewport';
 
 const menuItems = [
   'Услуги',
@@ -14,15 +15,21 @@ const menuItems = [
 ];
 
 const socialItems = ['Youtube', 'Rutube', 'Вконтакте', 'Max'];
-const mobileVideoSrc = publicAssetPath('/video/mobile.mp4');
-const desktopVideoSrc = publicAssetPath('/video/desktop.mp4');
+const mobileVideoSrc = mediaAssetPath('/mobile.mp4');
+const desktopVideoSrc = mediaAssetPath('/desktop.mp4');
 
 export function FinalContactSection() {
   const [activeButtonId, setActiveButtonId] = useState<string | null>(null);
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const { openContactModal } = useContactModal();
+  const sectionContentRef = useRef<HTMLDivElement | null>(null);
+  const shouldLoadVideo = useNearViewport(sectionContentRef);
 
   useEffect(() => {
+    if (!shouldLoadVideo) {
+      return;
+    }
+
     const mediaQuery = window.matchMedia(
       '(max-width: 999.98px) and (orientation: portrait)',
     );
@@ -36,11 +43,11 @@ export function FinalContactSection() {
     return () => {
       mediaQuery.removeEventListener('change', updateVideoSrc);
     };
-  }, []);
+  }, [shouldLoadVideo]);
 
   return (
     <FullPageSection id="final-contact" fullBleed reserveHeader className="items-stretch bg-black">
-      <div className="relative isolate h-full w-full overflow-hidden bg-black font-normalidad text-white">
+      <div ref={sectionContentRef} className="relative isolate h-full w-full overflow-hidden bg-black font-normalidad text-white">
         <div className="relative z-40 mx-auto flex h-full w-full max-w-[1740px] flex-col px-5 pb-[max(18px,env(safe-area-inset-bottom))] pt-4 max-[999px]:[@media_(orientation:landscape)]:pb-0 max-[999px]:[@media_(orientation:landscape)]:pt-1 min-[1000px]:px-0 min-[1000px]:pb-0 min-[1000px]:pt-14">
           <div className="relative z-20 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-0">
             <nav aria-label="Навигация по секциям">
@@ -127,7 +134,7 @@ export function FinalContactSection() {
                   muted
                   loop
                   playsInline
-                  preload="auto"
+                  preload="none"
                   className="absolute inset-0 z-0 block h-full w-full"
                   aria-hidden="true"
                 />

@@ -23,12 +23,11 @@ import {
 import {WhyUsSection} from "@/src/components/ui/WhyUsSection";
 import {TeamSection} from "@/src/components/ui/TeamSection";
 import { FinalContactSection } from '@/src/components/ui/FinalContactSection/FinalContactSection';
-import { publicAssetPath } from '@/src/lib/publicAssetPath';
-import { MediaPreloader } from '@/src/components/ui/MediaPreloader';
+import { mediaAssetPath } from '@/src/lib/mediaAssetPath';
 
 const SECOND_SECTION_INDEX = 1;
 const MORPH_SECTION_INDEX = 2;
-const MORPH_VIDEO_SRC = publicAssetPath('/video/only_bg.mp4');
+const MORPH_VIDEO_SRC = mediaAssetPath('/only_bg.mp4');
 
 const isDesktopMorphViewport = () =>
   typeof window !== 'undefined' && window.matchMedia('(min-width: 1000px)').matches;
@@ -61,7 +60,6 @@ export const MainScene = () => {
 
   return (
     <div className="">
-      <MediaPreloader />
       <FullPageScroll
         beforeTransitionCallback={(startIndex, targetIndex) => {
           if (

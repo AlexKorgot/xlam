@@ -16,11 +16,13 @@ import {
 import { ModalPortal } from '@/src/components/ui/modal';
 import { cinematicSlides } from './data';
 import { getFilmStripChromeLayout } from './filmStripLayout';
-import { SliderScene, type SliderPointerAction } from './SliderScene';
+import type { SliderScene, SliderPointerAction } from './SliderScene';
 import type { CinematicOverlayState, CinematicSlide } from './types';
-import dzenLogo from './assets/line/dzen.svg';
-import merLogo from './assets/line/mer.svg';
-import nikeLogo from './assets/line/nike.svg';
+import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
+
+const dzenLogo = remoteImageAsset('/dzen.svg', 147, 44);
+const merLogo = remoteImageAsset('/mer.svg', 163, 35);
+const nikeLogo = remoteImageAsset('/nike.svg', 104, 37);
 
 gsap.registerPlugin(useGSAP);
 
@@ -82,7 +84,7 @@ function LogoTicker() {
                 key={`${groupIndex}-${index}-${logo.src}`}
                 src={logo}
                 alt=""
-                loading="eager"
+                loading="lazy"
                 className="h-5 w-auto max-w-none shrink-0 object-contain sm:h-6 md:h-7"
                 draggable={false}
               />
@@ -198,7 +200,7 @@ function OpenedSheetBody({
                 src={preview.src}
                 alt={preview.alt}
                 fill
-                loading="eager"
+                loading="lazy"
                 unoptimized
                 sizes="(max-width: 639px) calc(100vw - 40px), (max-width: 1023px) 50vw, 45vw"
                 className="object-cover object-bottom"
@@ -300,50 +302,85 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
   useEffect(() => {
     const host = canvasHostRef.current;
+    const root = rootRef.current;
 
-    if (!host) {
+    if (!host || !root) {
       return;
     }
 
-    const scene = new SliderScene(host, {
-      slides,
-      reducedMotion,
-      onActiveSlideChange: setActiveIndex,
-      onOverlayStateChange: setOverlayState,
-      onOpenedSlideTargetChange: setPendingOpenedIndex,
-    });
+    let isDisposed = false;
+    let disposeScene: (() => void) | null = null;
 
-    sceneRef.current = scene;
+    const initializeScene = async () => {
+      const { SliderScene } = await import('./SliderScene');
 
-    const canvas = scene.getCanvasElement();
-    const handlePointerDown = (event: PointerEvent) => {
-      pointerStartRef.current = { x: event.clientX, y: event.clientY };
-    };
-    const handlePointerUp = (event: PointerEvent) => {
-      const start = pointerStartRef.current;
-
-      pointerStartRef.current = null;
-
-      if (!start) {
+      if (isDisposed) {
         return;
       }
 
-      handlePointerAction(scene.getPointerGestureAction(start.x, start.y, event.clientX, event.clientY));
-    };
-    const handlePointerCancel = () => {
-      pointerStartRef.current = null;
+      const scene = new SliderScene(host, {
+        slides,
+        reducedMotion,
+        onActiveSlideChange: setActiveIndex,
+        onOverlayStateChange: setOverlayState,
+        onOpenedSlideTargetChange: setPendingOpenedIndex,
+      });
+
+      sceneRef.current = scene;
+
+      const canvas = scene.getCanvasElement();
+      const handlePointerDown = (event: PointerEvent) => {
+        pointerStartRef.current = { x: event.clientX, y: event.clientY };
+      };
+      const handlePointerUp = (event: PointerEvent) => {
+        const start = pointerStartRef.current;
+
+        pointerStartRef.current = null;
+
+        if (!start) {
+          return;
+        }
+
+        handlePointerAction(scene.getPointerGestureAction(start.x, start.y, event.clientX, event.clientY));
+      };
+      const handlePointerCancel = () => {
+        pointerStartRef.current = null;
+      };
+
+      canvas.addEventListener('pointerdown', handlePointerDown);
+      canvas.addEventListener('pointerup', handlePointerUp);
+      canvas.addEventListener('pointercancel', handlePointerCancel);
+
+      disposeScene = () => {
+        canvas.removeEventListener('pointerdown', handlePointerDown);
+        canvas.removeEventListener('pointerup', handlePointerUp);
+        canvas.removeEventListener('pointercancel', handlePointerCancel);
+        scene.dispose();
+        sceneRef.current = null;
+      };
     };
 
-    canvas.addEventListener('pointerdown', handlePointerDown);
-    canvas.addEventListener('pointerup', handlePointerUp);
-    canvas.addEventListener('pointercancel', handlePointerCancel);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) {
+          return;
+        }
+
+        observer.disconnect();
+        void initializeScene();
+      },
+      {
+        rootMargin: '350px 0px',
+        threshold: 0.01,
+      },
+    );
+
+    observer.observe(root);
 
     return () => {
-      canvas.removeEventListener('pointerdown', handlePointerDown);
-      canvas.removeEventListener('pointerup', handlePointerUp);
-      canvas.removeEventListener('pointercancel', handlePointerCancel);
-      scene.dispose();
-      sceneRef.current = null;
+      isDisposed = true;
+      observer.disconnect();
+      disposeScene?.();
     };
   }, [handlePointerAction, reducedMotion, slides]);
 

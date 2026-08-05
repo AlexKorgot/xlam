@@ -4,8 +4,10 @@ import { forwardRef, useImperativeHandle, useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import Image from 'next/image';
-import Logo from '@/src/lib/assets/logo.svg';
+import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
 import HeaderPlate from '@/src/lib/assets/main/rectangle.png';
+
+const Logo = remoteImageAsset('/logo.svg', 110, 56);
 
 export interface AnimatedLogoHandle {
   setProgress: (progress: number) => void;

@@ -299,6 +299,11 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 return;
             }
 
+            if (!video.getAttribute('src')) {
+                video.src = videoSrc;
+                video.load();
+            }
+
             if (reset) {
                 video.currentTime = 0;
             }
@@ -1279,10 +1284,9 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     >
                         <video
                             ref={topVideoRef}
-                            src={videoSrc}
                             muted
                             playsInline
-                            preload="auto"
+                            preload="none"
                             className="block h-full w-full object-cover"
                         />
                     </div>
@@ -1333,10 +1337,9 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     >
                         <video
                             ref={bottomVideoRef}
-                            src={videoSrc}
                             muted
                             playsInline
-                            preload="auto"
+                            preload="none"
                             className="block h-full w-full object-cover"
                         />
                     </div>
