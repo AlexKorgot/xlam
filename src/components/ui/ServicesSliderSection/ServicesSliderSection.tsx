@@ -9,6 +9,7 @@ import {
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
 import { mediaAssetPath, remoteImageAsset } from '@/src/lib/mediaAssetPath';
+import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import { useNearViewport } from '@/src/lib/useNearViewport';
 import useEmblaCarousel from 'embla-carousel-react';
 import WheelGesturesPlugin from 'embla-carousel-wheel-gestures';
@@ -49,6 +50,93 @@ type ServiceSlide = {
   videoRefConfig?: VideoRefConfig;
 };
 
+type ServiceVideoMediaProps = {
+  posterSrc: string;
+  shouldLoad: boolean;
+  videoRef: ServiceVideoRef;
+  videoSrc: string;
+};
+
+function ServiceVideoMedia({
+  posterSrc,
+  shouldLoad,
+  videoRef,
+  videoSrc,
+}: ServiceVideoMediaProps) {
+  const [isPosterReady, setIsPosterReady] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
+  const [hasVideoError, setHasVideoError] = useState(false);
+
+  const markVideoReady = () => {
+    setIsVideoReady(true);
+    setIsVideoLoading(false);
+    setHasVideoError(false);
+  };
+
+  const showLoader =
+    !isPosterReady || (shouldLoad && isVideoLoading && !hasVideoError);
+
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-[radial-gradient(circle_at_50%_42%,rgba(99,255,69,0.14),rgba(0,0,0,0.96)_68%)]">
+      <Image
+        src={posterSrc}
+        alt=""
+        fill
+        sizes="(min-width: 1000px) 25vw, (min-width: 600px) 33vw, 50vw"
+        loading="lazy"
+        onLoad={() => setIsPosterReady(true)}
+        onError={() => setIsPosterReady(true)}
+        className={`pointer-events-none object-cover transition-opacity duration-300 ${
+          isPosterReady ? 'opacity-100' : 'opacity-0'
+        }`}
+      />
+
+      <video
+        ref={videoRef}
+        className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+          isVideoReady && !hasVideoError ? 'opacity-100' : 'opacity-0'
+        }`}
+        src={shouldLoad ? videoSrc : undefined}
+        playsInline
+        loop
+        muted
+        preload="none"
+        onLoadStart={() => {
+          setIsVideoLoading(true);
+          setHasVideoError(false);
+        }}
+        onLoadedData={markVideoReady}
+        onCanPlay={markVideoReady}
+        onPlaying={markVideoReady}
+        onWaiting={() => setIsVideoLoading(true)}
+        onStalled={() => setIsVideoLoading(true)}
+        onSuspend={() => {
+          if (!isVideoReady) {
+            setIsVideoLoading(false);
+          }
+        }}
+        onError={() => {
+          setHasVideoError(true);
+          setIsVideoReady(false);
+          setIsVideoLoading(false);
+        }}
+      />
+
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-0 z-[1] flex items-center justify-center bg-black/25 backdrop-blur-[1px] transition-opacity duration-200 ${
+          showLoader ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <span className="relative flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#63ff45]/25 border-r-[#63ff45] border-t-[#63ff45] shadow-[0_0_22px_rgba(99,255,69,0.38)] animate-spin motion-reduce:animate-none">
+          <span className="h-1.5 w-1.5 rotate-45 bg-[#63ff45] shadow-[0_0_12px_rgba(99,255,69,0.9)]" />
+        </span>
+      </div>
+    </div>
+  );
+}
+
 interface ServicesSliderSectionProps {
   allowSectionScrollOnEdges?: boolean;
 }
@@ -57,6 +145,7 @@ const scrollIgnoreAttr = { [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' } as const;
 const edgeWheelThreshold = 48;
 const edgeWheelUnlockDelay = 700;
 const edgeWrapUnlockDelay = 420;
+const lastSlideReturnDelay = 500;
 
 const showModalContent: ServiceModalContent = {
   title: 'Шоу под ключ',
@@ -226,7 +315,7 @@ export function ServicesSliderSection({
       description:
         'ОТ ИДЕИ ДО ПРЕМЬЕРЫ: РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР',
       modal: showModalContent,
-      videoSrc: mediaAssetPath('/3.mp4'),
+      videoSrc: publicAssetPath('/video/show.mp4'),
       posterSrc: mediaAssetPath('/3.jpg'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
@@ -240,7 +329,7 @@ export function ServicesSliderSection({
       description:
           'ПРОИЗВОДИМ СИСТЕМНЫЙ КОНТЕНТ: ИМИДЖ, ПРОДУКТ, КОММУНИКАЦИИ',
       modal: b2bModalContent,
-      videoSrc: mediaAssetPath('/2.mp4'),
+      videoSrc: publicAssetPath('/video/b2b.mp4'),
       posterSrc: mediaAssetPath('/2.jpg'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
@@ -254,7 +343,7 @@ export function ServicesSliderSection({
       description:
         'ДЕЛАЕМ РЕКЛАМУ, КОТОРУЮ ПЕРЕСЫЛАЮТ ДРУЗЬЯМ',
       modal: adsModalContent,
-      videoSrc: mediaAssetPath('/4.mp4'),
+      videoSrc: publicAssetPath('/video/ads.mp4'),
       posterSrc: mediaAssetPath('/4.jpg'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
@@ -268,7 +357,7 @@ export function ServicesSliderSection({
       description:
         'СОЗДАЕМ ВИЗУАЛ НОВОГО ПОКОЛЕНИЯ С ПОМОЩЬЮ ИИ',
       modal: brandingModalContent,
-      videoSrc: mediaAssetPath('/1.mp4'),
+      videoSrc: publicAssetPath('/video/ai.mp4'),
       posterSrc: mediaAssetPath('/1.jpg'),
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
@@ -282,7 +371,13 @@ export function ServicesSliderSection({
       description:
         'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ',
       modal: brandModalContent,
+      videoSrc: publicAssetPath('/video/branding.mp4'),
       posterSrc: mediaAssetPath('/5.jpg'),
+      videoRefConfig: {
+        ref: useRef<HTMLVideoElement | null>(null),
+        handleMouseLeave: (ref) => handleLeave(ref),
+        handleMouseEnter: (ref) => handleEnter(ref),
+      },
     },
   ];
 
@@ -342,6 +437,8 @@ export function ServicesSliderSection({
   const wheelBridgeTimeoutRef = useRef<number | null>(null);
   const edgeWrapLockRef = useRef(false);
   const edgeWrapTimeoutRef = useRef<number | null>(null);
+  const lastSlideReturnTimeoutRef = useRef<number | null>(null);
+  const isSliderHoveredRef = useRef(false);
   const lastSliderIntentRef = useRef<'up' | 'down' | null>(null);
   const sectionTouchStartRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -398,6 +495,49 @@ export function ServicesSliderSection({
       }, edgeWrapUnlockDelay);
     };
 
+    const clearLastSlideReturn = () => {
+      if (lastSlideReturnTimeoutRef.current) {
+        window.clearTimeout(lastSlideReturnTimeoutRef.current);
+        lastSlideReturnTimeoutRef.current = null;
+      }
+    };
+
+    const canReturnFromLastSlide = () => {
+      const snapCount = emblaApi.scrollSnapList().length;
+
+      return (
+        snapCount > 1 &&
+        !edgeWrapLockRef.current &&
+        lastSliderIntentRef.current === 'down' &&
+        emblaApi.selectedScrollSnap() === snapCount - 1
+      );
+    };
+
+    const returnFromLastSlide = () => {
+      if (isSliderHoveredRef.current || !canReturnFromLastSlide()) {
+        return;
+      }
+
+      edgeWrapLockRef.current = true;
+      lastSliderIntentRef.current = null;
+      resetWheelBridge();
+      emblaApi.scrollTo(0);
+      queueEdgeWrapUnlock();
+    };
+
+    const queueLastSlideReturn = () => {
+      clearLastSlideReturn();
+
+      if (isSliderHoveredRef.current || !canReturnFromLastSlide()) {
+        return;
+      }
+
+      lastSlideReturnTimeoutRef.current = window.setTimeout(() => {
+        lastSlideReturnTimeoutRef.current = null;
+        returnFromLastSlide();
+      }, lastSlideReturnDelay);
+    };
+
     const wrapToOppositeEdge = (direction: 'up' | 'down') => {
       const snapCount = emblaApi.scrollSnapList().length;
 
@@ -406,6 +546,14 @@ export function ServicesSliderSection({
       }
 
       if (edgeWrapLockRef.current) {
+        return true;
+      }
+
+      if (
+        direction === 'down' &&
+        isSliderHoveredRef.current &&
+        emblaApi.selectedScrollSnap() === snapCount - 1
+      ) {
         return true;
       }
 
@@ -418,23 +566,14 @@ export function ServicesSliderSection({
       return true;
     };
 
-    const resetLastSnapToDefault = () => {
-      const snapCount = emblaApi.scrollSnapList().length;
+    const handleSliderMouseEnter = () => {
+      isSliderHoveredRef.current = true;
+      clearLastSlideReturn();
+    };
 
-      if (
-        snapCount <= 1 ||
-        edgeWrapLockRef.current ||
-        lastSliderIntentRef.current !== 'down' ||
-        emblaApi.selectedScrollSnap() !== snapCount - 1
-      ) {
-        return;
-      }
-
-      edgeWrapLockRef.current = true;
-      lastSliderIntentRef.current = null;
-      resetWheelBridge();
-      emblaApi.scrollTo(0);
-      queueEdgeWrapUnlock();
+    const handleSliderMouseLeave = () => {
+      isSliderHoveredRef.current = false;
+      queueLastSlideReturn();
     };
 
     const handleWheel = (event: WheelEvent) => {
@@ -574,14 +713,18 @@ export function ServicesSliderSection({
     viewportNode.addEventListener('pointerdown', handlePointerDown);
     viewportNode.addEventListener('pointerup', handlePointerUp);
     viewportNode.addEventListener('pointercancel', handlePointerCancel);
-    emblaApi.on('settle', resetLastSnapToDefault);
+    viewportNode.addEventListener('mouseenter', handleSliderMouseEnter);
+    viewportNode.addEventListener('mouseleave', handleSliderMouseLeave);
+    emblaApi.on('settle', queueLastSlideReturn);
 
     return () => {
       viewportNode.removeEventListener('wheel', handleWheel);
       viewportNode.removeEventListener('pointerdown', handlePointerDown);
       viewportNode.removeEventListener('pointerup', handlePointerUp);
       viewportNode.removeEventListener('pointercancel', handlePointerCancel);
-      emblaApi.off('settle', resetLastSnapToDefault);
+      viewportNode.removeEventListener('mouseenter', handleSliderMouseEnter);
+      viewportNode.removeEventListener('mouseleave', handleSliderMouseLeave);
+      emblaApi.off('settle', queueLastSlideReturn);
 
       if (wheelBridgeTimeoutRef.current) {
         window.clearTimeout(wheelBridgeTimeoutRef.current);
@@ -593,7 +736,10 @@ export function ServicesSliderSection({
         edgeWrapTimeoutRef.current = null;
       }
 
+      clearLastSlideReturn();
+
       sectionTouchStartRef.current = null;
+      isSliderHoveredRef.current = false;
       lastSliderIntentRef.current = null;
       unlockWheelBridge();
       unlockEdgeWrap();
@@ -633,15 +779,11 @@ export function ServicesSliderSection({
                     >
                       <div className="relative h-full w-full overflow-hidden">
                         {slide.videoSrc && slide.videoRefConfig ? (
-                          <video
-                            ref={slide.videoRefConfig.ref}
-                            className="pointer-events-none h-full w-full object-cover"
-                            src={shouldLoadVideos ? slide.videoSrc : undefined}
-                            poster={slide.posterSrc}
-                            playsInline
-                            loop
-                            muted
-                            preload="none"
+                          <ServiceVideoMedia
+                            posterSrc={slide.posterSrc}
+                            shouldLoad={shouldLoadVideos}
+                            videoRef={slide.videoRefConfig.ref}
+                            videoSrc={slide.videoSrc}
                           />
                         ) : (
                           <Image
