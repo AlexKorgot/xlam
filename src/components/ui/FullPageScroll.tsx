@@ -29,7 +29,10 @@ type ScrollRequestDetail = {
 interface FullPageScrollProps {
   children: ReactNode;
   animationDuration?: number;
-  beforeTransitionCallback?: (startIndex: number, targetIndex: number) => boolean | void;
+  beforeTransitionCallback?: (
+    startIndex: number,
+    targetIndex: number,
+  ) => boolean | void | Promise<boolean | void>;
   progressCallback?: (value: number) => void;
   sectionChangeCallback?: (index: number) => void;
   transitionStartCallback?: (startIndex: number, targetIndex: number) => void;
@@ -150,7 +153,7 @@ export default function FullPageScroll({
   }, [clearBlockedTransitionTimeout, releaseBlockedTransitionLock]);
 
   const scrollToSection = useCallback(
-    (index: number) => {
+    async (index: number) => {
       if (!containerRef.current || !sectionsRef.current[index] || isScrollingRef.current) {
         return;
       }
@@ -166,7 +169,7 @@ export default function FullPageScroll({
 
     animationRef.current?.kill();
 
-    if (beforeTransitionCallback?.(startIndex, index) === false) {
+    if (await beforeTransitionCallback?.(startIndex, index) === false) {
       clearBlockedTransitionTimeout();
       blockedTransitionStartedAtRef.current = window.performance.now();
       scheduleBlockedTransitionUnlock();

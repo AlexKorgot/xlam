@@ -1,16 +1,18 @@
 'use client';
 
-import { forwardRef, useImperativeHandle, useRef, type CSSProperties } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import dynamic from 'next/dynamic';
 import { usePathname, useRouter } from 'next/navigation';
 import { AnimatedLogoNew, type AnimatedLogoHandle } from '@/src/components/ui/AnimatedLogoNew';
-import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
 import type { HeaderHandle } from '@/src/components/ui/Header/types';
 import { useContactModal } from '@/src/components/ui/contact-modal';
 import { FULLPAGE_SCROLL_EVENT } from '@/src/components/ui/FullPageScroll';
 
 gsap.registerPlugin(useGSAP);
+
+const GlitchText = dynamic(() => import('@/src/components/ui/GlitchText/GlitchText'));
 
 const MENU_ITEM_SIZE = '16';
 
@@ -61,6 +63,10 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
   const logoRef = useRef<AnimatedLogoHandle>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const progressRef = useRef(initialProgressValue);
+  const controlsRequestedRef = useRef(initialProgressValue > 0.001);
+  const [shouldRenderControls, setShouldRenderControls] = useState(
+    initialProgressValue > 0.001,
+  );
   const initialMenuStyle = getInitialMenuStyle(initialProgressValue);
 
   useGSAP(
@@ -114,6 +120,12 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
   useImperativeHandle(ref, () => ({
     setProgress(progress: number) {
       progressRef.current = gsap.utils.clamp(0, 1, progress);
+
+      if (progressRef.current > 0.001 && !controlsRequestedRef.current) {
+        controlsRequestedRef.current = true;
+        setShouldRenderControls(true);
+      }
+
       timelineRef.current?.progress(progressRef.current);
       logoRef.current?.setProgress(progressRef.current);
     },
@@ -171,18 +183,20 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
             className="pointer-events-auto flex items-center gap-[20px] text-white lg:gap-[32px]"
             style={initialMenuStyle}
           >
-            {desktopMenu.left.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                className="cursor-pointer uppercase"
-                onClick={() => jumpToSection(item.targetId)}
-              >
-                <GlitchText size={MENU_ITEM_SIZE}>
-                  {item.label}
-                </GlitchText>
-              </button>
-            ))}
+            {shouldRenderControls
+              ? desktopMenu.left.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className="cursor-pointer uppercase"
+                    onClick={() => jumpToSection(item.targetId)}
+                  >
+                    <GlitchText size={MENU_ITEM_SIZE}>
+                      {item.label}
+                    </GlitchText>
+                  </button>
+                ))
+              : null}
           </div>
 
           <div className="pointer-events-none flex justify-center px-4">
@@ -198,27 +212,31 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
             className="pointer-events-auto flex items-center justify-end gap-[20px] text-white lg:gap-[32px]"
             style={initialMenuStyle}
           >
-            {desktopMenu.right.map((item) => (
+            {shouldRenderControls
+              ? desktopMenu.right.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className="cursor-pointer uppercase"
+                    onClick={() => jumpToSection(item.targetId)}
+                  >
+                    <GlitchText size={MENU_ITEM_SIZE}>
+                      {item.label}
+                    </GlitchText>
+                  </button>
+                ))
+              : null}
+            {shouldRenderControls ? (
               <button
-                key={item.key}
                 type="button"
-                className="cursor-pointer uppercase"
-                onClick={() => jumpToSection(item.targetId)}
+                className="pointer-events-auto inline-flex min-h-[36px] cursor-pointer items-center justify-center border border-white/90 bg-[linear-gradient(155.051deg,rgba(238,238,238,0.3)_7.5265%,rgba(112,112,112,0.3)_47.838%,rgba(255,255,255,0.3)_95.294%)] px-[20px] py-[7px] uppercase text-white shadow-[0_242.942px_67.889px_rgba(0,0,0,0),0_155.416px_62.279px_rgba(0,0,0,0.01),0_87.527px_52.74px_rgba(0,0,0,0.05),0_38.714px_38.714px_rgba(0,0,0,0.09),0_9.538px_21.321px_rgba(0,0,0,0.1)] backdrop-blur-[5.05px] transition-[border-color,background,opacity] duration-200 hover:border-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/80"
+                onClick={openContactModal}
               >
                 <GlitchText size={MENU_ITEM_SIZE}>
-                  {item.label}
+                  Связаться с нами
                 </GlitchText>
               </button>
-            ))}
-            <button
-              type="button"
-              className="pointer-events-auto inline-flex min-h-[36px] cursor-pointer items-center justify-center border border-white/90 bg-[linear-gradient(155.051deg,rgba(238,238,238,0.3)_7.5265%,rgba(112,112,112,0.3)_47.838%,rgba(255,255,255,0.3)_95.294%)] px-[20px] py-[7px] uppercase text-white shadow-[0_242.942px_67.889px_rgba(0,0,0,0),0_155.416px_62.279px_rgba(0,0,0,0.01),0_87.527px_52.74px_rgba(0,0,0,0.05),0_38.714px_38.714px_rgba(0,0,0,0.09),0_9.538px_21.321px_rgba(0,0,0,0.1)] backdrop-blur-[5.05px] transition-[border-color,background,opacity] duration-200 hover:border-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/80"
-              onClick={openContactModal}
-            >
-              <GlitchText size={MENU_ITEM_SIZE}>
-                Связаться с нами
-              </GlitchText>
-            </button>
+            ) : null}
           </div>
         </header>
       </div>

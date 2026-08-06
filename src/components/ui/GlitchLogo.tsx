@@ -64,6 +64,7 @@ const createColorMaskStyle = (color: string): CSSProperties => ({
 export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
   function GlitchLogo({ intensity, width, height, sizes, className }, ref) {
     const rootRef = useRef<HTMLDivElement>(null);
+    const baseImageRef = useRef<HTMLImageElement>(null);
     const topRef = useRef<HTMLDivElement>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
     const redRef = useRef<HTMLDivElement>(null);
@@ -172,6 +173,13 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
 
         timelineRef.current = timeline;
 
+        if (
+          baseImageRef.current?.complete &&
+          (baseImageRef.current.naturalWidth ?? 0) > 0
+        ) {
+          imageReadyRef.current = true;
+        }
+
         flushQueuedPlay();
 
         return () => {
@@ -227,6 +235,7 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
         {isHero ? (
           <img
             {...imageProps}
+            ref={baseImageRef}
             alt="XLAM Media"
             fetchPriority="high"
             onLoad={handleBaseImageLoad}
@@ -235,6 +244,7 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
         ) : (
           <img
             {...imageProps}
+            ref={baseImageRef}
             alt=""
             aria-hidden="true"
             fetchPriority="high"

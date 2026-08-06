@@ -1,13 +1,15 @@
 'use client';
 
-import { forwardRef, useImperativeHandle, useRef, type CSSProperties } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import dynamic from 'next/dynamic';
 import { AnimatedLogoNew, type AnimatedLogoHandle } from '@/src/components/ui/AnimatedLogoNew';
-import BurgerButtonNew from '@/src/components/ui/BurgerButtonNew';
 import type { HeaderHandle } from '@/src/components/ui/Header/types';
 
 gsap.registerPlugin(useGSAP);
+
+const BurgerButtonNew = dynamic(() => import('@/src/components/ui/BurgerButtonNew'));
 
 interface HeaderMobileProps {
   initialProgress?: number;
@@ -37,6 +39,10 @@ const HeaderMobile = forwardRef<HeaderHandle, HeaderMobileProps>(function Header
   const logoRef = useRef<AnimatedLogoHandle>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const progressRef = useRef(initialProgressValue);
+  const controlsRequestedRef = useRef(initialProgressValue > 0.001);
+  const [shouldRenderControls, setShouldRenderControls] = useState(
+    initialProgressValue > 0.001,
+  );
   const initialMenuStyle = getInitialMenuStyle(initialProgressValue);
 
   useGSAP(
@@ -90,6 +96,12 @@ const HeaderMobile = forwardRef<HeaderHandle, HeaderMobileProps>(function Header
   useImperativeHandle(ref, () => ({
     setProgress(progress: number) {
       progressRef.current = gsap.utils.clamp(0, 1, progress);
+
+      if (progressRef.current > 0.001 && !controlsRequestedRef.current) {
+        controlsRequestedRef.current = true;
+        setShouldRenderControls(true);
+      }
+
       timelineRef.current?.progress(progressRef.current);
       logoRef.current?.setProgress(progressRef.current);
     },
@@ -131,7 +143,7 @@ const HeaderMobile = forwardRef<HeaderHandle, HeaderMobileProps>(function Header
           </div>
 
           <div ref={burgerRef} className="pointer-events-auto" style={initialMenuStyle}>
-            <BurgerButtonNew />
+            {shouldRenderControls ? <BurgerButtonNew /> : null}
           </div>
         </header>
       </div>

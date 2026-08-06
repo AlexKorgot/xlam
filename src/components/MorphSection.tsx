@@ -31,6 +31,7 @@ export interface MorphSectionHandle {
 type MorphSectionProps = {
     videoSrc: string;
     renderState: SectionRenderState;
+    onTimelineReadyChange?: (ready: boolean) => void;
     topVideoSrc?: string;
     bottomVideoSrc?: string;
     autoPlayTimeline?: boolean;
@@ -151,6 +152,7 @@ function buildMPathLeftWithOffset(leftX: number, offsetX: number) {
 const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function MorphSection({
     videoSrc,
     renderState,
+    onTimelineReadyChange,
     topVideoSrc = videoSrc,
     bottomVideoSrc = videoSrc,
     autoPlayTimeline = true,
@@ -964,6 +966,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 );
 
             timelineRef.current = tl;
+            onTimelineReadyChange?.(true);
 
             if (autoPlayTimeline) {
                 tl.play(0);
@@ -973,6 +976,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
             }
 
             return () => {
+                onTimelineReadyChange?.(false);
                 clearExpandedPlayButtonTimeout();
                 pauseVideos(true);
                 timelineRef.current?.kill();
@@ -989,6 +993,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 bottomLeftX,
                 topVideoSrc,
                 bottomVideoSrc,
+                onTimelineReadyChange,
             ],
         }
     );

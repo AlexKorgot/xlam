@@ -19,14 +19,9 @@ import {
   SecondSectionDesign,
   type SecondSectionDesignHandle,
 } from '@/src/components/ui/SecondSectionDesign';
-import MorphSection, {
-  type MorphSectionHandle,
-} from '@/src/components/MorphSection';
+import type { MorphSectionHandle } from '@/src/components/MorphSection';
 import { useHeaderProgress } from '@/src/components/ui/Header/HeaderProvider';
-import {
-  MobileXHeroSection,
-  type MobileXHeroSectionHandle,
-} from '@/src/components/ui/MobileXHeroSection';
+import type { MobileXHeroSectionHandle } from '@/src/components/ui/MobileXHeroSection';
 import { mediaAssetPath } from '@/src/lib/mediaAssetPath';
 import { getSectionRenderState } from '@/src/lib/fullPageSectionState';
 
@@ -42,6 +37,14 @@ const FINAL_CONTACT_SECTION_INDEX = 8;
 const MORPH_VIDEO_SRC = mediaAssetPath('/only_bg.mp4');
 const MORPH_TOP_VIDEO_SRC = '/video_reels/top_video.mp4';
 const MORPH_BOTTOM_VIDEO_SRC = '/video_reels/bottom_video.mp4';
+
+const loadMorphSection = () => import('@/src/components/MorphSection');
+const MorphSection = lazy(loadMorphSection);
+const loadMobileXHeroSection = () =>
+  import('@/src/components/ui/MobileXHeroSection').then(
+    ({ MobileXHeroSection: Component }) => ({ default: Component }),
+  );
+const MobileXHeroSection = lazy(loadMobileXHeroSection);
 
 const PerformanceDiagnostics = lazy(() =>
   import('@/src/components/ui/PerformanceDiagnostics').then(
@@ -144,16 +147,46 @@ export const MainScene = () => {
   const setHeaderProgress = useHeaderProgress();
   const [activeSectionIndex, setActiveSectionIndex] = useState(INTRO_SECTION_INDEX);
   const [transitionTargetIndex, setTransitionTargetIndex] = useState<number | null>(null);
+  const [hasMountedMorphSection, setHasMountedMorphSection] = useState(false);
   const responsiveMorphMode = useResponsiveMorphMode();
   const responsiveMorphModeRef = useRef(responsiveMorphMode);
   const secondSectionRef = useRef<SecondSectionDesignHandle>(null);
   const morphSectionRef = useRef<MorphSectionHandle>(null);
   const mobileHeroRef = useRef<MobileXHeroSectionHandle>(null);
   const morphStartTimeoutRef = useRef<number | null>(null);
+  const morphTimelineReadyRef = useRef(false);
+  const morphTimelineReadyPromiseRef = useRef<Promise<void> | null>(null);
+  const resolveMorphTimelineReadyRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     responsiveMorphModeRef.current = responsiveMorphMode;
   }, [responsiveMorphMode]);
+
+  const waitForMorphTimeline = useCallback(() => {
+    if (morphTimelineReadyRef.current) {
+      return Promise.resolve();
+    }
+
+    if (!morphTimelineReadyPromiseRef.current) {
+      morphTimelineReadyPromiseRef.current = new Promise<void>((resolve) => {
+        resolveMorphTimelineReadyRef.current = resolve;
+      });
+    }
+
+    return morphTimelineReadyPromiseRef.current;
+  }, []);
+
+  const handleMorphTimelineReadyChange = useCallback((ready: boolean) => {
+    morphTimelineReadyRef.current = ready;
+
+    if (!ready) {
+      return;
+    }
+
+    resolveMorphTimelineReadyRef.current?.();
+    resolveMorphTimelineReadyRef.current = null;
+    morphTimelineReadyPromiseRef.current = null;
+  }, []);
 
   const clearMorphStartTimeout = useCallback(() => {
     if (morphStartTimeoutRef.current === null) {
@@ -201,9 +234,32 @@ export const MainScene = () => {
   const handleSectionChange = useCallback((index: number) => {
     setActiveSectionIndex(index);
     setTransitionTargetIndex(null);
+
+    if (index === SECOND_SECTION_INDEX || index === MORPH_SECTION_INDEX) {
+      setHasMountedMorphSection(true);
+    }
   }, []);
 
-  const handleBeforeTransition = useCallback((startIndex: number, targetIndex: number) => {
+  const handleBeforeTransition = useCallback(async (
+    startIndex: number,
+    targetIndex: number,
+  ) => {
+    if (targetIndex === MORPH_SECTION_INDEX && startIndex !== MORPH_SECTION_INDEX) {
+      const mode = responsiveMorphModeRef.current;
+
+      if (mode === 'mobile') {
+        await loadMobileXHeroSection();
+      } else if (mode === 'desktop') {
+        await loadMorphSection();
+      }
+
+      setHasMountedMorphSection(true);
+
+      if (mode === 'desktop') {
+        await waitForMorphTimeline();
+      }
+    }
+
     if (
       startIndex === MORPH_SECTION_INDEX &&
       targetIndex === SECOND_SECTION_INDEX &&
@@ -245,7 +301,7 @@ export const MainScene = () => {
     }
 
     return true;
-  }, []);
+  }, [waitForMorphTimeline]);
 
   const handleProgress = useCallback((progress: number) => {
     setHeaderProgress(progress);
@@ -348,25 +404,34 @@ export const MainScene = () => {
             data-fullpage-section-id="next"
             data-section-render-state={morphSectionRenderState}
           >
-            {morphSectionRenderState === 'distant' || responsiveMorphMode === null ? (
+            {
+              morphSectionRenderState === 'distant' ||
+              responsiveMorphMode === null ||
+              !hasMountedMorphSection
+            ? (
               <div className="h-full w-full" aria-hidden="true" />
-            ) : responsiveMorphMode === 'mobile' ? (
-              <MobileXHeroSection
-                ref={mobileHeroRef}
-                renderState={morphSectionRenderState}
-              />
             ) : (
-              <MorphSection
-                ref={morphSectionRef}
-                renderState={morphSectionRenderState}
-                className="flex flex-col items-center"
-                videoSrc={MORPH_VIDEO_SRC}
-                topVideoSrc={MORPH_TOP_VIDEO_SRC}
-                bottomVideoSrc={MORPH_BOTTOM_VIDEO_SRC}
-                autoPlayTimeline={false}
-                topEndWidth={1040}
-                bottomLeftX={-795}
-              />
+              <Suspense fallback={<div className="h-full w-full bg-black" aria-hidden="true" />}>
+                {responsiveMorphMode === 'mobile' ? (
+                  <MobileXHeroSection
+                    ref={mobileHeroRef}
+                    renderState={morphSectionRenderState}
+                  />
+                ) : (
+                  <MorphSection
+                    ref={morphSectionRef}
+                    renderState={morphSectionRenderState}
+                    onTimelineReadyChange={handleMorphTimelineReadyChange}
+                    className="flex flex-col items-center"
+                    videoSrc={MORPH_VIDEO_SRC}
+                    topVideoSrc={MORPH_TOP_VIDEO_SRC}
+                    bottomVideoSrc={MORPH_BOTTOM_VIDEO_SRC}
+                    autoPlayTimeline={false}
+                    topEndWidth={1040}
+                    bottomLeftX={-795}
+                  />
+                )}
+              </Suspense>
             )}
           </div>
         </FullPageSection>
