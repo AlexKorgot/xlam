@@ -551,6 +551,63 @@ const artItems: ArtItemConfig[] = [
   },
 ];
 
+const responsiveArtSourceSets: Record<ArtKey, string> = {
+  spring: [
+    '/art/spring-480.webp 480w',
+    '/art/spring-960.webp 960w',
+    '/art/spring-1440.webp 1440w',
+    `${Spring.src} 2160w`,
+  ].join(', '),
+  sphere: [`/art/circle-320.webp 320w`, `${Sphere.src} 485w`].join(', '),
+  stoneM: [`/art/m-480.webp 480w`, `${StoneM.src} 810w`].join(', '),
+  greenBrick: [
+    '/art/lego_green-480.webp 480w',
+    '/art/lego_green-960.webp 960w',
+    `${GreenBrick.src} 2160w`,
+  ].join(', '),
+  furryX: [
+    '/art/x-480.webp 480w',
+    '/art/x-768.webp 768w',
+    `${FurryX.src} 1024w`,
+  ].join(', '),
+  shield: [`/art/sield-320.webp 320w`, `${Shield.src} 500w`].join(', '),
+  tube: [
+    '/art/tube-480.webp 480w',
+    '/art/tube-960.webp 960w',
+    '/art/tube-1440.webp 1440w',
+    `${Tube.src} 2160w`,
+  ].join(', '),
+  brick: [
+    '/art/lego_dark-480.webp 480w',
+    '/art/lego_dark-960.webp 960w',
+    '/art/lego_dark-1440.webp 1440w',
+    `${DarkBrick.src} 2160w`,
+  ].join(', '),
+};
+
+function getArtImageSizes(item: ArtItemConfig) {
+  const mobilePortraitSize = item.layouts.mobilePortrait.size;
+  const mobileLandscapeSize = item.layouts.mobileLandscape.size;
+  const desktopSize = item.layouts.desktop.size;
+
+  if (
+    typeof mobilePortraitSize !== 'number' ||
+    typeof mobileLandscapeSize !== 'number' ||
+    typeof desktopSize !== 'number'
+  ) {
+    return '(max-width: 1710px) 100vw, 1710px';
+  }
+
+  return [
+    `(max-width: 767px) and (orientation: landscape) ${mobileLandscapeSize}px`,
+    `(max-width: 767px) ${mobilePortraitSize}px`,
+    `(max-width: 1023px) ${Math.round(desktopSize * 0.75)}px`,
+    `(max-width: 1279px) ${Math.round(desktopSize * 0.84)}px`,
+    `(max-width: 1535px) ${Math.round(desktopSize * 0.9)}px`,
+    `${desktopSize}px`,
+  ].join(', ');
+}
+
 function getOrCreateRef<T>(store: MutableRefObject<Record<string, T | null>>, key: string) {
   if (!(key in store.current)) {
     store.current[key] = null;
@@ -914,6 +971,7 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
                       {/* eslint-disable-next-line @next/next/no-img-element -- static export is unoptimized */}
                       <img
                         src={item.src.src}
+                        srcSet={responsiveArtSourceSets[item.key]}
                         width={item.src.width}
                         height={item.src.height}
                         alt=""
@@ -922,7 +980,7 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
                         fetchPriority={isLcpCandidate ? 'high' : undefined}
                         decoding="async"
                         className={item.imageClassName}
-                        sizes="(max-width: 1710px) 100vw, 1710px"
+                        sizes={getArtImageSizes(item)}
                       />
                     </div>
                   </div>

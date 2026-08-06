@@ -35,8 +35,8 @@ const TEXT_SECTION_INDEX = 6;
 const TEAM_SECTION_INDEX = 7;
 const FINAL_CONTACT_SECTION_INDEX = 8;
 const MORPH_VIDEO_SRC = mediaAssetPath('/only_bg.mp4');
-const MORPH_TOP_VIDEO_SRC = '/video_reels/top_video.mp4';
-const MORPH_BOTTOM_VIDEO_SRC = '/video_reels/bottom_video.mp4';
+const MORPH_TOP_VIDEO_SRC = '/video_reels/top_video.optimized.mp4';
+const MORPH_BOTTOM_VIDEO_SRC = '/video_reels/bottom_video.optimized.mp4';
 
 const loadMorphSection = () => import('@/src/components/MorphSection');
 const MorphSection = lazy(loadMorphSection);
