@@ -1,11 +1,14 @@
 'use client';
 
-import Image, { type StaticImageData } from 'next/image';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { GlitchBrandXIcon } from '@/src/components/ui/GlitchBrandXIcon';
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
 import { BaseModal } from '@/src/components/ui/modal';
 import { useContactModal } from '@/src/components/ui/contact-modal';
+import {
+  preloadServiceModalBackground,
+  type ServiceModalBackground,
+} from './serviceModalBackground';
 
 export type ServiceModalFeature = {
   title: string;
@@ -18,7 +21,7 @@ export type ServiceModalContent = {
   description: string;
   ctaIntro: string;
   ctaLabel: string;
-  backgroundImage: StaticImageData;
+  backgroundImage: ServiceModalBackground;
   features: ServiceModalFeature[];
 };
 
@@ -245,6 +248,8 @@ export function ServiceModal({
   );
 
   useEffect(() => {
+    let isCancelled = false;
+
     if (!isOpen) {
       clearContentSwitchTimers();
       return;
@@ -256,22 +261,33 @@ export function ServiceModal({
 
     clearContentSwitchTimers();
 
-    contentSwitchFrameRef.current = window.requestAnimationFrame(() => {
-      contentSwitchFrameRef.current = null;
-      setIsContentVisible(false);
+    void preloadServiceModalBackground(content.backgroundImage).then(() => {
+      if (isCancelled) {
+        return;
+      }
 
-      contentSwitchTimeoutRef.current = window.setTimeout(() => {
-        displayedStateRef.current = nextDisplayedState;
-        setDisplayedState(nextDisplayedState);
+      contentSwitchFrameRef.current = window.requestAnimationFrame(() => {
+        contentSwitchFrameRef.current = null;
+        setIsContentVisible(false);
 
-        contentSwitchFrameRef.current = window.requestAnimationFrame(() => {
-          contentSwitchFrameRef.current = null;
-          setIsContentVisible(true);
-        });
+        contentSwitchTimeoutRef.current = window.setTimeout(() => {
+          displayedStateRef.current = nextDisplayedState;
+          setDisplayedState(nextDisplayedState);
 
-        contentSwitchTimeoutRef.current = null;
-      }, contentSwitchExitDuration);
+          contentSwitchFrameRef.current = window.requestAnimationFrame(() => {
+            contentSwitchFrameRef.current = null;
+            setIsContentVisible(true);
+          });
+
+          contentSwitchTimeoutRef.current = null;
+        }, contentSwitchExitDuration);
+      });
     });
+
+    return () => {
+      isCancelled = true;
+      clearContentSwitchTimers();
+    };
   }, [content, isOpen, nextDisplayedState]);
 
   useEffect(
@@ -380,15 +396,19 @@ export function ServiceModal({
       variant="sheet"
     >
       <div className={backgroundTransitionClass}>
-        <Image
-          src={displayedState.content.backgroundImage}
-          alt=""
-          fill
-          loading="eager"
-          unoptimized
-          sizes="(min-width: 1024px) 1540px, 100vw"
-          className="object-cover"
-        />
+        <picture className="block h-full w-full">
+          <source
+            media="(max-width: 999.98px)"
+            srcSet={displayedState.content.backgroundImage.mobile.src}
+          />
+          <img
+            src={displayedState.content.backgroundImage.desktop.src}
+            alt=""
+            decoding="async"
+            fetchPriority="high"
+            className="h-full w-full object-cover"
+          />
+        </picture>
       </div>
       <div className="pointer-events-none absolute inset-0 bg-black/10 min-[1000px]:bg-black/30" />
       <div className="pointer-events-none absolute inset-y-0 left-0 w-full bg-gradient-to-r from-black/10 via-black/[0.06] to-transparent min-[1000px]:hidden" />

@@ -15,7 +15,6 @@ import FullPageScroll, {
   FULLPAGE_SECTION_REVEAL_DELAY,
 } from '@/src/components/ui/FullPageScroll';
 import FullPageSection from '@/src/components/ui/FullPageSection';
-import { PerformanceDiagnostics } from '@/src/components/ui/PerformanceDiagnostics';
 import {
   SecondSectionDesign,
   type SecondSectionDesignHandle,
@@ -43,6 +42,12 @@ const FINAL_CONTACT_SECTION_INDEX = 8;
 const MORPH_VIDEO_SRC = mediaAssetPath('/only_bg.mp4');
 const MORPH_TOP_VIDEO_SRC = '/video_reels/top_video.mp4';
 const MORPH_BOTTOM_VIDEO_SRC = '/video_reels/bottom_video.mp4';
+
+const PerformanceDiagnostics = lazy(() =>
+  import('@/src/components/ui/PerformanceDiagnostics').then(
+    ({ PerformanceDiagnostics: Component }) => ({ default: Component }),
+  ),
+);
 
 const ServicesSliderSection = lazy(() =>
   import('@/src/components/ui/ServicesSliderSection/ServicesSliderSection').then(
@@ -314,7 +319,11 @@ export const MainScene = () => {
 
   return (
     <div className="">
-      <PerformanceDiagnostics activeSectionIndex={activeSectionIndex} />
+      {process.env.NODE_ENV !== 'production' ? (
+        <Suspense fallback={null}>
+          <PerformanceDiagnostics activeSectionIndex={activeSectionIndex} />
+        </Suspense>
+      ) : null}
       <FullPageScroll
         beforeTransitionCallback={handleBeforeTransition}
         progressCallback={handleProgress}

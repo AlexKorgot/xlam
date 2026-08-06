@@ -2,14 +2,23 @@
 
 import {
   createContext,
+  lazy,
+  Suspense,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
-import { ContactModalNew } from './ContactModalNew';
 import type { ContactModalContextValue } from './contactModal.types';
+
+const loadContactModal = () =>
+  import('./ContactModalNew').then(({ ContactModalNew: Component }) => ({
+    default: Component,
+  }));
+
+const ContactModalNew = lazy(loadContactModal);
 
 const ContactModalContext = createContext<ContactModalContextValue | null>(null);
 
@@ -19,8 +28,26 @@ type ContactModalProviderProps = {
 
 export function ContactModalProvider({ children }: ContactModalProviderProps) {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [hasMountedContactModal, setHasMountedContactModal] = useState(false);
+
+  useEffect(() => {
+    const preloadOnIntent = () => {
+      void loadContactModal();
+      window.removeEventListener('pointerdown', preloadOnIntent, true);
+      window.removeEventListener('keydown', preloadOnIntent, true);
+    };
+
+    window.addEventListener('pointerdown', preloadOnIntent, true);
+    window.addEventListener('keydown', preloadOnIntent, true);
+
+    return () => {
+      window.removeEventListener('pointerdown', preloadOnIntent, true);
+      window.removeEventListener('keydown', preloadOnIntent, true);
+    };
+  }, []);
 
   const openContactModal = useCallback(() => {
+    setHasMountedContactModal(true);
     setIsContactModalOpen(true);
   }, []);
 
@@ -40,7 +67,14 @@ export function ContactModalProvider({ children }: ContactModalProviderProps) {
   return (
     <ContactModalContext.Provider value={value}>
       {children}
-      <ContactModalNew isOpen={isContactModalOpen} onClose={closeContactModal} />
+      {hasMountedContactModal ? (
+        <Suspense fallback={null}>
+          <ContactModalNew
+            isOpen={isContactModalOpen}
+            onClose={closeContactModal}
+          />
+        </Suspense>
+      ) : null}
     </ContactModalContext.Provider>
   );
 }

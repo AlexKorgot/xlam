@@ -12,7 +12,7 @@ import {
 } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import Image, { type StaticImageData } from 'next/image';
+import type { StaticImageData } from 'next/image';
 import Sphere from '@/src/lib/assets/main/circle.webp';
 import DarkBrick from '@/src/lib/assets/main/lego_dark.webp';
 import GreenBrick from '@/src/lib/assets/main/lego_green.webp';
@@ -911,13 +911,16 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
                       ref={getOrCreateRef(parallaxRefs, item.key)}
                       style={{ willChange: 'transform' }}
                     >
-                      <Image
-                        src={item.src}
+                      {/* eslint-disable-next-line @next/next/no-img-element -- static export is unoptimized */}
+                      <img
+                        src={item.src.src}
+                        width={item.src.width}
+                        height={item.src.height}
                         alt=""
                         aria-hidden="true"
-                        unoptimized
                         loading={isLcpCandidate ? 'eager' : 'lazy'}
                         fetchPriority={isLcpCandidate ? 'high' : undefined}
+                        decoding="async"
                         className={item.imageClassName}
                         sizes="(max-width: 1710px) 100vw, 1710px"
                       />

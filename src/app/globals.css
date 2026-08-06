@@ -1,4 +1,12 @@
 @import "tailwindcss";
+@source not "../components/cinematic";
+@source not "../components/ui/AnimatedLogo.tsx";
+@source not "../components/ui/BurgerButton.tsx";
+@source not "../components/ui/Coverflow.tsx";
+@source not "../components/ui/MediaPreloader.tsx";
+@source not "../components/ui/Text/Text.tsx";
+@source not "../components/ui/contact-modal/ContactModal.tsx";
+@source not "../components/ui/fallbacks/MainFallback.tsx";
 
 :root {
   --background: #050505;
@@ -114,39 +122,6 @@ body {
     ),
     radial-gradient(circle at 50% 46%, rgba(184, 255, 44, 0.12), transparent 42%);
   animation: route-noise-scan 320ms steps(3, end) infinite;
-}
-
-body:has([data-route-loading="true"]) [data-route-noise],
-[data-route-noise][data-active="true"],
-[data-route-loading-noise] {
-  opacity: 1;
-  visibility: visible;
-}
-
-body:has([data-route-loading="true"]) [data-route-noise] {
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-body:has([data-route-loading="true"]) [data-route-noise]::before,
-body:has([data-route-loading="true"]) [data-route-noise]::after,
-[data-route-noise][data-active="true"]::before,
-[data-route-noise][data-active="true"]::after,
-[data-route-loading-noise]::before,
-[data-route-loading-noise]::after {
-  opacity: 1;
-}
-
-[data-route-noise][data-active="true"]::before,
-body:has([data-route-loading="true"]) [data-route-noise]::before,
-[data-route-loading-noise]::before {
-  opacity: 0.2;
-}
-
-[data-route-noise][data-active="true"]::after,
-body:has([data-route-loading="true"]) [data-route-noise]::after,
-[data-route-loading-noise]::after {
-  opacity: 0.34;
 }
 
 @keyframes route-noise-shift {

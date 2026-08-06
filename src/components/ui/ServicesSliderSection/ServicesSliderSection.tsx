@@ -8,7 +8,7 @@ import {
   FULLPAGE_TOUCH_SWIPE_THRESHOLD,
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
-import { mediaAssetPath, remoteImageAsset } from '@/src/lib/mediaAssetPath';
+import { mediaAssetPath } from '@/src/lib/mediaAssetPath';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import { useNearViewport } from '@/src/lib/useNearViewport';
 import useEmblaCarousel from 'embla-carousel-react';
@@ -25,12 +25,11 @@ import {
   ServiceModal,
   type ServiceModalContent,
 } from './ServiceModal';
-
-const adsModalImage = remoteImageAsset('/ads-modal.png', 1756, 829);
-const b2bModalImage = remoteImageAsset('/b2b-modal.png', 1756, 829);
-const brandModalImage = remoteImageAsset('/brand.png', 1756, 829);
-const brandingModalImage = remoteImageAsset('/branding-modal.png', 1756, 829);
-const showModalImage = remoteImageAsset('/show-modal.png', 1800, 860);
+import {
+  preloadServiceModalBackground,
+  serviceModalBackgroundList,
+  serviceModalBackgrounds,
+} from './serviceModalBackground';
 
 type ServiceVideoRef = RefObject<HTMLVideoElement | null>;
 
@@ -154,7 +153,7 @@ const showModalContent: ServiceModalContent = {
     'Вам не нужно контролировать несколько подрядчиков и сводить их работу — мы все сделаем за вас. Берем на себя весь процесс: разработка, съёмка, постпродакшн и упаковка.',
   ctaIntro: 'Поговорим о вашей идее',
   ctaLabel: 'Оставить заявку',
-  backgroundImage: showModalImage,
+  backgroundImage: serviceModalBackgrounds.show,
   features: [
     {
       title: 'Придумываем',
@@ -182,7 +181,7 @@ const adsModalContent: ServiceModalContent = {
     'Реклама — это короткое кино, где нет случайных кадров: каждая секунда продумана, каждый образ работает на идею. Сопровождаем проект на всех стадиях — от брифа до финальной упаковки',
   ctaIntro: 'Поговорим о вашей идее',
   ctaLabel: 'Оставить заявку',
-  backgroundImage: adsModalImage,
+  backgroundImage: serviceModalBackgrounds.ads,
   features: [
     {
       title: 'Задача',
@@ -210,7 +209,7 @@ const b2bModalContent: ServiceModalContent = {
     'Знаем, что бизнесу всегда нужно «вчера». Строим визуальные системы: имиджевые ролики, продуктовые видео, корпоративный контент и  материалы для внутренних и внешних коммуникаций',
   ctaIntro: 'Поговорим о вашей идее',
   ctaLabel: 'Оставить заявку',
-  backgroundImage: b2bModalImage,
+  backgroundImage: serviceModalBackgrounds.b2b,
   features: [
     {
       title: 'Стратегия',
@@ -238,7 +237,7 @@ const brandingModalContent: ServiceModalContent = {
     'ИИ-контент под задачи любой сложности: быстро — когда время критично, масштабно — когда нужен объём, нестандартно — когда обычные решения не подходят.',
   ctaIntro: 'Поговорим о вашей идее',
   ctaLabel: 'Оставить заявку',
-  backgroundImage: brandingModalImage,
+  backgroundImage: serviceModalBackgrounds.branding,
   features: [
     {
       title: 'Архитектура',
@@ -266,7 +265,7 @@ const brandModalContent: ServiceModalContent = {
     'Знаем, как айдентика живет в кадре, потому что сами снимаем шоу и рекламу. Делаем бренды, которые работают не только на бумаге, но и на экране. От стратегии до моушна и CGI.',
   ctaIntro: 'Поговорим о вашей идее',
   ctaLabel: 'Оставить заявку',
-  backgroundImage: brandModalImage,
+  backgroundImage: serviceModalBackgrounds.brand,
   features: [
     {
       title: 'Исследование',
@@ -454,6 +453,16 @@ export function ServicesSliderSection({
     },
     [WheelGesturesPlugin({ forceWheelAxis: 'y' })],
   );
+
+  useEffect(() => {
+    if (!shouldLoadVideos) {
+      return;
+    }
+
+    for (const background of serviceModalBackgroundList) {
+      void preloadServiceModalBackground(background);
+    }
+  }, [shouldLoadVideos]);
 
   useEffect(() => {
     if (!emblaApi) {
@@ -766,6 +775,15 @@ export function ServicesSliderSection({
                       className="embla__slide relative h-full min-w-0 flex-none basis-[calc((100%+9px)/2)] cursor-pointer border-0 bg-transparent pb-0 pl-[9px] pr-0 pt-0 text-left text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#63ff45] min-[600px]:basis-[calc((100%+9px)/3)] min-[1000px]:basis-1/4 min-[1000px]:pl-[22px]"
                       aria-label={`Открыть услугу ${slide.title}`}
                       onClick={() => openModal(index)}
+                      onFocus={() => {
+                        void preloadServiceModalBackground(slide.modal.backgroundImage);
+                      }}
+                      onPointerDown={() => {
+                        void preloadServiceModalBackground(slide.modal.backgroundImage);
+                      }}
+                      onPointerEnter={() => {
+                        void preloadServiceModalBackground(slide.modal.backgroundImage);
+                      }}
                       onMouseEnter={
                         slide.videoRefConfig
                           ? slide.videoRefConfig.handleMouseEnter(slide.videoRefConfig.ref)

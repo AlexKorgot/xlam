@@ -1,12 +1,13 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element -- static export uses unoptimized SVG layers */
+
 import {
   forwardRef,
   useImperativeHandle,
   useRef,
   type CSSProperties,
 } from 'react';
-import Image from 'next/image';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
@@ -198,14 +199,14 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
     };
 
     const imageProps = {
-      src: Logo,
-      unoptimized: true,
+      src: Logo.src,
       width,
       height,
       sizes,
       className,
       draggable: false,
       loading: 'eager',
+      decoding: 'async',
     } as const;
     const isHero = intensity === 'hero';
     const channelClipPath = isHero
@@ -224,21 +225,21 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
         aria-label={isHero ? undefined : 'XLAM Media'}
       >
         {isHero ? (
-          <Image
+          <img
             {...imageProps}
             alt="XLAM Media"
             fetchPriority="high"
             onLoad={handleBaseImageLoad}
-            style={{ clipPath: `inset(${HERO_MEDIA_TOP} 0 0)` }}
+            style={{ color: 'transparent', clipPath: `inset(${HERO_MEDIA_TOP} 0 0)` }}
           />
         ) : (
-          <Image
+          <img
             {...imageProps}
             alt=""
             aria-hidden="true"
             fetchPriority="high"
             onLoad={handleBaseImageLoad}
-            style={{ visibility: 'hidden' }}
+            style={{ color: 'transparent', visibility: 'hidden' }}
           />
         )}
 
@@ -248,14 +249,14 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
             aria-hidden="true"
             style={{ ...sliceLayerStyle, clipPath: topClipPath }}
           >
-            <Image {...imageProps} alt="" />
+            <img {...imageProps} alt="" style={{ color: 'transparent' }} />
           </div>
           <div
             ref={bottomRef}
             aria-hidden="true"
             style={{ ...sliceLayerStyle, clipPath: bottomClipPath }}
           >
-            <Image {...imageProps} alt="" />
+            <img {...imageProps} alt="" style={{ color: 'transparent' }} />
           </div>
 
           <div
@@ -306,7 +307,7 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
                   filter: 'invert(1)',
                 }}
               >
-                <Image {...imageProps} alt="" />
+                <img {...imageProps} alt="" style={{ color: 'transparent' }} />
               </div>
               <div
                 ref={mediaGreenRef}
