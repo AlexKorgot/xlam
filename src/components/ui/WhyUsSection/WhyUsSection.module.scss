@@ -111,14 +111,6 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .featureBlock {
-    opacity: 1;
-    transform: none;
-    animation: none;
-  }
-}
-
 @media (min-width: 1000px) {
   .featureList {
     --gap-x: 16px;

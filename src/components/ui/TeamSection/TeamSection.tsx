@@ -296,23 +296,31 @@ export function TeamSection() {
     }
 
     hasCenteredInitialItemRef.current = true;
+    const list = listRef.current;
 
-    const centerInitialItem = window.setTimeout(() => {
-      const list = listRef.current;
+    if (!list || !isMobilePickerViewport()) {
+      return undefined;
+    }
 
-      if (!list || !isMobilePickerViewport()) {
-        return;
-      }
+    const activeIndex = teamItems.findIndex((item) => item.id === activeId);
+    const rowHeight = window.matchMedia('(orientation: landscape)').matches
+      ? 48
+      : window.matchMedia('(min-width: 640px)').matches
+        ? 70
+        : 54;
 
-      const row = list.querySelector<HTMLLIElement>(`[data-team-item-id="${activeId}"]`);
+    isSnapScrollingRef.current = true;
+    list.scrollTo({
+      top: Math.max(0, activeIndex) * rowHeight,
+      behavior: 'auto',
+    });
 
-      if (row) {
-        scrollRowToListCenter(row, 'auto');
-      }
-    }, 0);
+    const releaseInitialScroll = window.setTimeout(() => {
+      isSnapScrollingRef.current = false;
+    }, 50);
 
     return () => {
-      window.clearTimeout(centerInitialItem);
+      window.clearTimeout(releaseInitialScroll);
 
       if (scrollStopTimeoutRef.current !== null) {
         window.clearTimeout(scrollStopTimeoutRef.current);

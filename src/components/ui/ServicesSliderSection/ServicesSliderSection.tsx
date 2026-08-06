@@ -129,7 +129,7 @@ function ServiceVideoMedia({
           showLoader ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        <span className="relative flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#63ff45]/25 border-r-[#63ff45] border-t-[#63ff45] shadow-[0_0_22px_rgba(99,255,69,0.38)] animate-spin motion-reduce:animate-none">
+        <span className="relative flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#63ff45]/25 border-r-[#63ff45] border-t-[#63ff45] shadow-[0_0_22px_rgba(99,255,69,0.38)] animate-spin">
           <span className="h-1.5 w-1.5 rotate-45 bg-[#63ff45] shadow-[0_0_12px_rgba(99,255,69,0.9)]" />
         </span>
       </div>

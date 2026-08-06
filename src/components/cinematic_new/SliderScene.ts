@@ -22,7 +22,6 @@ import type { CinematicSlide, SliderSceneCallbacks } from './types';
 
 type SliderSceneOptions = SliderSceneCallbacks & {
   slides: CinematicSlide[];
-  reducedMotion: boolean;
 };
 
 type FilmStripSlideRole = 'center' | 'side' | 'buffer' | 'sleeping';
@@ -105,14 +104,10 @@ export class SliderScene {
   private isVisible = true;
   private isDestroyed = false;
   private mode: 'slider' | 'sliding' | 'opening' | 'opened' | 'openedSliding' | 'closing' = 'slider';
-  private readonly reducedMotion: boolean;
-
   constructor(container: HTMLElement, options: SliderSceneOptions) {
     this.container = container;
     this.callbacks = options;
     this.slides = options.slides;
-    this.reducedMotion = options.reducedMotion;
-
     this.renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: true,
@@ -323,7 +318,7 @@ export class SliderScene {
     this.activateSlideVideo(this.activeIndex, false);
     void this.playActiveVideo();
 
-    const duration = this.reducedMotion ? 0.01 : 1.28;
+    const duration = 1.28;
     const activePlane = this.planes[this.activeIndex];
     activePlane.mesh.renderOrder = 30;
 
@@ -383,7 +378,7 @@ export class SliderScene {
     this.callbacks.onOverlayStateChange?.('closing');
     this.timeline?.kill();
 
-    const duration = this.reducedMotion ? 0.01 : 1.08;
+    const duration = 1.08;
 
     this.timeline = gsap.timeline({
       defaults: { ease: 'power3.inOut', overwrite: 'auto' },
@@ -435,7 +430,7 @@ export class SliderScene {
     const height = Math.max(1, rect.height);
     const isMobile = isFilmStripMobileViewport(width);
 
-    const maxDpr = isMobile || this.reducedMotion ? 1.5 : 2;
+    const maxDpr = isMobile ? 1.5 : 2;
     const dpr = clamp(window.devicePixelRatio || 1, 1, maxDpr);
 
     this.viewport.set(width, height);
@@ -525,7 +520,7 @@ export class SliderScene {
     const from = this.slidePosition;
     const to = from + direction;
     const targetIndex = wrapIndex(Math.round(to), this.slides.length);
-    const duration = this.reducedMotion ? 0.01 : 1.28;
+    const duration = 1.28;
 
     const motion = {
       position: from,
@@ -678,7 +673,7 @@ export class SliderScene {
     slideVideo.textureTween?.kill();
     slideVideo.textureTween = gsap.to(plane.uniforms.uTextureMix, {
       value: 1,
-      duration: this.reducedMotion ? 0.01 : 0.36,
+      duration: 0.36,
       ease: 'sine.out',
       overwrite: 'auto',
       onComplete: () => {
@@ -748,7 +743,7 @@ export class SliderScene {
     const targetIndex = wrapIndex(this.activeIndex + direction, this.slides.length);
     const fromPlane = this.planes[fromIndex];
     const targetPlane = this.planes[targetIndex];
-    const duration = this.reducedMotion ? 0.01 : 0.96;
+    const duration = 0.96;
     const travel = this.viewport.x * 0.92;
     let hasActivatedTarget = false;
 

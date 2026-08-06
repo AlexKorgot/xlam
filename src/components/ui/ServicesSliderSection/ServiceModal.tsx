@@ -319,11 +319,11 @@ export function ServiceModal({
   };
 
   const contentTransitionClass = [
-    'transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+    'transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
     isContentVisible ? 'opacity-100' : 'opacity-0',
   ].join(' ');
   const backgroundTransitionClass = [
-    'pointer-events-none absolute inset-0 transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+    'pointer-events-none absolute inset-0 transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
     isContentVisible ? 'opacity-100' : 'opacity-0',
   ].join(' ');
 

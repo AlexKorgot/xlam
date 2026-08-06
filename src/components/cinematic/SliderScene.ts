@@ -5,7 +5,6 @@ import type { CinematicSlide, SliderSceneCallbacks } from './types';
 
 type SliderSceneOptions = SliderSceneCallbacks & {
   slides: CinematicSlide[];
-  reducedMotion: boolean;
 };
 
 type PosterTexture = {
@@ -112,14 +111,10 @@ export class SliderScene {
   private isDestroyed = false;
   private hasCapturedVideoPosters = false;
   private mode: 'slider' | 'opening' | 'opened' | 'closing' = 'slider';
-  private readonly reducedMotion: boolean;
-
   constructor(container: HTMLElement, options: SliderSceneOptions) {
     this.container = container;
     this.callbacks = options;
     this.slides = options.slides;
-    this.reducedMotion = options.reducedMotion;
-
     this.renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: false,
@@ -221,7 +216,7 @@ export class SliderScene {
     this.timeline?.kill();
     void this.playActiveVideo();
 
-    const duration = this.reducedMotion ? 0.01 : 1.35;
+    const duration = 1.35;
     const activePlane = this.planes[this.activeIndex];
     activePlane.mesh.renderOrder = 20;
 
@@ -290,7 +285,7 @@ export class SliderScene {
     this.callbacks.onOverlayStateChange?.('closing');
     this.timeline?.kill();
 
-    const duration = this.reducedMotion ? 0.01 : 1.18;
+    const duration = 1.18;
     this.timeline = gsap.timeline({
       defaults: { ease: 'power3.inOut', overwrite: 'auto' },
       onComplete: () => {
@@ -321,7 +316,7 @@ export class SliderScene {
     const width = Math.max(1, rect.width);
     const height = Math.max(1, rect.height);
     const isMobile = width < 760;
-    const maxDpr = isMobile || this.reducedMotion ? 1.25 : 1.75;
+    const maxDpr = isMobile ? 1.25 : 1.75;
     const dpr = clamp(window.devicePixelRatio || 1, 1, maxDpr);
 
     this.viewport.set(width, height);
@@ -567,7 +562,7 @@ export class SliderScene {
     this.timeline?.kill();
     this.timeline = gsap.timeline({
       defaults: {
-        duration: this.reducedMotion ? 0.01 : 0.82,
+        duration: 0.82,
         ease: 'power3.inOut',
         overwrite: 'auto',
       },

@@ -13,17 +13,15 @@ import {
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import Image, { type StaticImageData } from 'next/image';
+import Sphere from '@/src/lib/assets/main/circle.webp';
+import DarkBrick from '@/src/lib/assets/main/lego_dark.webp';
+import GreenBrick from '@/src/lib/assets/main/lego_green.webp';
+import StoneM from '@/src/lib/assets/main/m.webp';
+import Shield from '@/src/lib/assets/main/sield.webp';
+import Spring from '@/src/lib/assets/main/spring.webp';
+import Tube from '@/src/lib/assets/main/tube.webp';
+import FurryX from '@/src/lib/assets/main/x.webp';
 import FullPageSection from '@/src/components/ui/FullPageSection';
-import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
-
-const Spring = remoteImageAsset('/spring.png', 2160, 2160);
-const Sphere = remoteImageAsset('/circle.png', 485, 485);
-const StoneM = remoteImageAsset('/m.png', 810, 626);
-const GreenBrick = remoteImageAsset('/lego_green.png', 2160, 2160);
-const FurryX = remoteImageAsset('/x.png', 1024, 1024);
-const Shield = remoteImageAsset('/sield.png', 500, 500);
-const Tube = remoteImageAsset('/tube.png', 2160, 2160);
-const DarkBrick = remoteImageAsset('/lego_dark.png', 2160, 2160);
 
 export interface SecondSectionDesignHandle {
   setProgress: (progress: number) => void;
@@ -593,8 +591,9 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
     const scatterTimelineRef = useRef<gsap.core.Timeline | null>(null);
     const titleNodeRef = useRef<HTMLDivElement | null>(null);
     const progressRef = useRef(0);
-    const [artBreakpoint, setArtBreakpoint] = useState<ArtBreakpoint>('desktop');
-    const activeArtStage = artStages[artBreakpoint];
+    const [artBreakpoint, setArtBreakpoint] = useState<ArtBreakpoint | null>(null);
+    const activeArtBreakpoint = artBreakpoint ?? 'desktop';
+    const activeArtStage = artStages[activeArtBreakpoint];
 
     const lines = useMemo(
       () => [
@@ -631,7 +630,7 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
 
     useGSAP(
       () => {
-        if (!sectionRef.current || !titleRef.current) {
+        if (!sectionRef.current || !titleRef.current || artBreakpoint === null) {
           return;
         }
 
@@ -766,6 +765,10 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
       playEnter() {
         scatterTimelineRef.current?.kill();
 
+        if (artBreakpoint === null) {
+          return;
+        }
+
         const timeline = gsap.timeline({
           defaults: {
             duration: 0.82,
@@ -813,6 +816,10 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
       },
       playExit() {
         scatterTimelineRef.current?.kill();
+
+        if (artBreakpoint === null) {
+          return;
+        }
 
         const timeline = gsap.timeline({
           defaults: {
@@ -876,10 +883,12 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
               style={{
                 width: activeArtStage.width,
                 height: activeArtStage.height,
+                visibility: artBreakpoint === null ? 'hidden' : 'visible',
               }}
             >
               {artItems.map((item) => {
-                const layout = item.layouts[artBreakpoint];
+                const layout = item.layouts[activeArtBreakpoint];
+                const isLcpCandidate = item.key === 'furryX';
 
                 return (
                   <div
@@ -907,7 +916,8 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
                         alt=""
                         aria-hidden="true"
                         unoptimized
-                        loading="lazy"
+                        loading={isLcpCandidate ? 'eager' : 'lazy'}
+                        fetchPriority={isLcpCandidate ? 'high' : undefined}
                         className={item.imageClassName}
                         sizes="(max-width: 1710px) 100vw, 1710px"
                       />

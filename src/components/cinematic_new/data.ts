@@ -1,4 +1,5 @@
 import { mediaAssetPath, remoteImageAsset } from '@/src/lib/mediaAssetPath';
+import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import type { CinematicSlide } from './types';
 
 const merPreview1 = remoteImageAsset('/mer1.png', 412, 208);
@@ -11,9 +12,9 @@ const podcastPreview2 = remoteImageAsset('/show2.png', 412, 208);
 const merVideo = mediaAssetPath('/Mer.mp4');
 const nowVideo = mediaAssetPath('/now.mp4');
 const voteVideo = mediaAssetPath('/vote.mp4');
-const merPoster = mediaAssetPath('/mer.jpg');
-const nowPoster = mediaAssetPath('/stidno.jpg');
-const votePoster = mediaAssetPath('/vibor.jpg');
+const merPoster = publicAssetPath('/cinematic_posters/mer.jpg');
+const nowPoster = publicAssetPath('/cinematic_posters/stidno.jpg');
+const votePoster = publicAssetPath('/cinematic_posters/vibor.jpg');
 const mainVideoObjectPosition: [number, number] = [0.5, 0.58];
 const productionDescription =
   'Полный цикл продакшена: разработка концепции, подбор ведущих и гостей, организация съемок, продакшн и пост-продакшн. Мы превращаем идею в полноценный формат, готовый к публикации на YouTube, ТВ или платформах.';

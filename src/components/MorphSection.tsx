@@ -5,7 +5,6 @@ import {
     useEffect,
     useId,
     useImperativeHandle,
-    useMemo,
     useRef,
     useState,
 } from 'react';
@@ -16,8 +15,7 @@ import type {
 } from 'react';
 import gsap from 'gsap';
 import {useGSAP} from '@gsap/react';
-import {useNearViewport} from '@/src/lib/useNearViewport';
-import {useVideoPreload} from '@/src/lib/videoPreload';
+import type {SectionRenderState} from '@/src/lib/fullPageSectionState';
 
 export interface MorphSectionHandle {
     playForward: () => void;
@@ -32,6 +30,7 @@ export interface MorphSectionHandle {
 
 type MorphSectionProps = {
     videoSrc: string;
+    renderState: SectionRenderState;
     topVideoSrc?: string;
     bottomVideoSrc?: string;
     autoPlayTimeline?: boolean;
@@ -151,6 +150,7 @@ function buildMPathLeftWithOffset(leftX: number, offsetX: number) {
 
 const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function MorphSection({
     videoSrc,
+    renderState,
     topVideoSrc = videoSrc,
     bottomVideoSrc = videoSrc,
     autoPlayTimeline = true,
@@ -175,11 +175,6 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     const isExpandedVideoPlayingRef = useRef(false);
     const [lettersScale, setLettersScale] = useState(1);
     const [lettersScaledHeight, setLettersScaledHeight] = useState<number | null>(null);
-    const shouldPreloadVideo = useNearViewport(rootRef, '120% 0px');
-    const videoPreloadSources = useMemo(
-        () => [topVideoSrc, bottomVideoSrc, videoSrc],
-        [topVideoSrc, bottomVideoSrc, videoSrc],
-    );
     const topVideoRef = useRef<HTMLVideoElement | null>(null);
     const topVideoClipRef = useRef<HTMLDivElement | null>(null);
     const topClipPathRef = useRef<SVGPathElement | null>(null);
@@ -196,11 +191,6 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     const bottomLetterRefs = useRef<SVGPathElement[]>([]);
 
     const textRef = useRef<HTMLParagraphElement | null>(null);
-
-    useVideoPreload(videoPreloadSources, {
-        enabled: shouldPreloadVideo,
-        mediaQuery: '(min-width: 1000px)',
-    });
 
     const setTopLetterRef = (el: SVGPathElement | null, index: number) => {
         if (el) topLetterRefs.current[index] = el;
@@ -316,6 +306,18 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
         pauseVideo(bottomVideoRef.current, reset);
         pauseVideo(expandedVideoRef.current, reset);
     };
+
+    useEffect(() => {
+        if (renderState === 'active') {
+            return;
+        }
+
+        expandedVideoTimelineRef.current?.kill();
+        expandedVideoTimelineRef.current = null;
+
+        [topVideoRef.current, bottomVideoRef.current, expandedVideoRef.current]
+            .forEach((video) => video?.pause());
+    }, [renderState]);
 
     const playLetterVideos = (reset = false) => {
         const letterVideos: Array<[HTMLVideoElement | null, string]> = [
@@ -1160,44 +1162,53 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 return;
             }
 
-            gsap.to(expandedVideoFrameRef.current, {
-                autoAlpha: 0,
-                pointerEvents: 'none',
-                duration: 0.95,
-                ease: 'sine.out',
-                overwrite: 'auto',
-                onComplete: resetExpandedVideoPlayback,
+            expandedVideoTimelineRef.current?.kill();
+            expandedVideoTimelineRef.current = gsap.timeline({
+                defaults: {
+                    ease: 'sine.out',
+                    overwrite: 'auto',
+                },
             });
-            gsap.to(expandedPlayButtonRef.current, {
-                autoAlpha: 0,
-                scale: 0.94,
-                duration: 0.32,
-                ease: 'sine.out',
-                overwrite: 'auto',
-            });
+
+            expandedVideoTimelineRef.current
+                .to(expandedVideoFrameRef.current, {
+                    autoAlpha: 0,
+                    pointerEvents: 'none',
+                    duration: 0.95,
+                    onComplete: resetExpandedVideoPlayback,
+                }, 0)
+                .to(expandedPlayButtonRef.current, {
+                    autoAlpha: 0,
+                    scale: 0.94,
+                    duration: 0.32,
+                }, 0);
         },
         fadeExpandedVideoIn() {
             if (!isExpandedVideoVisibleRef.current) {
                 return;
             }
 
-            gsap.to(expandedVideoFrameRef.current, {
-                autoAlpha: 1,
-                pointerEvents: 'auto',
-                filter: 'blur(0px)',
-                scale: 1,
-                duration: 0.95,
-                ease: 'sine.out',
-                overwrite: 'auto',
+            expandedVideoTimelineRef.current?.kill();
+            expandedVideoTimelineRef.current = gsap.timeline({
+                defaults: {
+                    ease: 'sine.out',
+                    overwrite: 'auto',
+                },
             });
-            gsap.to(expandedPlayButtonRef.current, {
-                autoAlpha: isExpandedVideoPlayingRef.current ? 0 : 1,
-                scale: isExpandedVideoPlayingRef.current ? 0.94 : 1,
-                duration: 0.32,
-                delay: 0.42,
-                ease: 'sine.out',
-                overwrite: 'auto',
-            });
+
+            expandedVideoTimelineRef.current
+                .to(expandedVideoFrameRef.current, {
+                    autoAlpha: 1,
+                    pointerEvents: 'auto',
+                    filter: 'blur(0px)',
+                    scale: 1,
+                    duration: 0.95,
+                }, 0)
+                .to(expandedPlayButtonRef.current, {
+                    autoAlpha: isExpandedVideoPlayingRef.current ? 0 : 1,
+                    scale: isExpandedVideoPlayingRef.current ? 0.94 : 1,
+                    duration: 0.32,
+                }, 0.42);
         },
         isExpandedVideoVisible() {
             return isExpandedVideoVisibleRef.current;

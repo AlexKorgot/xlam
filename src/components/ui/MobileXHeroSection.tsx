@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import type {
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
@@ -9,14 +9,12 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { useContactModal } from '@/src/components/ui/contact-modal';
 import { mediaAssetPath } from '@/src/lib/mediaAssetPath';
-import { useNearViewport } from '@/src/lib/useNearViewport';
-import { useVideoPreload } from '@/src/lib/videoPreload';
+import type { SectionRenderState } from '@/src/lib/fullPageSectionState';
 
 const TAGLINE =
   'Мы делаем шоу для платформ, рекламу для брендов и контент для бизнеса. Такие дела.';
 
 const onlyBgVideo = mediaAssetPath('/only_bg.mp4');
-const mobileVideoPreloadSources = [onlyBgVideo] as const;
 const EXPANDED_PLAY_BUTTON_TAP_THRESHOLD = 10;
 const mobileXClipPath =
   'polygon(99.943% 100%, 66.277% 48.911%, 91.502% 0%, 65.893% 0%, 49.971% 24.158%, 34.050% 0%, 8.440% 0%, 33.666% 48.911%, 0% 100%, 39.996% 100%, 49.971% 80.693%, 59.947% 100%)';
@@ -31,13 +29,20 @@ export interface MobileXHeroSectionHandle {
   isExpandedVideoVisible: () => boolean;
 }
 
-export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function MobileXHeroSection(
-  _props,
+type MobileXHeroSectionProps = {
+  renderState: SectionRenderState;
+};
+
+export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle, MobileXHeroSectionProps>(function MobileXHeroSection(
+  { renderState },
   ref,
 ) {
+  const isActive = renderState === 'active';
   const { openContactModal } = useContactModal();
   const rootRef = useRef<HTMLElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
+  const maskedVideoRef = useRef<HTMLVideoElement | null>(null);
   const expandedVideoFrameRef = useRef<HTMLDivElement | null>(null);
   const expandedVideoRef = useRef<HTMLVideoElement | null>(null);
   const expandedPlayButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -47,12 +52,44 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
   const isExpandedVideoVisibleRef = useRef(false);
   const isExpandedVideoPlayingRef = useRef(false);
   const shouldSuppressExpandedPlayClickRef = useRef(false);
-  const shouldPreloadVideo = useNearViewport(rootRef, '120% 0px');
-  const shouldLoadVideo = useNearViewport(rootRef);
-  useVideoPreload(mobileVideoPreloadSources, {
-    enabled: shouldPreloadVideo,
-    mediaQuery: '(max-width: 999.98px)',
-  });
+  useEffect(() => {
+    if (isActive) {
+      if (isExpandedVideoVisibleRef.current) {
+        backgroundVideoRef.current?.pause();
+        maskedVideoRef.current?.pause();
+
+        if (expandedVideoRef.current && !expandedVideoRef.current.getAttribute('src')) {
+          expandedVideoRef.current.src = onlyBgVideo;
+          expandedVideoRef.current.load();
+        }
+
+        return;
+      }
+
+      void backgroundVideoRef.current?.play().catch(() => undefined);
+      void maskedVideoRef.current?.play().catch(() => undefined);
+      return;
+    }
+
+    expandedTimelineRef.current?.kill();
+    expandedTimelineRef.current = null;
+
+    [backgroundVideoRef.current, maskedVideoRef.current, expandedVideoRef.current]
+      .forEach((video) => {
+        if (!video) {
+          return;
+        }
+
+        video.pause();
+
+        if (video.getAttribute('src') || video.currentSrc) {
+          video.removeAttribute('src');
+          video.load();
+        }
+      });
+
+    isExpandedVideoPlayingRef.current = false;
+  }, [isActive]);
   useGSAP(
     () => {
       gsap.set(expandedVideoFrameRef.current, {
@@ -271,6 +308,14 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
         return;
       }
 
+      backgroundVideoRef.current?.pause();
+      maskedVideoRef.current?.pause();
+
+      if (!expandedVideo.getAttribute('src')) {
+        expandedVideo.src = onlyBgVideo;
+        expandedVideo.load();
+      }
+
       isExpandedVideoVisibleRef.current = true;
       clearExpandedPlayButtonTimeout();
       expandedTimelineRef.current?.kill();
@@ -312,11 +357,13 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
       clearExpandedPlayButtonTimeout();
       syncExpandedPlayButtonState();
 
-      gsap.timeline({
+      expandedTimelineRef.current = gsap.timeline({
         defaults: {
           ease: 'power2.out',
         },
-      })
+      });
+
+      expandedTimelineRef.current
         .to(expandedFrame, {
           autoAlpha: 0,
           clipPath: 'inset(26% 12% 24% 12%)',
@@ -338,6 +385,12 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
         }, 0.12)
         .call(() => {
           resetExpandedVideoPlayback();
+
+          if (isActive) {
+            void backgroundVideoRef.current?.play().catch(() => undefined);
+            void maskedVideoRef.current?.play().catch(() => undefined);
+          }
+
           gsap.set(expandedPlayButtonRef.current, {
             autoAlpha: 0,
             scale: 0.94,
@@ -349,43 +402,52 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
         return;
       }
 
-      gsap.to(expandedVideoFrameRef.current, {
-        autoAlpha: 0,
-        duration: 0.75,
-        ease: 'sine.out',
-        overwrite: 'auto',
-        onComplete: resetExpandedVideoPlayback,
+      expandedTimelineRef.current?.kill();
+      expandedTimelineRef.current = gsap.timeline({
+        defaults: {
+          ease: 'sine.out',
+          overwrite: 'auto',
+        },
       });
-      gsap.to(expandedPlayButtonRef.current, {
-        autoAlpha: 0,
-        scale: 0.94,
-        duration: 0.28,
-        ease: 'sine.out',
-        overwrite: 'auto',
-      });
+
+      expandedTimelineRef.current
+        .to(expandedVideoFrameRef.current, {
+          autoAlpha: 0,
+          duration: 0.75,
+          onComplete: resetExpandedVideoPlayback,
+        }, 0)
+        .to(expandedPlayButtonRef.current, {
+          autoAlpha: 0,
+          scale: 0.94,
+          duration: 0.28,
+        }, 0);
     },
     fadeExpandedVideoIn() {
       if (!isExpandedVideoVisibleRef.current) {
         return;
       }
 
-      gsap.to(expandedVideoFrameRef.current, {
-        autoAlpha: 1,
-        clipPath: 'inset(0% 0% 0% 0%)',
-        filter: 'blur(0px)',
-        scale: 1,
-        duration: 0.75,
-        ease: 'sine.out',
-        overwrite: 'auto',
+      expandedTimelineRef.current?.kill();
+      expandedTimelineRef.current = gsap.timeline({
+        defaults: {
+          ease: 'sine.out',
+          overwrite: 'auto',
+        },
       });
-      gsap.to(expandedPlayButtonRef.current, {
-        autoAlpha: isExpandedVideoPlayingRef.current ? 0 : 1,
-        scale: isExpandedVideoPlayingRef.current ? 0.94 : 1,
-        duration: 0.32,
-        delay: 0.22,
-        ease: 'sine.out',
-        overwrite: 'auto',
-      });
+
+      expandedTimelineRef.current
+        .to(expandedVideoFrameRef.current, {
+          autoAlpha: 1,
+          clipPath: 'inset(0% 0% 0% 0%)',
+          filter: 'blur(0px)',
+          scale: 1,
+          duration: 0.75,
+        }, 0)
+        .to(expandedPlayButtonRef.current, {
+          autoAlpha: isExpandedVideoPlayingRef.current ? 0 : 1,
+          scale: isExpandedVideoPlayingRef.current ? 0.94 : 1,
+          duration: 0.32,
+        }, 0.22);
     },
     isExpandedVideoVisible() {
       return isExpandedVideoVisibleRef.current;
@@ -398,9 +460,10 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
       className="relative isolate flex h-full min-h-0 w-full overflow-hidden bg-black font-normalidad text-white min-[1000px]:hidden"
     >
       <video
+        ref={backgroundVideoRef}
         className="absolute inset-0 h-full w-full scale-x-[-1] object-cover"
-        src={shouldLoadVideo ? onlyBgVideo : undefined}
-        autoPlay
+        src={isActive ? onlyBgVideo : undefined}
+        autoPlay={isActive}
         muted
         loop
         playsInline
@@ -426,7 +489,6 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
         <video
           ref={expandedVideoRef}
           className="h-full w-full object-cover brightness-110 contrast-110"
-          src={shouldLoadVideo ? onlyBgVideo : undefined}
           muted
           playsInline
           preload="none"
@@ -473,9 +535,10 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle>(function 
               aria-hidden="true"
             >
               <video
+                ref={maskedVideoRef}
                 className="h-full w-full object-cover brightness-125 contrast-110"
-                src={shouldLoadVideo ? onlyBgVideo : undefined}
-                autoPlay
+                src={isActive ? onlyBgVideo : undefined}
+                autoPlay={isActive}
                 muted
                 loop
                 playsInline

@@ -636,15 +636,14 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
         return;
       }
 
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const duration = reduceMotion ? 0.12 : 0.62;
-      const artExitDistance = reduceMotion ? 0 : 190;
-      const artEnterDistance = reduceMotion ? 0 : 190;
-      const textExitScale = reduceMotion ? 1 : 1.65;
-      const textEnterScale = reduceMotion ? 1 : 0.9;
-      const artMotionScale = reduceMotion ? 1 : 1.34;
+      const duration = 0.62;
+      const artExitDistance = 190;
+      const artEnterDistance = 190;
+      const textExitScale = 1.65;
+      const textEnterScale = 0.9;
+      const artMotionScale = 1.34;
       const isMobileViewport = window.matchMedia('(max-width: 639.98px)').matches;
-      const textEnterY = reduceMotion ? 0 : isMobileViewport ? 8 : 36;
+      const textEnterY = isMobileViewport ? 8 : 36;
       const keepArtworkStatic =
         activeSlide.topImage === incomingSlide.topImage &&
         activeSlide.bottomImage === incomingSlide.bottomImage &&
@@ -663,7 +662,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
         autoAlpha: 0,
         y: textEnterY,
         scale: textEnterScale,
-        filter: reduceMotion ? 'none' : 'blur(10px)',
+        filter: 'blur(10px)',
       });
       if (keepArtworkStatic) {
         gsap.set([incomingTopRef.current, incomingBottomRef.current], {
@@ -691,9 +690,9 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
           activeTextRef.current,
           {
             autoAlpha: 0,
-            y: reduceMotion ? 0 : -34,
+            y: -34,
             scale: textExitScale,
-            filter: reduceMotion ? 'none' : 'blur(8px)',
+            filter: 'blur(8px)',
             duration,
           },
           0,

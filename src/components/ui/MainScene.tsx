@@ -3,15 +3,19 @@
 import {
   lazy,
   Suspense,
+  useCallback,
   useEffect,
   useRef,
+  useState,
   type CSSProperties,
   type ReactNode,
 } from 'react';
 import FullPageScroll, {
+  FULLPAGE_SCROLL_EVENT,
   FULLPAGE_SECTION_REVEAL_DELAY,
 } from '@/src/components/ui/FullPageScroll';
 import FullPageSection from '@/src/components/ui/FullPageSection';
+import { PerformanceDiagnostics } from '@/src/components/ui/PerformanceDiagnostics';
 import {
   SecondSectionDesign,
   type SecondSectionDesignHandle,
@@ -25,10 +29,17 @@ import {
   type MobileXHeroSectionHandle,
 } from '@/src/components/ui/MobileXHeroSection';
 import { mediaAssetPath } from '@/src/lib/mediaAssetPath';
-import { useNearViewport } from '@/src/lib/useNearViewport';
+import { getSectionRenderState } from '@/src/lib/fullPageSectionState';
 
+const INTRO_SECTION_INDEX = 0;
 const SECOND_SECTION_INDEX = 1;
 const MORPH_SECTION_INDEX = 2;
+const SERVICES_SECTION_INDEX = 3;
+const WHY_SECTION_INDEX = 4;
+const PROJECTS_SECTION_INDEX = 5;
+const TEXT_SECTION_INDEX = 6;
+const TEAM_SECTION_INDEX = 7;
+const FINAL_CONTACT_SECTION_INDEX = 8;
 const MORPH_VIDEO_SRC = mediaAssetPath('/only_bg.mp4');
 const MORPH_TOP_VIDEO_SRC = '/video_reels/top_video.mp4';
 const MORPH_BOTTOM_VIDEO_SRC = '/video_reels/bottom_video.mp4';
@@ -65,18 +76,21 @@ const FinalContactSection = lazy(() =>
 );
 
 type DeferredSectionProps = {
+  activeSectionIndex: number;
   children: ReactNode;
   fallbackClassName?: string;
+  sectionIndex: number;
   sectionId: string;
 };
 
 const DeferredSection = ({
+  activeSectionIndex,
   children,
   fallbackClassName = 'bg-black',
+  sectionIndex,
   sectionId,
 }: DeferredSectionProps) => {
-  const sectionRef = useRef<HTMLDivElement | null>(null);
-  const shouldLoad = useNearViewport(sectionRef, '180% 0px');
+  const renderState = getSectionRenderState(sectionIndex, activeSectionIndex);
 
   const fallback = (
     <div
@@ -87,201 +101,313 @@ const DeferredSection = ({
 
   return (
     <div
-      ref={sectionRef}
       data-fullpage-section-id={sectionId}
+      data-section-render-state={renderState}
       className={`w-full ${fallbackClassName}`}
       style={{ height: 'var(--fullpage-height, 100svh)' } as CSSProperties}
     >
-      {shouldLoad ? <Suspense fallback={fallback}>{children}</Suspense> : fallback}
+      {renderState === 'distant' ? fallback : (
+        <Suspense fallback={fallback}>{children}</Suspense>
+      )}
     </div>
   );
 };
 
-const isDesktopMorphViewport = () =>
-  typeof window !== 'undefined' && window.matchMedia('(min-width: 1000px)').matches;
+type ResponsiveMorphMode = 'mobile' | 'desktop' | null;
 
-const isMobileHeroViewport = () =>
-  typeof window !== 'undefined' && window.matchMedia('(max-width: 999.98px)').matches;
+function useResponsiveMorphMode() {
+  const [mode, setMode] = useState<ResponsiveMorphMode>(null);
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 1000px)');
+    const syncMode = () => {
+      setMode(media.matches ? 'desktop' : 'mobile');
+    };
+
+    syncMode();
+    media.addEventListener('change', syncMode);
+
+    return () => {
+      media.removeEventListener('change', syncMode);
+    };
+  }, []);
+
+  return mode;
+}
 
 export const MainScene = () => {
   const setHeaderProgress = useHeaderProgress();
+  const [activeSectionIndex, setActiveSectionIndex] = useState(INTRO_SECTION_INDEX);
+  const [transitionTargetIndex, setTransitionTargetIndex] = useState<number | null>(null);
+  const responsiveMorphMode = useResponsiveMorphMode();
+  const responsiveMorphModeRef = useRef(responsiveMorphMode);
   const secondSectionRef = useRef<SecondSectionDesignHandle>(null);
   const morphSectionRef = useRef<MorphSectionHandle>(null);
   const mobileHeroRef = useRef<MobileXHeroSectionHandle>(null);
   const morphStartTimeoutRef = useRef<number | null>(null);
 
-  const clearMorphStartTimeout = () => {
+  useEffect(() => {
+    responsiveMorphModeRef.current = responsiveMorphMode;
+  }, [responsiveMorphMode]);
+
+  const clearMorphStartTimeout = useCallback(() => {
     if (morphStartTimeoutRef.current === null) {
       return;
     }
 
     window.clearTimeout(morphStartTimeoutRef.current);
     morphStartTimeoutRef.current = null;
-  };
+  }, []);
 
   useEffect(
     () => () => {
       clearMorphStartTimeout();
     },
-    [],
+    [clearMorphStartTimeout],
   );
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get('skipIntro') !== '1') {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      window.dispatchEvent(
+        new CustomEvent(FULLPAGE_SCROLL_EVENT, {
+          detail: {
+            behavior: 'instant',
+            targetIndex: SECOND_SECTION_INDEX,
+          },
+        }),
+      );
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, []);
+
+  const morphSectionRenderState = transitionTargetIndex === MORPH_SECTION_INDEX
+    ? 'active'
+    : getSectionRenderState(MORPH_SECTION_INDEX, activeSectionIndex);
+
+  const handleSectionChange = useCallback((index: number) => {
+    setActiveSectionIndex(index);
+    setTransitionTargetIndex(null);
+  }, []);
+
+  const handleBeforeTransition = useCallback((startIndex: number, targetIndex: number) => {
+    if (
+      startIndex === MORPH_SECTION_INDEX &&
+      targetIndex === SECOND_SECTION_INDEX &&
+      responsiveMorphModeRef.current === 'mobile' &&
+      mobileHeroRef.current?.isExpandedVideoVisible()
+    ) {
+      mobileHeroRef.current?.hideExpandedVideo();
+      return false;
+    }
+
+    if (
+      startIndex === MORPH_SECTION_INDEX &&
+      targetIndex > MORPH_SECTION_INDEX &&
+      responsiveMorphModeRef.current === 'mobile' &&
+      !mobileHeroRef.current?.isExpandedVideoVisible()
+    ) {
+      mobileHeroRef.current?.revealExpandedVideo();
+      return false;
+    }
+
+    if (
+      startIndex === MORPH_SECTION_INDEX &&
+      targetIndex === SECOND_SECTION_INDEX &&
+      responsiveMorphModeRef.current === 'desktop' &&
+      morphSectionRef.current?.isExpandedVideoVisible()
+    ) {
+      morphSectionRef.current?.hideExpandedVideo();
+      return false;
+    }
+
+    if (
+      startIndex === MORPH_SECTION_INDEX &&
+      targetIndex > MORPH_SECTION_INDEX &&
+      responsiveMorphModeRef.current === 'desktop' &&
+      !morphSectionRef.current?.isExpandedVideoVisible()
+    ) {
+      morphSectionRef.current?.revealExpandedVideo();
+      return false;
+    }
+
+    return true;
+  }, []);
+
+  const handleProgress = useCallback((progress: number) => {
+    setHeaderProgress(progress);
+    secondSectionRef.current?.setProgress(progress);
+  }, [setHeaderProgress]);
+
+  const handleTransitionStart = useCallback((startIndex: number, targetIndex: number) => {
+    clearMorphStartTimeout();
+    setTransitionTargetIndex(targetIndex);
+
+    if (startIndex === SECOND_SECTION_INDEX && targetIndex === MORPH_SECTION_INDEX) {
+      secondSectionRef.current?.playExit();
+    }
+
+    if (startIndex === MORPH_SECTION_INDEX && targetIndex === SECOND_SECTION_INDEX) {
+      secondSectionRef.current?.playEnter();
+    }
+
+    if (
+      startIndex === SECOND_SECTION_INDEX &&
+      targetIndex === MORPH_SECTION_INDEX &&
+      responsiveMorphModeRef.current === 'desktop'
+    ) {
+      morphStartTimeoutRef.current = window.setTimeout(() => {
+        morphSectionRef.current?.playForward();
+        morphStartTimeoutRef.current = null;
+      }, FULLPAGE_SECTION_REVEAL_DELAY * 1000);
+    }
+
+    if (
+      startIndex === MORPH_SECTION_INDEX &&
+      targetIndex === SECOND_SECTION_INDEX &&
+      responsiveMorphModeRef.current === 'desktop'
+    ) {
+      morphSectionRef.current?.hideExpandedVideo();
+      morphSectionRef.current?.playReverse();
+    }
+
+    if (
+      startIndex === MORPH_SECTION_INDEX &&
+      targetIndex > MORPH_SECTION_INDEX &&
+      responsiveMorphModeRef.current === 'desktop'
+    ) {
+      morphSectionRef.current?.fadeExpandedVideoOut();
+    }
+
+    if (
+      startIndex === MORPH_SECTION_INDEX &&
+      targetIndex > MORPH_SECTION_INDEX &&
+      responsiveMorphModeRef.current === 'mobile'
+    ) {
+      mobileHeroRef.current?.fadeExpandedVideoOut();
+    }
+
+    if (
+      startIndex > MORPH_SECTION_INDEX &&
+      targetIndex === MORPH_SECTION_INDEX &&
+      responsiveMorphModeRef.current === 'desktop'
+    ) {
+      morphSectionRef.current?.fadeExpandedVideoIn();
+    }
+
+    if (
+      startIndex > MORPH_SECTION_INDEX &&
+      targetIndex === MORPH_SECTION_INDEX &&
+      responsiveMorphModeRef.current === 'mobile'
+    ) {
+      mobileHeroRef.current?.fadeExpandedVideoIn();
+    }
+  }, [clearMorphStartTimeout]);
 
   return (
     <div className="">
+      <PerformanceDiagnostics activeSectionIndex={activeSectionIndex} />
       <FullPageScroll
-        beforeTransitionCallback={(startIndex, targetIndex) => {
-          if (
-            startIndex === MORPH_SECTION_INDEX &&
-            targetIndex === SECOND_SECTION_INDEX &&
-            isMobileHeroViewport() &&
-            mobileHeroRef.current?.isExpandedVideoVisible()
-          ) {
-            mobileHeroRef.current?.hideExpandedVideo();
-            return false;
-          }
-
-          if (
-            startIndex === MORPH_SECTION_INDEX &&
-            targetIndex > MORPH_SECTION_INDEX &&
-            isMobileHeroViewport() &&
-            !mobileHeroRef.current?.isExpandedVideoVisible()
-          ) {
-            mobileHeroRef.current?.revealExpandedVideo();
-            return false;
-          }
-
-          if (
-            startIndex === MORPH_SECTION_INDEX &&
-            targetIndex === SECOND_SECTION_INDEX &&
-            isDesktopMorphViewport() &&
-            morphSectionRef.current?.isExpandedVideoVisible()
-          ) {
-            morphSectionRef.current?.hideExpandedVideo();
-            return false;
-          }
-
-          if (
-            startIndex === MORPH_SECTION_INDEX &&
-            targetIndex > MORPH_SECTION_INDEX &&
-            isDesktopMorphViewport() &&
-            !morphSectionRef.current?.isExpandedVideoVisible()
-          ) {
-            morphSectionRef.current?.revealExpandedVideo();
-            return false;
-          }
-
-          return true;
-        }}
-        progressCallback={(progress) => {
-          setHeaderProgress(progress);
-          secondSectionRef.current?.setProgress(progress);
-        }}
-        transitionStartCallback={(startIndex, targetIndex) => {
-          clearMorphStartTimeout();
-
-          if (startIndex === SECOND_SECTION_INDEX && targetIndex === MORPH_SECTION_INDEX) {
-            secondSectionRef.current?.playExit();
-          }
-
-          if (startIndex === MORPH_SECTION_INDEX && targetIndex === SECOND_SECTION_INDEX) {
-            secondSectionRef.current?.playEnter();
-          }
-
-          if (
-            startIndex === SECOND_SECTION_INDEX &&
-            targetIndex === MORPH_SECTION_INDEX &&
-            isDesktopMorphViewport()
-          ) {
-            morphStartTimeoutRef.current = window.setTimeout(() => {
-              morphSectionRef.current?.playForward();
-              morphStartTimeoutRef.current = null;
-            }, FULLPAGE_SECTION_REVEAL_DELAY * 1000);
-          }
-
-          if (
-            startIndex === MORPH_SECTION_INDEX &&
-            targetIndex === SECOND_SECTION_INDEX &&
-            isDesktopMorphViewport()
-          ) {
-            morphSectionRef.current?.hideExpandedVideo();
-            morphSectionRef.current?.playReverse();
-          }
-
-          if (
-            startIndex === MORPH_SECTION_INDEX &&
-            targetIndex > MORPH_SECTION_INDEX &&
-            isDesktopMorphViewport()
-          ) {
-            morphSectionRef.current?.fadeExpandedVideoOut();
-          }
-
-          if (
-            startIndex === MORPH_SECTION_INDEX &&
-            targetIndex > MORPH_SECTION_INDEX &&
-            isMobileHeroViewport()
-          ) {
-            mobileHeroRef.current?.fadeExpandedVideoOut();
-          }
-
-          if (
-            startIndex > MORPH_SECTION_INDEX &&
-            targetIndex === MORPH_SECTION_INDEX &&
-            isDesktopMorphViewport()
-          ) {
-            morphSectionRef.current?.fadeExpandedVideoIn();
-          }
-
-          if (
-            startIndex > MORPH_SECTION_INDEX &&
-            targetIndex === MORPH_SECTION_INDEX &&
-            isMobileHeroViewport()
-          ) {
-            mobileHeroRef.current?.fadeExpandedVideoIn();
-          }
-
-        }}
+        beforeTransitionCallback={handleBeforeTransition}
+        progressCallback={handleProgress}
+        sectionChangeCallback={handleSectionChange}
+        transitionStartCallback={handleTransitionStart}
       >
-        <FullPageSection id="intro"  className={'bg-transparent'}>
+        <FullPageSection id="intro" className="bg-transparent">
           <div className="sr-only">XLAM Media</div>
         </FullPageSection>
 
-        <SecondSectionDesign ref={secondSectionRef} />
+        <DeferredSection
+          activeSectionIndex={activeSectionIndex}
+          sectionIndex={SECOND_SECTION_INDEX}
+          sectionId="production"
+        >
+          <SecondSectionDesign ref={secondSectionRef} />
+        </DeferredSection>
 
         <FullPageSection id="next" className="items-stretch bg-black">
-          <MobileXHeroSection ref={mobileHeroRef} />
-          <MorphSection
-              ref={morphSectionRef}
-              className={'hidden flex-col items-center min-[1000px]:flex'}
-              videoSrc={MORPH_VIDEO_SRC}
-              topVideoSrc={MORPH_TOP_VIDEO_SRC}
-              bottomVideoSrc={MORPH_BOTTOM_VIDEO_SRC}
-              autoPlayTimeline={false}
-              topEndWidth={1040}
-              bottomLeftX={-795}
-          />
+          <div
+            className="h-full w-full bg-black"
+            data-fullpage-section-id="next"
+            data-section-render-state={morphSectionRenderState}
+          >
+            {morphSectionRenderState === 'distant' || responsiveMorphMode === null ? (
+              <div className="h-full w-full" aria-hidden="true" />
+            ) : responsiveMorphMode === 'mobile' ? (
+              <MobileXHeroSection
+                ref={mobileHeroRef}
+                renderState={morphSectionRenderState}
+              />
+            ) : (
+              <MorphSection
+                ref={morphSectionRef}
+                renderState={morphSectionRenderState}
+                className="flex flex-col items-center"
+                videoSrc={MORPH_VIDEO_SRC}
+                topVideoSrc={MORPH_TOP_VIDEO_SRC}
+                bottomVideoSrc={MORPH_BOTTOM_VIDEO_SRC}
+                autoPlayTimeline={false}
+                topEndWidth={1040}
+                bottomLeftX={-795}
+              />
+            )}
+          </div>
         </FullPageSection>
 
-        <DeferredSection sectionId="services">
+        <DeferredSection
+          activeSectionIndex={activeSectionIndex}
+          sectionIndex={SERVICES_SECTION_INDEX}
+          sectionId="services"
+        >
           <ServicesSliderSection allowSectionScrollOnEdges />
         </DeferredSection>
 
-        <DeferredSection sectionId="why">
+        <DeferredSection
+          activeSectionIndex={activeSectionIndex}
+          sectionIndex={WHY_SECTION_INDEX}
+          sectionId="why"
+        >
           <WhyUsSection />
         </DeferredSection>
 
-        <DeferredSection sectionId="projects">
+        <DeferredSection
+          activeSectionIndex={activeSectionIndex}
+          sectionIndex={PROJECTS_SECTION_INDEX}
+          sectionId="projects"
+        >
           <CinematicVideoSlider />
         </DeferredSection>
 
-        <DeferredSection sectionId="text-section" fallbackClassName="bg-white">
+        <DeferredSection
+          activeSectionIndex={activeSectionIndex}
+          sectionIndex={TEXT_SECTION_INDEX}
+          sectionId="text-section"
+          fallbackClassName="bg-white"
+        >
           <TextSection intervalMs={0} />
         </DeferredSection>
 
-        <DeferredSection sectionId="about">
+        <DeferredSection
+          activeSectionIndex={activeSectionIndex}
+          sectionIndex={TEAM_SECTION_INDEX}
+          sectionId="about"
+        >
           <TeamSection />
         </DeferredSection>
 
-        <DeferredSection sectionId="final-contact">
+        <DeferredSection
+          activeSectionIndex={activeSectionIndex}
+          sectionIndex={FINAL_CONTACT_SECTION_INDEX}
+          sectionId="final-contact"
+        >
           <FinalContactSection />
         </DeferredSection>
 

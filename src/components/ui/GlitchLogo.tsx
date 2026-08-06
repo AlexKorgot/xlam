@@ -81,10 +81,6 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
 
       queuedPlayRef.current = false;
 
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        return;
-      }
-
       timelineRef.current.restart();
     };
 
@@ -119,7 +115,10 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
           transformOrigin: intensity === 'hero' ? 'center 25.23%' : 'center center',
         });
         gsap.set(channels, { x: 0, autoAlpha: 0 });
-        gsap.set(mediaLayers, { autoAlpha: 0 });
+
+        if (mediaLayers.length > 0) {
+          gsap.set(mediaLayers, { autoAlpha: 0 });
+        }
 
         const timeline = gsap.timeline({
               paused: true,
@@ -127,7 +126,10 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
               onComplete: () => {
                 gsap.set(slices, { x: 0, skewX: 0, opacity: 1 });
                 gsap.set(channels, { x: 0, autoAlpha: 0 });
-                gsap.set(mediaLayers, { autoAlpha: 0 });
+
+                if (mediaLayers.length > 0) {
+                  gsap.set(mediaLayers, { autoAlpha: 0 });
+                }
               },
             })
           .to(slices, { skewX: 15, duration: 0.1 })
@@ -181,10 +183,6 @@ export const GlitchLogo = forwardRef<GlitchLogoHandle, GlitchLogoProps>(
 
     useImperativeHandle(ref, () => ({
       play() {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          return;
-        }
-
         if (!imageReadyRef.current || !timelineRef.current) {
           queuedPlayRef.current = true;
           return;
