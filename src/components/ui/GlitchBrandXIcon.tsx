@@ -51,8 +51,6 @@ export function GlitchBrandXIcon({
         return;
       }
 
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
       gsap.set(targets, {
         x: 0,
         skewX: 0,
@@ -61,10 +59,6 @@ export function GlitchBrandXIcon({
       gsap.set([redRef.current, greenRef.current], {
         autoAlpha: 0,
       });
-
-      if (reduceMotion) {
-        return;
-      }
 
       tlRef.current = gsap.timeline({
         paused: true,

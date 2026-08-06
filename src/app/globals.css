@@ -173,21 +173,6 @@ body:has([data-route-loading="true"]) [data-route-noise]::after,
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  [data-route-noise]::before,
-  [data-route-noise]::after,
-  [data-route-loading-noise]::before,
-  [data-route-loading-noise]::after {
-    animation: none;
-  }
-
-  [data-route-noise][data-active="true"]::before,
-  body:has([data-route-loading="true"]) [data-route-noise]::before,
-  [data-route-loading-noise]::before {
-    opacity: 0.12;
-  }
-}
-
 @keyframes fade-in {
   from {
     opacity: 0;

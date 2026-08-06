@@ -95,10 +95,6 @@ export function BottomSheet({
       return;
     }
 
-    const prefersReducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches;
-
     if (closeTimerRef.current) {
       window.clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
@@ -136,7 +132,7 @@ export function BottomSheet({
         }
 
         focusTimerRef.current = null;
-      }, prefersReducedMotion ? 0 : 80);
+      }, 80);
 
       return () => {
         if (visibilityFrameRef.current) {
@@ -163,7 +159,7 @@ export function BottomSheet({
         triggerRef.current?.focus();
         triggerRef.current = null;
       },
-      prefersReducedMotion ? 0 : animationDuration,
+      animationDuration,
     );
 
     return () => {
@@ -332,7 +328,7 @@ export function BottomSheet({
         <div
           className={[
             'fixed inset-0 z-[1000] flex items-end justify-center bg-black/45 px-0 text-[#111]',
-            'transition-opacity duration-[280ms] ease-out motion-reduce:transition-none',
+            'transition-opacity duration-[280ms] ease-out',
             isVisible ? 'opacity-100' : 'opacity-0',
           ].join(' ')}
           data-fullpage-scroll-ignore="true"
@@ -343,7 +339,7 @@ export function BottomSheet({
             className={[
               'grid h-[92dvh] max-h-[92dvh] w-full max-w-[520px] overflow-hidden rounded-t-[24px] bg-[#f7f6f1] shadow-[0_-18px_60px_rgba(0,0,0,0.35)] outline-none',
               footer ? 'grid-rows-[auto_minmax(0,1fr)_auto]' : 'grid-rows-[auto_minmax(0,1fr)]',
-              'transition-transform duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+              'transition-transform duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
               isVisible ? 'translate-y-0' : 'translate-y-full',
             ].join(' ')}
             role="dialog"

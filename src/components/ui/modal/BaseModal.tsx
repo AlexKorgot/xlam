@@ -89,10 +89,6 @@ export function BaseModal({
       return;
     }
 
-    const prefersReducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches;
-
     if (closeTimerRef.current) {
       window.clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
@@ -135,7 +131,7 @@ export function BaseModal({
         triggerRef.current?.focus();
         triggerRef.current = null;
       },
-      prefersReducedMotion ? 0 : animationDuration,
+      animationDuration,
     );
 
     return () => {
@@ -344,7 +340,7 @@ export function BaseModal({
         ref={dialogRef}
         className={[
           'fixed inset-0 z-[1000] overflow-hidden overflow-x-hidden text-white',
-          'transition-opacity motion-reduce:transition-none',
+          'transition-opacity',
           isSheet
             ? 'duration-[360ms] ease-out'
             : 'duration-[260ms] ease-out',
@@ -371,7 +367,7 @@ export function BaseModal({
             isSheet
               ? ''
               : [
-                  'transition-[opacity,transform] duration-[260ms] ease-out motion-reduce:transition-none',
+                  'transition-[opacity,transform] duration-[260ms] ease-out',
                   isVisible ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-4 scale-[0.985] opacity-0',
                 ].join(' '),
           ].join(' ')}
@@ -381,7 +377,7 @@ export function BaseModal({
               'relative flex w-full flex-col overflow-hidden overflow-x-hidden',
               isSheet
                 ? [
-                    'h-[var(--modal-sheet-height,calc(100dvh-1rem))] max-w-none rounded-t-lg border border-b-0 border-white/18 bg-[#050909]/88 shadow-[0_-28px_90px_rgba(0,0,0,0.76)] backdrop-blur-lg transition-[opacity,transform] duration-[620ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:bg-[#050909]/94 sm:backdrop-blur-xl lg:h-[var(--modal-sheet-desktop-height,min(829px,calc(100dvh-4rem)))] lg:max-w-[min(1756px,calc(100vw-4rem))] lg:rounded-lg lg:border-b lg:shadow-[0_30px_100px_rgba(0,0,0,0.78)]',
+                    'h-[var(--modal-sheet-height,calc(100dvh-1rem))] max-w-none rounded-t-lg border border-b-0 border-white/18 bg-[#050909]/88 shadow-[0_-28px_90px_rgba(0,0,0,0.76)] backdrop-blur-lg transition-[opacity,transform] duration-[620ms] ease-[cubic-bezier(0.22,1,0.36,1)] sm:bg-[#050909]/94 sm:backdrop-blur-xl lg:h-[var(--modal-sheet-desktop-height,min(829px,calc(100dvh-4rem)))] lg:max-w-[min(1756px,calc(100vw-4rem))] lg:rounded-lg lg:border-b lg:shadow-[0_30px_100px_rgba(0,0,0,0.78)]',
                     isVisible
                       ? 'translate-y-0 scale-100 opacity-100'
                       : 'translate-y-full opacity-0 lg:translate-y-0 lg:scale-100',
@@ -417,7 +413,7 @@ export function BaseModal({
             {isSheet ? (
               <div
                 className={[
-                  'relative min-h-0 flex-1 overflow-hidden transition-opacity duration-[420ms] ease-out motion-reduce:transition-none',
+                  'relative min-h-0 flex-1 overflow-hidden transition-opacity duration-[420ms] ease-out',
                   isVisible ? 'opacity-100' : 'opacity-0',
                 ].join(' ')}
               >

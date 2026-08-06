@@ -27,22 +27,9 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   const [activeIndex, setActiveIndex] = useState(0);
   const [overlayState, setOverlayState] = useState<CinematicOverlayState>('slider');
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
   const slides = useMemo(() => cinematicSlides, []);
   const activeSlide = slides[activeIndex];
   const isOpened = overlayState === 'opened' || overlayState === 'opening';
-
-  useEffect(() => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const sync = () => setReducedMotion(media.matches);
-
-    sync();
-    media.addEventListener('change', sync);
-
-    return () => {
-      media.removeEventListener('change', sync);
-    };
-  }, []);
 
   useEffect(() => {
     const host = canvasHostRef.current;
@@ -53,7 +40,6 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
     const scene = new SliderScene(host, {
       slides,
-      reducedMotion,
       onActiveSlideChange: setActiveIndex,
       onOverlayStateChange: setOverlayState,
       onAutoplayBlocked: () => setAutoplayBlocked(true),
@@ -73,7 +59,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       scene.dispose();
       sceneRef.current = null;
     };
-  }, [reducedMotion, slides]);
+  }, [slides]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -108,11 +94,11 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       if (isOpened) {
         gsap.fromTo(
           detailItems,
-          { autoAlpha: 0, y: reducedMotion ? 0 : 28 },
+          { autoAlpha: 0, y: 28 },
           {
             autoAlpha: 1,
             y: 0,
-            duration: reducedMotion ? 0.01 : 0.62,
+            duration: 0.62,
             stagger: 0.06,
             ease: 'power2.out',
             delay: overlayState === 'opened' ? 0 : 0.52,
@@ -120,7 +106,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
         );
         gsap.to(overlayRef.current, {
           '--cinematic-chrome-opacity': 0,
-          duration: reducedMotion ? 0.01 : 0.42,
+          duration: 0.42,
           ease: 'power2.out',
         });
         return;
@@ -128,17 +114,17 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
       gsap.to(detailItems, {
         autoAlpha: 0,
-        y: reducedMotion ? 0 : 20,
-        duration: reducedMotion ? 0.01 : 0.28,
+        y: 20,
+        duration: 0.28,
         ease: 'power2.out',
       });
       gsap.to(overlayRef.current, {
         '--cinematic-chrome-opacity': 1,
-        duration: reducedMotion ? 0.01 : 0.34,
+        duration: 0.34,
         ease: 'power2.out',
       });
     },
-    { scope: rootRef, dependencies: [isOpened, overlayState, reducedMotion, activeIndex] },
+    { scope: rootRef, dependencies: [isOpened, overlayState, activeIndex] },
   );
 
   return (

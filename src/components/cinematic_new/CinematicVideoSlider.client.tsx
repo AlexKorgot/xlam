@@ -253,7 +253,6 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   const [activeIndex, setActiveIndex] = useState(0);
   const [pendingOpenedIndex, setPendingOpenedIndex] = useState<number | null>(null);
   const [overlayState, setOverlayState] = useState<CinematicOverlayState>('slider');
-  const [reducedMotion, setReducedMotion] = useState(false);
   const [sectionStyle, setSectionStyle] = useState<CinematicSectionStyle>({
     '--cinematic-band-top': '38%',
     '--cinematic-band-bottom': '62%',
@@ -300,18 +299,6 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   }, [handleOpen]);
 
   useEffect(() => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const sync = () => setReducedMotion(media.matches);
-
-    sync();
-    media.addEventListener('change', sync);
-
-    return () => {
-      media.removeEventListener('change', sync);
-    };
-  }, []);
-
-  useEffect(() => {
     const host = canvasHostRef.current;
     const root = rootRef.current;
 
@@ -331,7 +318,6 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
       const scene = new SliderScene(host, {
         slides,
-        reducedMotion,
         onActiveSlideChange: setActiveIndex,
         onOverlayStateChange: setOverlayState,
         onOpenedSlideTargetChange: setPendingOpenedIndex,
@@ -393,7 +379,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       observer.disconnect();
       disposeScene?.();
     };
-  }, [handlePointerAction, reducedMotion, slides]);
+  }, [handlePointerAction, slides]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -499,7 +485,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
     const sheet = sheetRef.current;
     const focusTimer = window.setTimeout(() => {
       (sheetTitleRef.current ?? closeButtonRef.current ?? sheet).focus();
-    }, reducedMotion ? 0 : 900);
+    }, 900);
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -541,7 +527,7 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       window.clearTimeout(focusTimer);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handleClose, isDetailsLayerVisible, reducedMotion]);
+  }, [handleClose, isDetailsLayerVisible]);
 
   useEffect(() => {
     if (isDetailsLayerVisible) {
@@ -726,11 +712,11 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       const contentItems = sheet.querySelectorAll('[data-case-content]');
       const headingItems = sheet.querySelectorAll('[data-case-heading]');
       const usesDesktopModalMotion = window.innerWidth >= 1024;
-      const shouldAnimateSheetContentHeight = window.innerWidth >= 1024 && !reducedMotion;
+      const shouldAnimateSheetContentHeight = window.innerWidth >= 1024;
 
       gsap.to(chromeRef.current, {
         '--cinematic-chrome-opacity': isChromeVisible ? 1 : 0,
-        duration: reducedMotion ? 0.01 : 0.36,
+        duration: 0.36,
         ease: 'power2.out',
       });
 
@@ -767,28 +753,28 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
           gsap.fromTo(
             headingItems,
-            { autoAlpha: 0, y: reducedMotion ? 0 : 10 },
+            { autoAlpha: 0, y: 10 },
             {
               autoAlpha: 1,
               y: 0,
-              duration: reducedMotion ? 0.01 : openedSlideIncomingDuration,
+              duration: openedSlideIncomingDuration,
               stagger: 0.035,
               ease: 'power2.out',
-              delay: reducedMotion ? 0 : openedSlideIncomingDelay,
+              delay: openedSlideIncomingDelay,
               overwrite: 'auto',
             },
           );
 
           gsap.fromTo(
             contentItems,
-            { autoAlpha: 0, y: reducedMotion ? 0 : 14 },
+            { autoAlpha: 0, y: 14 },
             {
               autoAlpha: 1,
               y: 0,
-              duration: reducedMotion ? 0.01 : openedSlideIncomingDuration,
+              duration: openedSlideIncomingDuration,
               stagger: 0.035,
               ease: 'power2.out',
-              delay: reducedMotion ? 0 : openedSlideIncomingDelay,
+              delay: openedSlideIncomingDelay,
               overwrite: 'auto',
             },
           );
@@ -797,16 +783,16 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
           gsap.to(headingItems, {
             autoAlpha: 0,
-            y: reducedMotion ? 0 : -6,
-            duration: reducedMotion ? 0.01 : 0.18,
+            y: -6,
+            duration: 0.18,
             ease: 'power2.out',
             overwrite: 'auto',
           });
 
           gsap.to(contentItems, {
             autoAlpha: 0,
-            y: reducedMotion ? 0 : -10,
-            duration: reducedMotion ? 0.01 : 0.22,
+            y: -10,
+            duration: 0.22,
             ease: 'power2.out',
             overwrite: 'auto',
           });
@@ -856,16 +842,16 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
             sheet,
             {
               autoAlpha: 0,
-              scale: reducedMotion || !usesDesktopModalMotion ? 1 : 0.985,
-              y: reducedMotion || !usesDesktopModalMotion ? 0 : 24,
-              yPercent: reducedMotion || usesDesktopModalMotion ? 0 : 100,
+              scale: !usesDesktopModalMotion ? 1 : 0.985,
+              y: !usesDesktopModalMotion ? 0 : 24,
+              yPercent: usesDesktopModalMotion ? 0 : 100,
             },
             {
               autoAlpha: 1,
               scale: 1,
               y: 0,
               yPercent: 0,
-              duration: reducedMotion ? 0.01 : 0.62,
+              duration: 0.62,
               ease: 'power3.out',
               delay: overlayState === 'opened' ? 0 : 0.18,
             },
@@ -880,11 +866,11 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
         } else {
           gsap.fromTo(
             headingItems,
-            { autoAlpha: 0, y: reducedMotion ? 0 : wasSheetVisible ? 6 : 12 },
+            { autoAlpha: 0, y: wasSheetVisible ? 6 : 12 },
             {
               autoAlpha: 1,
               y: 0,
-              duration: reducedMotion ? 0.01 : 0.26,
+              duration: 0.26,
               stagger: 0.035,
               ease: 'power2.out',
               delay: contentDelay,
@@ -893,11 +879,11 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
           gsap.fromTo(
             contentItems,
-            { autoAlpha: 0, y: reducedMotion ? 0 : 12 },
+            { autoAlpha: 0, y: 12 },
             {
               autoAlpha: 1,
               y: 0,
-              duration: reducedMotion ? 0.01 : 0.3,
+              duration: 0.3,
               stagger: 0.035,
               ease: 'power2.out',
               delay: contentDelay,
@@ -916,10 +902,10 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
       gsap.to(sheet, {
         autoAlpha: 0,
-        scale: reducedMotion || !usesDesktopModalMotion ? 1 : 0.985,
-        y: reducedMotion || !usesDesktopModalMotion ? 0 : 24,
-        yPercent: reducedMotion || usesDesktopModalMotion ? 0 : 100,
-        duration: reducedMotion ? 0.01 : 0.44,
+        scale: !usesDesktopModalMotion ? 1 : 0.985,
+        y: !usesDesktopModalMotion ? 0 : 24,
+        yPercent: usesDesktopModalMotion ? 0 : 100,
+        duration: 0.44,
         ease: 'power3.in',
       });
 
@@ -927,20 +913,20 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
       gsap.to(contentItems, {
         autoAlpha: 0,
-        y: reducedMotion ? 0 : 24,
-        duration: reducedMotion ? 0.01 : 0.58,
+        y: 24,
+        duration: 0.58,
         stagger: 0.06,
         ease: 'power2.out',
       });
 
       gsap.to(headingItems, {
         autoAlpha: 0,
-        y: reducedMotion ? 0 : 12,
-        duration: reducedMotion ? 0.01 : 0.36,
+        y: 12,
+        duration: 0.36,
         ease: 'power2.out',
       });
     },
-    { scope: rootRef, dependencies: [activeIndex, isChromeVisible, isOpened, overlayState, pendingOpenedIndex, reducedMotion] },
+    { scope: rootRef, dependencies: [activeIndex, isChromeVisible, isOpened, overlayState, pendingOpenedIndex] },
   );
 
   useGSAP(
@@ -951,17 +937,17 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
       gsap.fromTo(
         labelRef.current.querySelectorAll('[data-slide-label]'),
-        { autoAlpha: 0, y: reducedMotion ? 0 : 8 },
+        { autoAlpha: 0, y: 8 },
         {
           autoAlpha: 1,
           y: 0,
-          duration: reducedMotion ? 0.01 : 0.34,
+          duration: 0.34,
           stagger: 0.035,
           ease: 'power2.out',
         },
       );
     },
-    { scope: rootRef, dependencies: [activeIndex, isChromeVisible, reducedMotion] },
+    { scope: rootRef, dependencies: [activeIndex, isChromeVisible] },
   );
 
   return (
