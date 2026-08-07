@@ -21,7 +21,7 @@ const desktopVideoSrc = mediaAssetPath('/desktop.mp4');
 export function FinalContactSection() {
   const [activeButtonId, setActiveButtonId] = useState<string | null>(null);
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
-  const { openContactModal } = useContactModal();
+  const { openContactModal, preloadContactModal } = useContactModal();
   const sectionContentRef = useRef<HTMLDivElement | null>(null);
   const shouldLoadVideo = useNearViewport(sectionContentRef);
 
@@ -147,6 +147,9 @@ export function FinalContactSection() {
 
               <button
                 type="button"
+                onPointerEnter={preloadContactModal}
+                onFocus={preloadContactModal}
+                onPointerDown={preloadContactModal}
                 onClick={openContactModal}
                 className="pointer-events-auto absolute left-[28%] top-[43%] z-20 h-[23%] w-[52%] cursor-pointer rounded-[6px] bg-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#66ff66] max-[999px]:[@media_(orientation:landscape)]:left-[38%] max-[999px]:[@media_(orientation:landscape)]:top-[27%] max-[999px]:[@media_(orientation:landscape)]:h-[38%] max-[999px]:[@media_(orientation:landscape)]:w-[26%] min-[1000px]:left-[38%] min-[1000px]:top-[27%] min-[1000px]:h-[38%] min-[1000px]:w-[26%]"
                 aria-label="Открыть форму обратной связи"

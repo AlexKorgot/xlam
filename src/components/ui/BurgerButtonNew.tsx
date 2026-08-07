@@ -22,7 +22,7 @@ type CloseMenuOptions = {
 };
 
 export default function BurgerButton() {
-    const { openContactModal } = useContactModal();
+    const { openContactModal, preloadContactModal } = useContactModal();
     const toggleButtonRef = useRef<HTMLButtonElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
     const overlayFrameRef = useRef<number | null>(null);
@@ -232,6 +232,9 @@ export default function BurgerButton() {
                     <button
                         type="button"
                         className="w-full border-y border-black px-[31px] py-[14px] text-left text-[18px] font-semibold uppercase text-black max-[999px]:[@media_(orientation:landscape)]:col-span-2 max-[999px]:[@media_(orientation:landscape)]:flex max-[999px]:[@media_(orientation:landscape)]:h-11 max-[999px]:[@media_(orientation:landscape)]:items-center max-[999px]:[@media_(orientation:landscape)]:px-4 max-[999px]:[@media_(orientation:landscape)]:py-0 max-[999px]:[@media_(orientation:landscape)]:text-[14px] max-[999px]:[@media_(orientation:landscape)]:leading-none"
+                        onPointerEnter={preloadContactModal}
+                        onFocus={preloadContactModal}
+                        onPointerDown={preloadContactModal}
                         onClick={handleContactClick}
                     >
                         Оставить заявку

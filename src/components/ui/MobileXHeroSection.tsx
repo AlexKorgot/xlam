@@ -38,7 +38,7 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle, MobileXHe
   ref,
 ) {
   const isActive = renderState === 'active';
-  const { openContactModal } = useContactModal();
+  const { openContactModal, preloadContactModal } = useContactModal();
   const rootRef = useRef<HTMLElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -599,6 +599,9 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle, MobileXHe
           <button
             type="button"
             className="mt-[22px] flex h-[54px] w-full items-center justify-center border border-white/88 bg-white/[0.08] px-5 text-center text-[clamp(1.05rem,4.5vw,1.25rem)] font-bold uppercase leading-none text-white shadow-[0_20px_70px_rgba(0,0,0,0.5),inset_0_0_32px_rgba(255,255,255,0.08)] backdrop-blur-[9px] transition-colors hover:border-[#66ff66] hover:text-[#66ff66] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+            onPointerEnter={preloadContactModal}
+            onFocus={preloadContactModal}
+            onPointerDown={preloadContactModal}
             onClick={openContactModal}
           >
             Заказать проект

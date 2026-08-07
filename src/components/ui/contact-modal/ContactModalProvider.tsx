@@ -6,7 +6,6 @@ import {
   Suspense,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -30,20 +29,8 @@ export function ContactModalProvider({ children }: ContactModalProviderProps) {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [hasMountedContactModal, setHasMountedContactModal] = useState(false);
 
-  useEffect(() => {
-    const preloadOnIntent = () => {
-      void loadContactModal();
-      window.removeEventListener('pointerdown', preloadOnIntent, true);
-      window.removeEventListener('keydown', preloadOnIntent, true);
-    };
-
-    window.addEventListener('pointerdown', preloadOnIntent, true);
-    window.addEventListener('keydown', preloadOnIntent, true);
-
-    return () => {
-      window.removeEventListener('pointerdown', preloadOnIntent, true);
-      window.removeEventListener('keydown', preloadOnIntent, true);
-    };
+  const preloadContactModal = useCallback(() => {
+    void loadContactModal();
   }, []);
 
   const openContactModal = useCallback(() => {
@@ -58,10 +45,11 @@ export function ContactModalProvider({ children }: ContactModalProviderProps) {
   const value = useMemo<ContactModalContextValue>(
     () => ({
       isContactModalOpen,
+      preloadContactModal,
       openContactModal,
       closeContactModal,
     }),
-    [closeContactModal, isContactModalOpen, openContactModal],
+    [closeContactModal, isContactModalOpen, openContactModal, preloadContactModal],
   );
 
   return (

@@ -63,7 +63,7 @@ export function ServiceModal({
   onNext,
   onAfterClose,
 }: ServiceModalProps) {
-  const { openContactModal } = useContactModal();
+  const { openContactModal, preloadContactModal } = useContactModal();
   const titleId = useId();
   const descriptionId = useId();
   const nextDisplayedState = useMemo<DisplayedModalState>(
@@ -444,6 +444,9 @@ export function ServiceModal({
             <button
               type="button"
               className="mt-2 flex min-h-[52px] w-full cursor-pointer items-center justify-center border border-white/68 bg-white/10 px-4 text-center text-[20px] font-bold uppercase leading-none text-white shadow-[inset_0_0_38px_rgba(255,255,255,0.08)] backdrop-blur-[1px] transition hover:border-[#63ff45] hover:bg-white/15 hover:text-[#63ff45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:min-h-[58px] sm:text-[23px] lg:mt-3 lg:min-h-[58px] lg:whitespace-nowrap lg:text-[23px]"
+              onPointerEnter={preloadContactModal}
+              onFocus={preloadContactModal}
+              onPointerDown={preloadContactModal}
               onClick={openContactModal}
             >
               <span className="cursor-pointer">
