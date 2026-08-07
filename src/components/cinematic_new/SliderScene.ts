@@ -33,6 +33,8 @@ type SlideVideo = {
   texture: THREE.VideoTexture;
   posterTexture: THREE.Texture;
   posterImage: HTMLImageElement;
+  posterBitmap: ImageBitmap | null;
+  cancelPosterPreparation: () => void;
   handlePosterLoad: () => void;
   handlePosterError: () => void;
   textureTween: gsap.core.Tween | null;
@@ -53,6 +55,7 @@ type SlideVideo = {
 export type SliderPointerAction = 'open' | 'previous' | 'next';
 const VIDEO_STALL_RECOVERY_DELAY_MS = 2200;
 const MAX_VIDEO_RECOVERY_ATTEMPTS = 1;
+const POSTER_BITMAP_STAGGER_MS = 120;
 const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
 
 function wrapIndex(index: number, total: number) {
@@ -99,11 +102,14 @@ export class SliderScene {
   private readonly startTime = performance.now();
   private readonly planes: VideoPlane[] = [];
   private readonly slideVideos: SlideVideo[] = [];
+  private readonly supportsImageBitmapPosters = typeof createImageBitmap === 'function';
 
   private resizeObserver: ResizeObserver | null = null;
   private intersectionObserver: IntersectionObserver | null = null;
   private timeline: gsap.core.Timeline | null = null;
   private rafId: number | null = null;
+  private shaderPreparation: Promise<void> | null = null;
+  private areShadersPrepared = false;
 
   private activeIndex = 0;
   private slidePosition = 0;
@@ -139,7 +145,7 @@ export class SliderScene {
       const posterMediaSize = new THREE.Vector2(16, 9);
       const posterResource = this.createPosterTexture(
         slide.posterSrc,
-        (loadedPosterTexture, width, height) => {
+        (loadedPosterTexture, width, height, posterBitmap) => {
           const slideVideo = this.slideVideos[index];
 
           if (!slideVideo || this.isDestroyed) {
@@ -147,6 +153,7 @@ export class SliderScene {
           }
 
           if (loadedPosterTexture && width > 0 && height > 0) {
+            slideVideo.posterBitmap = posterBitmap;
             posterMediaSize.set(width, height);
 
             if (slideVideo.textureState === 'poster') {
@@ -157,6 +164,7 @@ export class SliderScene {
           slideVideo.isPosterSettled = true;
           this.revealVideoTexture(index);
         },
+        index * POSTER_BITMAP_STAGGER_MS,
       );
       const posterTexture = posterResource.texture;
       const plane = new VideoPlane(posterTexture, this.viewport);
@@ -213,6 +221,8 @@ export class SliderScene {
         texture,
         posterTexture,
         posterImage: posterResource.image,
+        posterBitmap: null,
+        cancelPosterPreparation: posterResource.cancelPreparation,
         handlePosterLoad: posterResource.handleLoad,
         handlePosterError: posterResource.handleError,
         textureTween: null,
@@ -556,6 +566,8 @@ export class SliderScene {
       texture,
       posterTexture,
       posterImage,
+      posterBitmap,
+      cancelPosterPreparation,
       textureTween,
       recoveryTimer,
       handleMetadata,
@@ -579,6 +591,7 @@ export class SliderScene {
       video.removeEventListener('playing', handleVideoPlaying);
       posterImage.removeEventListener('load', handlePosterLoad);
       posterImage.removeEventListener('error', handlePosterError);
+      cancelPosterPreparation();
       video.pause();
       releasePreloadedVideo(this.slides[index].videoSrc, video, { crossOrigin: 'anonymous' });
       releasePreloadedImage(this.slides[index].posterSrc, posterImage, { crossOrigin: 'anonymous' });
@@ -586,6 +599,7 @@ export class SliderScene {
       video.load();
       texture.dispose();
       posterTexture.dispose();
+      posterBitmap?.close();
     });
 
     this.renderer.dispose();
@@ -673,28 +687,83 @@ export class SliderScene {
 
   private createPosterTexture(
     src: string,
-    handleSettled: (texture: THREE.Texture | null, width: number, height: number) => void,
+    handleSettled: (
+      texture: THREE.Texture | null,
+      width: number,
+      height: number,
+      bitmap: ImageBitmap | null,
+    ) => void,
+    bitmapDelayMs: number,
   ) {
     const image = acquirePreloadedImage(src, { crossOrigin: 'anonymous' });
     const texture = new THREE.Texture();
 
-    (texture as THREE.Texture & { image: HTMLImageElement }).image = image;
+    if (!this.supportsImageBitmapPosters) {
+      (texture as THREE.Texture & { image: HTMLImageElement }).image = image;
+    }
+
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
     texture.generateMipmaps = false;
 
     let isSettled = false;
-    const handleLoad = () => {
+    let isPreparingBitmap = false;
+    let preparationTimer: number | null = null;
+    const finalize = (
+      source: HTMLImageElement | ImageBitmap,
+      bitmap: ImageBitmap | null,
+    ) => {
       if (isSettled || this.isDestroyed) {
+        bitmap?.close();
         return;
       }
 
       isSettled = true;
       image.removeEventListener('load', handleLoad);
       image.removeEventListener('error', handleError);
+      const mutableTexture = texture as THREE.Texture & {
+        flipY: boolean;
+        image: HTMLImageElement | ImageBitmap;
+      };
+      mutableTexture.image = source;
+      mutableTexture.flipY = bitmap === null;
       texture.needsUpdate = true;
-      handleSettled(texture, image.naturalWidth, image.naturalHeight);
+      handleSettled(
+        texture,
+        bitmap?.width ?? image.naturalWidth,
+        bitmap?.height ?? image.naturalHeight,
+        bitmap,
+      );
+    };
+    const handleLoad = () => {
+      if (isSettled || isPreparingBitmap || this.isDestroyed) {
+        return;
+      }
+
+      if (!this.supportsImageBitmapPosters) {
+        finalize(image, null);
+        return;
+      }
+
+      isPreparingBitmap = true;
+      image.removeEventListener('load', handleLoad);
+      image.removeEventListener('error', handleError);
+      preparationTimer = window.setTimeout(() => {
+        preparationTimer = null;
+
+        if (this.isDestroyed) {
+          return;
+        }
+
+        void createImageBitmap(image, {
+          colorSpaceConversion: 'none',
+          imageOrientation: 'flipY',
+          premultiplyAlpha: 'none',
+        })
+          .then((bitmap) => finalize(bitmap, bitmap))
+          .catch(() => finalize(image, null));
+      }, bitmapDelayMs);
     };
     const handleError = () => {
       if (isSettled) {
@@ -704,7 +773,7 @@ export class SliderScene {
       isSettled = true;
       image.removeEventListener('load', handleLoad);
       image.removeEventListener('error', handleError);
-      handleSettled(null, 0, 0);
+      handleSettled(null, 0, 0, null);
     };
 
     image.addEventListener('load', handleLoad, { once: true });
@@ -715,6 +784,12 @@ export class SliderScene {
     }
 
     return {
+      cancelPreparation: () => {
+        if (preparationTimer !== null) {
+          window.clearTimeout(preparationTimer);
+          preparationTimer = null;
+        }
+      },
       image,
       texture,
       handleLoad,
@@ -1190,6 +1265,31 @@ export class SliderScene {
 
   private start() {
     if (this.rafId !== null || this.isDestroyed || !this.isRuntimeActive) {
+      return;
+    }
+
+    if (!this.areShadersPrepared) {
+      if (!this.shaderPreparation) {
+        const rendererWithAsyncCompile = this.renderer as THREE.WebGLRenderer & {
+          compileAsync: (
+            scene: THREE.Scene,
+            camera: THREE.PerspectiveCamera,
+          ) => Promise<THREE.Scene>;
+        };
+
+        this.shaderPreparation = rendererWithAsyncCompile
+          .compileAsync(this.scene, this.camera)
+          .then(
+            () => undefined,
+            () => undefined,
+          )
+          .then(() => {
+            this.areShadersPrepared = true;
+            this.shaderPreparation = null;
+            this.start();
+          });
+      }
+
       return;
     }
 
