@@ -7,22 +7,22 @@ import { ContactModalProvider } from '@/src/components/ui/contact-modal';
 const sans = localFont({
   src: [
     {
-      path: '../lib/fonts/NBlack.otf',
+      path: '../lib/fonts/NBlack.woff2',
       weight: '900',
       style: 'normal',
     },
     {
-      path: '../lib/fonts/NBold.otf',
+      path: '../lib/fonts/NBold.woff2',
       weight: '700',
       style: 'normal',
     },
     {
-      path: '../lib/fonts/NMedium.otf',
+      path: '../lib/fonts/NMedium.woff2',
       weight: '500',
       style: 'normal',
     },
     {
-      path: '../lib/fonts/NRegular.otf',
+      path: '../lib/fonts/NRegular.woff2',
       weight: '500',
       style: 'normal',
     },
