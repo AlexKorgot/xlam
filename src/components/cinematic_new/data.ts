@@ -1,20 +1,19 @@
-import { mediaAssetPath, remoteImageAsset } from '@/src/lib/mediaAssetPath';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import type { CinematicSlide } from './types';
 
-const merPreview1 = remoteImageAsset('/mer1.png', 412, 208);
-const merPreview2 = remoteImageAsset('/mer2.png', 412, 208);
-const showPreview1 = remoteImageAsset('/podcast1.png', 412, 208);
-const showPreview2 = remoteImageAsset('/podcast2.png', 412, 208);
-const podcastPreview1 = remoteImageAsset('/show1.png', 412, 208);
-const podcastPreview2 = remoteImageAsset('/show2.png', 412, 208);
+const merPreview1 = publicAssetPath('/cinematic_previews/mer-1-412.1c545995.webp');
+const merPreview2 = publicAssetPath('/cinematic_previews/mer-2-412.fda43870.webp');
+const showPreview1 = publicAssetPath('/cinematic_previews/podcast-1-412.16329266.webp');
+const showPreview2 = publicAssetPath('/cinematic_previews/podcast-2-412.e051ec56.webp');
+const podcastPreview1 = publicAssetPath('/cinematic_previews/show-1-412.b8ebda62.webp');
+const podcastPreview2 = publicAssetPath('/cinematic_previews/show-2-412.04b21275.webp');
 
-const merVideo = mediaAssetPath('/Mer.mp4');
-const nowVideo = mediaAssetPath('/now.mp4');
-const voteVideo = mediaAssetPath('/vote.mp4');
-const merPoster = publicAssetPath('/cinematic_posters/mer.jpg');
-const nowPoster = publicAssetPath('/cinematic_posters/stidno.jpg');
-const votePoster = publicAssetPath('/cinematic_posters/vibor.jpg');
+const merVideo = publicAssetPath('/cinematic_videos/mer-1920.4cd799a1.mp4');
+const nowVideo = publicAssetPath('/cinematic_videos/stidno-1920.4585f3d6.mp4');
+const voteVideo = publicAssetPath('/cinematic_videos/vibor-1280.f2942d38.mp4');
+const merPoster = publicAssetPath('/cinematic_posters/mer-1920.266a8cf9.webp');
+const nowPoster = publicAssetPath('/cinematic_posters/stidno-1920.df074ec8.webp');
+const votePoster = publicAssetPath('/cinematic_posters/vibor-1280.4c843162.webp');
 const mainVideoObjectPosition: [number, number] = [0.5, 0.58];
 const productionDescription =
   'Полный цикл продакшена: разработка концепции, подбор ведущих и гостей, организация съемок, продакшн и пост-продакшн. Мы превращаем идею в полноценный формат, готовый к публикации на YouTube, ТВ или платформах.';

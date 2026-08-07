@@ -1,12 +1,16 @@
 @import "tailwindcss";
 @source not "../components/cinematic";
 @source not "../components/ui/AnimatedLogo.tsx";
+@source not "../components/ui/AsyncWrapper.tsx";
 @source not "../components/ui/BurgerButton.tsx";
 @source not "../components/ui/Coverflow.tsx";
 @source not "../components/ui/MediaPreloader.tsx";
 @source not "../components/ui/Text/Text.tsx";
+@source not "../components/ui/bottom-sheet";
 @source not "../components/ui/contact-modal/ContactModal.tsx";
 @source not "../components/ui/fallbacks/MainFallback.tsx";
+@source not "../components/ui/ServicesSliderSection/BaseModal.tsx";
+@source not "../components/ui/ServicesSliderSection/ModalPortal.tsx";
 
 :root {
   --background: #050505;

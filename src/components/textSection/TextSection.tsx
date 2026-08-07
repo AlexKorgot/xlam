@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element -- static export uses explicit responsive WebP source sets */
+
 import {
   useCallback,
   useEffect,
@@ -9,8 +11,6 @@ import {
   type PointerEvent as ReactPointerEvent,
   type RefObject,
 } from 'react';
-import type { StaticImageData } from 'next/image';
-import Image from 'next/image';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import FullPageSection from '@/src/components/ui/FullPageSection';
@@ -21,21 +21,130 @@ import {
   FULLPAGE_TOUCH_SWIPE_THRESHOLD,
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
-import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
+import { publicAssetPath } from '@/src/lib/publicAssetPath';
 
-const GeneralBackground = remoteImageAsset('/general_bg.png', 1920, 1080);
-const BlueTop = remoteImageAsset('/blue_top.png', 1920, 890);
-const BlueBottom = remoteImageAsset('/blue_bottom.png', 1920, 730);
-const GreenTop = remoteImageAsset('/green_top.png', 1920, 970);
-const GreenBottom = remoteImageAsset('/green_bottom.png', 1920, 840);
-const GrayTop = remoteImageAsset('/gray_top.png', 1920, 930);
-const GrayBottom = remoteImageAsset('/gray_bottom.png', 1920, 820);
+type ResponsiveImageAsset = {
+  src: string;
+  srcSet: string;
+  sizes: string;
+  width: number;
+  height: number;
+};
+
+const artworkImageSizes = [
+  '(max-width: 399px) 1280px',
+  '(max-width: 639px) 1920px',
+  '(max-width: 1023px) 960px',
+  '(max-width: 1279px) 1280px',
+  '(max-width: 1535px) 1600px',
+  '1920px',
+].join(', ');
+
+function responsiveImageAsset(
+  variants: ReadonlyArray<readonly [number, `/${string}`]>,
+  width: number,
+  height: number,
+  sizes: string,
+): ResponsiveImageAsset {
+  const fallback = variants[variants.length - 1];
+
+  if (!fallback) {
+    throw new Error('A responsive image requires at least one source');
+  }
+
+  return {
+    src: publicAssetPath(fallback[1]),
+    srcSet: variants
+      .map(([variantWidth, path]) => `${publicAssetPath(path)} ${variantWidth}w`)
+      .join(', '),
+    sizes,
+    width,
+    height,
+  };
+}
+
+const GeneralBackground = responsiveImageAsset(
+  [
+    [640, '/text-section/general-bg-640.1a4a8308.webp'],
+    [1280, '/text-section/general-bg-1280.e76b5076.webp'],
+    [1920, '/text-section/general-bg-1920.3b819715.webp'],
+  ],
+  1920,
+  1080,
+  '110vw',
+);
+const BlueTop = responsiveImageAsset(
+  [
+    [960, '/text-section/blue-top-960.c74bd856.webp'],
+    [1280, '/text-section/blue-top-1280.8e3bf504.webp'],
+    [1600, '/text-section/blue-top-1600.de3cc32e.webp'],
+    [1920, '/text-section/blue-top-1920.d16430d7.webp'],
+  ],
+  1920,
+  890,
+  artworkImageSizes,
+);
+const BlueBottom = responsiveImageAsset(
+  [
+    [960, '/text-section/blue-bottom-960.d420c908.webp'],
+    [1280, '/text-section/blue-bottom-1280.2950fd7c.webp'],
+    [1600, '/text-section/blue-bottom-1600.17e19a54.webp'],
+    [1920, '/text-section/blue-bottom-1920.a044f322.webp'],
+  ],
+  1920,
+  730,
+  artworkImageSizes,
+);
+const GreenTop = responsiveImageAsset(
+  [
+    [960, '/text-section/green-top-960.b93e5c76.webp'],
+    [1280, '/text-section/green-top-1280.463c12a9.webp'],
+    [1600, '/text-section/green-top-1600.ec6fe53f.webp'],
+    [1920, '/text-section/green-top-1920.5d249b36.webp'],
+  ],
+  1920,
+  970,
+  artworkImageSizes,
+);
+const GreenBottom = responsiveImageAsset(
+  [
+    [960, '/text-section/green-bottom-960.aa0b47e1.webp'],
+    [1280, '/text-section/green-bottom-1280.10eea08d.webp'],
+    [1600, '/text-section/green-bottom-1600.c7a7d31c.webp'],
+    [1920, '/text-section/green-bottom-1920.a89bb186.webp'],
+  ],
+  1920,
+  840,
+  artworkImageSizes,
+);
+const GrayTop = responsiveImageAsset(
+  [
+    [960, '/text-section/gray-top-960.3edc0f39.webp'],
+    [1280, '/text-section/gray-top-1280.22956276.webp'],
+    [1600, '/text-section/gray-top-1600.72a616d5.webp'],
+    [1920, '/text-section/gray-top-1920.98abfdff.webp'],
+  ],
+  1920,
+  930,
+  artworkImageSizes,
+);
+const GrayBottom = responsiveImageAsset(
+  [
+    [960, '/text-section/gray-bottom-960.99be0117.webp'],
+    [1280, '/text-section/gray-bottom-1280.77c44961.webp'],
+    [1600, '/text-section/gray-bottom-1600.ad260154.webp'],
+    [1920, '/text-section/gray-bottom-1920.1fd9ac97.webp'],
+  ],
+  1920,
+  820,
+  artworkImageSizes,
+);
 
 type TextSlide = {
   id: string;
   lines: string[];
-  topImage: StaticImageData;
-  bottomImage: StaticImageData;
+  topImage: ResponsiveImageAsset;
+  bottomImage: ResponsiveImageAsset;
   imagePosition?: TextSlideImagePositionConfig;
 };
 
@@ -779,15 +888,17 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
           aria-hidden="true"
           style={{ willChange: 'transform' }}
         >
-          <Image
-            src={GeneralBackground}
+          <img
+            src={GeneralBackground.src}
+            srcSet={GeneralBackground.srcSet}
+            sizes={GeneralBackground.sizes}
+            width={GeneralBackground.width}
+            height={GeneralBackground.height}
             alt=""
             aria-hidden="true"
-            fill
             loading="lazy"
-            unoptimized
-            className="object-cover"
-            sizes="100vw"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         </div>
 
@@ -853,15 +964,17 @@ function SlideArtwork({
         className="absolute left-1/2 w-screen -translate-x-1/2"
         style={topImageStyle}
       >
-        <Image
-          src={slide.topImage}
+        <img
+          src={slide.topImage.src}
+          srcSet={slide.topImage.srcSet}
+          sizes={slide.topImage.sizes}
+          width={slide.topImage.width}
+          height={slide.topImage.height}
           alt=""
           aria-hidden="true"
-          fill
           loading="lazy"
-          unoptimized
-          className="object-cover object-bottom"
-          sizes="100vw"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover object-bottom"
         />
       </div>
 
@@ -870,15 +983,17 @@ function SlideArtwork({
         className="absolute left-1/2 w-screen -translate-x-1/2"
         style={bottomImageStyle}
       >
-        <Image
-          src={slide.bottomImage}
+        <img
+          src={slide.bottomImage.src}
+          srcSet={slide.bottomImage.srcSet}
+          sizes={slide.bottomImage.sizes}
+          width={slide.bottomImage.width}
+          height={slide.bottomImage.height}
           alt=""
           aria-hidden="true"
-          fill
           loading="lazy"
-          unoptimized
-          className="object-cover object-top"
-          sizes="100vw"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover object-top"
         />
       </div>
 
