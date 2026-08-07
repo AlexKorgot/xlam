@@ -24,6 +24,7 @@ import { useHeaderProgress } from '@/src/components/ui/Header/HeaderProvider';
 import type { MobileXHeroSectionHandle } from '@/src/components/ui/MobileXHeroSection';
 import { mediaAssetPath } from '@/src/lib/mediaAssetPath';
 import { getSectionRenderState } from '@/src/lib/fullPageSectionState';
+import { publicAssetPath } from '@/src/lib/publicAssetPath';
 
 const INTRO_SECTION_INDEX = 0;
 const SECOND_SECTION_INDEX = 1;
@@ -35,8 +36,8 @@ const TEXT_SECTION_INDEX = 6;
 const TEAM_SECTION_INDEX = 7;
 const FINAL_CONTACT_SECTION_INDEX = 8;
 const MORPH_VIDEO_SRC = mediaAssetPath('/only_bg.mp4');
-const MORPH_TOP_VIDEO_SRC = '/video_reels/top_video.optimized.mp4';
-const MORPH_BOTTOM_VIDEO_SRC = '/video_reels/bottom_video.optimized.mp4';
+const MORPH_TOP_VIDEO_SRC = publicAssetPath('/video_reels/top_video.optimized.mp4');
+const MORPH_BOTTOM_VIDEO_SRC = publicAssetPath('/video_reels/bottom_video.optimized.mp4');
 
 const loadMorphSection = () => import('@/src/components/MorphSection');
 const MorphSection = lazy(loadMorphSection);
@@ -395,7 +396,10 @@ export const MainScene = () => {
           sectionIndex={SECOND_SECTION_INDEX}
           sectionId="production"
         >
-          <SecondSectionDesign ref={secondSectionRef} />
+          <SecondSectionDesign
+            ref={secondSectionRef}
+            isActive={activeSectionIndex === SECOND_SECTION_INDEX}
+          />
         </DeferredSection>
 
         <FullPageSection id="next" className="items-stretch bg-black">

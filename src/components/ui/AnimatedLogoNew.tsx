@@ -288,6 +288,7 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
                             <Link
                                 className="pointer-events-auto block"
                                 href={'/'}
+                                prefetch={false}
                                 onClick={handleLogoClick}
                                 onPointerEnter={handleHeaderLogoPointerEnter}
                             >

@@ -22,12 +22,17 @@ import Spring from '@/src/lib/assets/main/spring.webp';
 import Tube from '@/src/lib/assets/main/tube.webp';
 import FurryX from '@/src/lib/assets/main/x.webp';
 import FullPageSection from '@/src/components/ui/FullPageSection';
+import { publicAssetPath } from '@/src/lib/publicAssetPath';
 
 export interface SecondSectionDesignHandle {
   setProgress: (progress: number) => void;
   playEnter: () => void;
   playExit: () => void;
 }
+
+type SecondSectionDesignProps = {
+  isActive?: boolean;
+};
 
 type ArtKey =
   | 'spring'
@@ -553,34 +558,34 @@ const artItems: ArtItemConfig[] = [
 
 const responsiveArtSourceSets: Record<ArtKey, string> = {
   spring: [
-    '/art/spring-480.webp 480w',
-    '/art/spring-960.webp 960w',
-    '/art/spring-1440.webp 1440w',
+    `${publicAssetPath('/art/spring-480.webp')} 480w`,
+    `${publicAssetPath('/art/spring-960.webp')} 960w`,
+    `${publicAssetPath('/art/spring-1440.webp')} 1440w`,
     `${Spring.src} 2160w`,
   ].join(', '),
-  sphere: [`/art/circle-320.webp 320w`, `${Sphere.src} 485w`].join(', '),
-  stoneM: [`/art/m-480.webp 480w`, `${StoneM.src} 810w`].join(', '),
+  sphere: [`${publicAssetPath('/art/circle-320.webp')} 320w`, `${Sphere.src} 485w`].join(', '),
+  stoneM: [`${publicAssetPath('/art/m-480.webp')} 480w`, `${StoneM.src} 810w`].join(', '),
   greenBrick: [
-    '/art/lego_green-480.webp 480w',
-    '/art/lego_green-960.webp 960w',
+    `${publicAssetPath('/art/lego_green-480.webp')} 480w`,
+    `${publicAssetPath('/art/lego_green-960.webp')} 960w`,
     `${GreenBrick.src} 2160w`,
   ].join(', '),
   furryX: [
-    '/art/x-480.webp 480w',
-    '/art/x-768.webp 768w',
+    `${publicAssetPath('/art/x-480.webp')} 480w`,
+    `${publicAssetPath('/art/x-768.webp')} 768w`,
     `${FurryX.src} 1024w`,
   ].join(', '),
-  shield: [`/art/sield-320.webp 320w`, `${Shield.src} 500w`].join(', '),
+  shield: [`${publicAssetPath('/art/sield-320.webp')} 320w`, `${Shield.src} 500w`].join(', '),
   tube: [
-    '/art/tube-480.webp 480w',
-    '/art/tube-960.webp 960w',
-    '/art/tube-1440.webp 1440w',
+    `${publicAssetPath('/art/tube-480.webp')} 480w`,
+    `${publicAssetPath('/art/tube-960.webp')} 960w`,
+    `${publicAssetPath('/art/tube-1440.webp')} 1440w`,
     `${Tube.src} 2160w`,
   ].join(', '),
   brick: [
-    '/art/lego_dark-480.webp 480w',
-    '/art/lego_dark-960.webp 960w',
-    '/art/lego_dark-1440.webp 1440w',
+    `${publicAssetPath('/art/lego_dark-480.webp')} 480w`,
+    `${publicAssetPath('/art/lego_dark-960.webp')} 960w`,
+    `${publicAssetPath('/art/lego_dark-1440.webp')} 1440w`,
     `${DarkBrick.src} 2160w`,
   ].join(', '),
 };
@@ -638,8 +643,11 @@ function syncTitleProgress(titleNode: HTMLDivElement, progress: number) {
   });
 }
 
-export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
-  function SecondSectionDesign(_props, ref) {
+export const SecondSectionDesign = forwardRef<
+  SecondSectionDesignHandle,
+  SecondSectionDesignProps
+>(
+  function SecondSectionDesign({ isActive = false }, ref) {
     const sectionRef = useRef<HTMLElement>(null);
     const titleRef = useRef<HTMLDivElement>(null);
     const artRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -945,7 +953,7 @@ export const SecondSectionDesign = forwardRef<SecondSectionDesignHandle>(
             >
               {artItems.map((item) => {
                 const layout = item.layouts[activeArtBreakpoint];
-                const isLcpCandidate = item.key === 'furryX';
+                const isLcpCandidate = isActive && item.key === 'furryX';
 
                 return (
                   <div
