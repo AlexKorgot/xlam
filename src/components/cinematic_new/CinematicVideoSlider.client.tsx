@@ -21,6 +21,7 @@ import type { CinematicOverlayState, CinematicSlide } from './types';
 import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
 import { useImagePreload } from '@/src/lib/imagePreload';
 import { useVideoPreload } from '@/src/lib/videoPreload';
+import type { SectionRenderState } from '@/src/lib/fullPageSectionState';
 
 const dzenLogo = remoteImageAsset('/dzen.svg', 147, 44);
 const merLogo = remoteImageAsset('/mer.svg', 163, 35);
@@ -30,7 +31,8 @@ gsap.registerPlugin(useGSAP);
 
 type CinematicVideoSliderProps = {
   className?: string;
-  isActive?: boolean;
+  prepareScene?: boolean;
+  renderState?: SectionRenderState;
 };
 
 type CinematicChromeStyle = CSSProperties & {
@@ -226,7 +228,8 @@ function OpenedSheetBody({
 
 export function CinematicVideoSlider({
   className = '',
-  isActive = true,
+  prepareScene,
+  renderState = 'active',
 }: CinematicVideoSliderProps) {
   const rootRef = useRef<HTMLElement | null>(null);
   const canvasHostRef = useRef<HTMLDivElement | null>(null);
@@ -249,6 +252,7 @@ export function CinematicVideoSlider({
   const wheelBridgeLockRef = useRef(false);
   const wheelBridgeTimeoutRef = useRef<number | null>(null);
   const wasOpenedVisibleRef = useRef(false);
+  const isActiveRef = useRef(renderState === 'active');
   const isSheetVisibleRef = useRef(false);
   const previousSheetContentHeightRef = useRef<number | null>(null);
   const sheetContentHeightTweenRef = useRef<gsap.core.Tween | null>(null);
@@ -271,8 +275,12 @@ export function CinematicVideoSlider({
   const nextSlide = slides[(activeIndex + 1) % slideCount];
   const pendingOpenedSlide = pendingOpenedIndex === null ? null : slides[pendingOpenedIndex];
   const isOpened = overlayState === 'opened' || overlayState === 'opening' || overlayState === 'openedSliding';
-  const isDetailsLayerVisible = isOpened || overlayState === 'closing';
-  const isChromeVisible = overlayState === 'slider' || overlayState === 'sliding';
+  const isActive = renderState === 'active';
+  const shouldPrepareScene = prepareScene ?? isActive;
+  const isDetailsLayerVisible = isActive && (isOpened || overlayState === 'closing');
+  const isChromeVisible = isActive && (overlayState === 'slider' || overlayState === 'sliding');
+
+  isActiveRef.current = isActive;
 
   useImagePreload(cinematicPosterPreloadSources, { crossOrigin: 'anonymous' });
   useVideoPreload(cinematicActiveVideoPreloadSources, {
@@ -282,6 +290,10 @@ export function CinematicVideoSlider({
   });
 
   const handleOpen = useCallback(() => {
+    if (!isActiveRef.current) {
+      return;
+    }
+
     openTriggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     sceneRef.current?.open();
   }, []);
@@ -305,7 +317,7 @@ export function CinematicVideoSlider({
   useEffect(() => {
     const host = canvasHostRef.current;
 
-    if (!host || !isActive) {
+    if (!host || !shouldPrepareScene) {
       return;
     }
 
@@ -321,6 +333,7 @@ export function CinematicVideoSlider({
 
       const scene = new SliderScene(host, {
         slides,
+        runtimeActive: isActiveRef.current,
         onActiveSlideChange: setActiveIndex,
         onOverlayStateChange: setOverlayState,
         onOpenedSlideTargetChange: setPendingOpenedIndex,
@@ -366,7 +379,11 @@ export function CinematicVideoSlider({
       isDisposed = true;
       disposeScene?.();
     };
-  }, [handlePointerAction, isActive, slides]);
+  }, [handlePointerAction, shouldPrepareScene, slides]);
+
+  useEffect(() => {
+    sceneRef.current?.setRuntimeActive(isActive);
+  }, [isActive]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -406,6 +423,10 @@ export function CinematicVideoSlider({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isActiveRef.current) {
+        return;
+      }
+
       if (event.key === 'Escape') {
         sceneRef.current?.close();
       }
@@ -437,10 +458,18 @@ export function CinematicVideoSlider({
   }, []);
 
   const handlePrevious = useCallback(() => {
+    if (!isActiveRef.current) {
+      return;
+    }
+
     sceneRef.current?.previous();
   }, []);
 
   const handleNext = useCallback(() => {
+    if (!isActiveRef.current) {
+      return;
+    }
+
     sceneRef.current?.next();
   }, []);
 
@@ -461,6 +490,10 @@ export function CinematicVideoSlider({
   }, [overlayState]);
 
   const handleClose = useCallback(() => {
+    if (!isActiveRef.current) {
+      return;
+    }
+
     sceneRef.current?.close();
   }, []);
 
@@ -517,13 +550,13 @@ export function CinematicVideoSlider({
   }, [handleClose, isDetailsLayerVisible]);
 
   useEffect(() => {
-    if (isDetailsLayerVisible) {
+    if (isDetailsLayerVisible || !isActive) {
       return;
     }
 
     openTriggerRef.current?.focus();
     openTriggerRef.current = null;
-  }, [isDetailsLayerVisible]);
+  }, [isActive, isDetailsLayerVisible]);
 
   const handleSheetPointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType !== 'touch') {
@@ -1030,6 +1063,7 @@ export function CinematicVideoSlider({
       <ModalPortal>
         <div
           ref={detailsRef}
+          inert={isDetailsLayerVisible ? undefined : true}
           className={`fixed inset-0 z-[80] transition-opacity duration-300 ${
             isDetailsLayerVisible ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
           }`}

@@ -88,6 +88,7 @@ type DeferredSectionProps = {
   activeSectionIndex: number;
   children: ReactNode;
   fallbackClassName?: string;
+  keepMounted?: boolean;
   sectionIndex: number;
   sectionId: string;
 };
@@ -96,6 +97,7 @@ const DeferredSection = ({
   activeSectionIndex,
   children,
   fallbackClassName = 'bg-black',
+  keepMounted = false,
   sectionIndex,
   sectionId,
 }: DeferredSectionProps) => {
@@ -115,7 +117,7 @@ const DeferredSection = ({
       className={`w-full ${fallbackClassName}`}
       style={{ height: 'var(--fullpage-height, 100svh)' } as CSSProperties}
     >
-      {renderState === 'distant' ? fallback : (
+      {renderState === 'distant' && !keepMounted ? fallback : (
         <Suspense fallback={fallback}>{children}</Suspense>
       )}
     </div>
@@ -149,6 +151,7 @@ export const MainScene = () => {
   const [activeSectionIndex, setActiveSectionIndex] = useState(INTRO_SECTION_INDEX);
   const [transitionTargetIndex, setTransitionTargetIndex] = useState<number | null>(null);
   const [hasMountedMorphSection, setHasMountedMorphSection] = useState(false);
+  const [hasVisitedProjectsSection, setHasVisitedProjectsSection] = useState(false);
   const responsiveMorphMode = useResponsiveMorphMode();
   const responsiveMorphModeRef = useRef(responsiveMorphMode);
   const secondSectionRef = useRef<SecondSectionDesignHandle>(null);
@@ -231,6 +234,10 @@ export const MainScene = () => {
   const morphSectionRenderState = transitionTargetIndex === MORPH_SECTION_INDEX
     ? 'active'
     : getSectionRenderState(MORPH_SECTION_INDEX, activeSectionIndex);
+  const projectsSectionRenderState = getSectionRenderState(
+    PROJECTS_SECTION_INDEX,
+    activeSectionIndex,
+  );
 
   const handleSectionChange = useCallback((index: number) => {
     setActiveSectionIndex(index);
@@ -238,6 +245,10 @@ export const MainScene = () => {
 
     if (index === SECOND_SECTION_INDEX || index === MORPH_SECTION_INDEX) {
       setHasMountedMorphSection(true);
+    }
+
+    if (index === PROJECTS_SECTION_INDEX) {
+      setHasVisitedProjectsSection(true);
     }
   }, []);
 
@@ -458,11 +469,16 @@ export const MainScene = () => {
 
         <DeferredSection
           activeSectionIndex={activeSectionIndex}
+          keepMounted={hasVisitedProjectsSection}
           sectionIndex={PROJECTS_SECTION_INDEX}
           sectionId="projects"
         >
           <CinematicVideoSlider
-            isActive={activeSectionIndex === PROJECTS_SECTION_INDEX}
+            prepareScene={
+              projectsSectionRenderState === 'active' ||
+              hasVisitedProjectsSection
+            }
+            renderState={projectsSectionRenderState}
           />
         </DeferredSection>
 

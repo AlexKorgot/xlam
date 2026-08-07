@@ -21,6 +21,7 @@ import {
 import type { CinematicSlide, SliderSceneCallbacks } from './types';
 
 type SliderSceneOptions = SliderSceneCallbacks & {
+  runtimeActive?: boolean;
   slides: CinematicSlide[];
 };
 
@@ -110,12 +111,14 @@ export class SliderScene {
   private slideVelocity = 0;
 
   private isVisible = true;
+  private isRuntimeActive: boolean;
   private isDestroyed = false;
   private mode: 'slider' | 'sliding' | 'opening' | 'opened' | 'openedSliding' | 'closing' = 'slider';
   constructor(container: HTMLElement, options: SliderSceneOptions) {
     this.container = container;
     this.callbacks = options;
     this.slides = options.slides;
+    this.isRuntimeActive = options.runtimeActive ?? true;
     this.renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: true,
@@ -238,9 +241,14 @@ export class SliderScene {
 
     this.resize();
     this.bindObservers();
-    this.start();
     this.pauseInactiveVideos();
-    void this.playActiveVideo();
+
+    if (this.isRuntimeActive) {
+      this.start();
+      void this.playActiveVideo();
+    } else {
+      this.pauseAllVideos();
+    }
   }
 
   getCanvasElement() {
@@ -249,6 +257,36 @@ export class SliderScene {
 
   getActiveIndex() {
     return this.activeIndex;
+  }
+
+  setRuntimeActive(isActive: boolean) {
+    if (this.isDestroyed || this.isRuntimeActive === isActive) {
+      return;
+    }
+
+    this.isRuntimeActive = isActive;
+
+    if (!isActive) {
+      this.timeline?.pause();
+      this.stop();
+      this.pauseAllVideos();
+      this.slideVideos.forEach(({ textureTween }, index) => {
+        textureTween?.pause();
+        this.clearVideoRecoveryTimer(index);
+      });
+      return;
+    }
+
+    this.resize();
+    this.timeline?.resume();
+    this.slideVideos.forEach(({ textureTween }) => textureTween?.resume());
+    this.slideVideos[this.activeIndex]?.handleMetadata();
+    this.revealVideoTexture(this.activeIndex);
+
+    if (this.isVisible && !document.hidden) {
+      this.start();
+      void this.playActiveVideo();
+    }
   }
 
   getPointerAction(clientX: number, clientY: number): SliderPointerAction | null {
@@ -313,23 +351,39 @@ export class SliderScene {
   }
 
   next() {
+    if (!this.isRuntimeActive) {
+      return;
+    }
+
     this.slideTo(1);
   }
 
   previous() {
+    if (!this.isRuntimeActive) {
+      return;
+    }
+
     this.slideTo(-1);
   }
 
   nextOpened() {
+    if (!this.isRuntimeActive) {
+      return;
+    }
+
     this.shiftOpenedSlide(1);
   }
 
   previousOpened() {
+    if (!this.isRuntimeActive) {
+      return;
+    }
+
     this.shiftOpenedSlide(-1);
   }
 
   open() {
-    if (this.mode !== 'slider') {
+    if (!this.isRuntimeActive || this.mode !== 'slider') {
       return;
     }
 
@@ -485,10 +539,7 @@ export class SliderScene {
   dispose() {
     this.isDestroyed = true;
     this.timeline?.kill();
-
-    if (this.rafId !== null) {
-      window.cancelAnimationFrame(this.rafId);
-    }
+    this.stop();
 
     this.resizeObserver?.disconnect();
     this.intersectionObserver?.disconnect();
@@ -696,6 +747,7 @@ export class SliderScene {
     if (
       !slideVideo ||
       !plane ||
+      !this.isRuntimeActive ||
       index !== this.activeIndex ||
       !slideVideo.isPosterSettled ||
       !slideVideo.isVideoReady ||
@@ -731,12 +783,16 @@ export class SliderScene {
   private async playVideo(index: number) {
     const video = this.slideVideos[index]?.video;
 
-    if (!video) {
+    if (!video || !this.isRuntimeActive || !this.isVisible || document.hidden) {
       return;
     }
 
     try {
       await video.play();
+
+      if (!this.isRuntimeActive || !this.isVisible || document.hidden) {
+        video.pause();
+      }
     } catch (error) {
       if (error instanceof DOMException) {
         if (error.name === 'NotAllowedError') {
@@ -944,7 +1000,12 @@ export class SliderScene {
   private scheduleVideoRecovery(index: number, immediate: boolean) {
     const slideVideo = this.slideVideos[index];
 
-    if (!slideVideo || index !== this.activeIndex || this.isDestroyed) {
+    if (
+      !slideVideo ||
+      index !== this.activeIndex ||
+      this.isDestroyed ||
+      !this.isRuntimeActive
+    ) {
       return;
     }
 
@@ -957,7 +1018,7 @@ export class SliderScene {
     slideVideo.recoveryTimer = window.setTimeout(() => {
       slideVideo.recoveryTimer = null;
 
-      if (index !== this.activeIndex || this.isDestroyed) {
+      if (index !== this.activeIndex || this.isDestroyed || !this.isRuntimeActive) {
         return;
       }
 
@@ -995,6 +1056,10 @@ export class SliderScene {
         video.pause();
       }
     });
+  }
+
+  private pauseAllVideos() {
+    this.slideVideos.forEach(({ video }) => video.pause());
   }
 
   private resetInactiveVideo(index: number) {
@@ -1092,7 +1157,7 @@ export class SliderScene {
         ([entry]) => {
           this.isVisible = entry?.isIntersecting ?? true;
 
-          if (this.isVisible) {
+          if (this.isVisible && this.isRuntimeActive) {
             this.start();
             void this.playActiveVideo();
 
@@ -1111,11 +1176,12 @@ export class SliderScene {
 
   private handleVisibilityChange = () => {
     if (document.hidden) {
+      this.stop();
       this.pauseVideo(this.activeIndex);
       return;
     }
 
-    if (this.isVisible) {
+    if (this.isVisible && this.isRuntimeActive) {
       void this.playActiveVideo();
 
       this.start();
@@ -1123,12 +1189,13 @@ export class SliderScene {
   };
 
   private start() {
-    if (this.rafId !== null || this.isDestroyed) {
+    if (this.rafId !== null || this.isDestroyed || !this.isRuntimeActive) {
       return;
     }
 
     const render = () => {
-      if (this.isDestroyed) {
+      if (this.isDestroyed || !this.isRuntimeActive) {
+        this.rafId = null;
         return;
       }
 
@@ -1148,6 +1215,15 @@ export class SliderScene {
     };
 
     this.rafId = window.requestAnimationFrame(render);
+  }
+
+  private stop() {
+    if (this.rafId === null) {
+      return;
+    }
+
+    window.cancelAnimationFrame(this.rafId);
+    this.rafId = null;
   }
 
   private getLayoutForOffset(offset: number): VideoPlaneLayout {
