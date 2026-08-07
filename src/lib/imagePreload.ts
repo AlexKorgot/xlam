@@ -26,14 +26,27 @@ const createImagePreloadRecord = (
   const key = getImagePreloadKey(src, crossOrigin);
   const image = new window.Image();
   const promise = new Promise<void>((resolve) => {
-    const handleSettled = () => {
-      image.removeEventListener('load', handleSettled);
-      image.removeEventListener('error', handleSettled);
+    const cleanup = () => {
+      image.removeEventListener('load', handleLoad);
+      image.removeEventListener('error', handleError);
+    };
+    const handleLoad = () => {
+      cleanup();
+      resolve();
+    };
+    const handleError = () => {
+      cleanup();
+
+      if (imageRecords.get(key)?.image === image) {
+        imageRecords.delete(key);
+        imagePreloadPromises.delete(key);
+      }
+
       resolve();
     };
 
-    image.addEventListener('load', handleSettled, { once: true });
-    image.addEventListener('error', handleSettled, { once: true });
+    image.addEventListener('load', handleLoad, { once: true });
+    image.addEventListener('error', handleError, { once: true });
     image.decoding = 'async';
 
     if (crossOrigin) {
@@ -42,7 +55,10 @@ const createImagePreloadRecord = (
 
     image.src = src;
 
-    void image.decode?.().then(handleSettled).catch(handleSettled);
+    void image.decode?.().then(handleLoad).catch(() => {
+      // The load/error events remain authoritative. Some browsers can reject
+      // decode() while the image request itself is still able to complete.
+    });
   });
 
   const record = { image, promise };

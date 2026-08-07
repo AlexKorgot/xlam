@@ -457,7 +457,9 @@ export const MainScene = () => {
           sectionIndex={PROJECTS_SECTION_INDEX}
           sectionId="projects"
         >
-          <CinematicVideoSlider />
+          <CinematicVideoSlider
+            isActive={activeSectionIndex === PROJECTS_SECTION_INDEX}
+          />
         </DeferredSection>
 
         <DeferredSection

@@ -39,6 +39,8 @@ export const videoPlaneFragmentShader = `
   uniform sampler2D uTexture;
   uniform sampler2D uNextTexture;
   uniform float uTextureMix;
+  uniform float uTextureNeedsSrgbOutput;
+  uniform float uNextTextureNeedsSrgbOutput;
   uniform float uOpacity;
   uniform float uDarkness;
   uniform float uCornerRadius;
@@ -50,6 +52,14 @@ export const videoPlaneFragmentShader = `
   uniform vec2 uNextMediaSize;
   uniform vec2 uObjectPosition;
   uniform vec2 uPlaneSize;
+
+  vec3 linearToSrgb(vec3 value) {
+    vec3 safeValue = max(value, vec3(0.0));
+    vec3 lower = safeValue * 12.92;
+    vec3 higher = 1.055 * pow(safeValue, vec3(1.0 / 2.4)) - 0.055;
+
+    return mix(lower, higher, step(vec3(0.0031308), safeValue));
+  }
 
   vec2 coverUv(vec2 uv, vec2 planeSize, vec2 mediaSize, vec2 objectPosition) {
     float planeAspect = max(planeSize.x / max(planeSize.y, 0.001), 0.001);
@@ -122,6 +132,8 @@ export const videoPlaneFragmentShader = `
 
     vec4 currentColor = texture2D(uTexture, clamp(coverCurrentUv, vec2(0.0), vec2(1.0)));
     vec4 nextColor = texture2D(uNextTexture, clamp(coverNextUv, vec2(0.0), vec2(1.0)));
+    currentColor.rgb = mix(currentColor.rgb, linearToSrgb(currentColor.rgb), uTextureNeedsSrgbOutput);
+    nextColor.rgb = mix(nextColor.rgb, linearToSrgb(nextColor.rgb), uNextTextureNeedsSrgbOutput);
     vec4 color = mix(currentColor, nextColor, uTextureMix);
 
     float horizontalEdge = smoothstep(0.0, 0.18, vUv.x) * smoothstep(1.0, 0.82, vUv.x);

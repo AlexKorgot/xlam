@@ -30,6 +30,7 @@ gsap.registerPlugin(useGSAP);
 
 type CinematicVideoSliderProps = {
   className?: string;
+  isActive?: boolean;
 };
 
 type CinematicChromeStyle = CSSProperties & {
@@ -59,7 +60,7 @@ const openedSlideIncomingDelay =
   openedSlideIncomingDuration -
   0.04;
 const tickerLogos = [nikeLogo, merLogo, dzenLogo, nikeLogo, merLogo, dzenLogo];
-const cinematicVideoPreloadSources = cinematicSlides.map((slide) => slide.videoSrc);
+const cinematicActiveVideoPreloadSources = [cinematicSlides[0].videoSrc];
 const cinematicPosterPreloadSources = cinematicSlides.map((slide) => slide.posterSrc);
 
 const getFocusableElements = (container: HTMLElement) =>
@@ -223,7 +224,10 @@ function OpenedSheetBody({
   );
 }
 
-export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderProps) {
+export function CinematicVideoSlider({
+  className = '',
+  isActive = true,
+}: CinematicVideoSliderProps) {
   const rootRef = useRef<HTMLElement | null>(null);
   const canvasHostRef = useRef<HTMLDivElement | null>(null);
   const sceneRef = useRef<SliderScene | null>(null);
@@ -271,8 +275,8 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
   const isChromeVisible = overlayState === 'slider' || overlayState === 'sliding';
 
   useImagePreload(cinematicPosterPreloadSources, { crossOrigin: 'anonymous' });
-  useVideoPreload(cinematicVideoPreloadSources, {
-    enabled: true,
+  useVideoPreload(cinematicActiveVideoPreloadSources, {
+    enabled: !isActive,
     mediaQuery: '(min-width: 0px)',
     crossOrigin: 'anonymous',
   });
@@ -300,9 +304,8 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
 
   useEffect(() => {
     const host = canvasHostRef.current;
-    const root = rootRef.current;
 
-    if (!host || !root) {
+    if (!host || !isActive) {
       return;
     }
 
@@ -357,29 +360,13 @@ export function CinematicVideoSlider({ className = '' }: CinematicVideoSliderPro
       };
     };
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting) {
-          return;
-        }
-
-        observer.disconnect();
-        void initializeScene();
-      },
-      {
-        rootMargin: '350px 0px',
-        threshold: 0.01,
-      },
-    );
-
-    observer.observe(root);
+    void initializeScene();
 
     return () => {
       isDisposed = true;
-      observer.disconnect();
       disposeScene?.();
     };
-  }, [handlePointerAction, slides]);
+  }, [handlePointerAction, isActive, slides]);
 
   useEffect(() => {
     const root = rootRef.current;

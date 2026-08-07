@@ -28,6 +28,8 @@ export class VideoPlane {
     uTexture: { value: THREE.Texture };
     uNextTexture: { value: THREE.Texture };
     uTextureMix: { value: number };
+    uTextureNeedsSrgbOutput: { value: number };
+    uNextTextureNeedsSrgbOutput: { value: number };
     uTime: { value: number };
     uBend: { value: number };
     uTransitionProgress: { value: number };
@@ -54,6 +56,8 @@ export class VideoPlane {
       uTexture: { value: texture },
       uNextTexture: { value: texture },
       uTextureMix: { value: 0 },
+      uTextureNeedsSrgbOutput: { value: this.needsSrgbOutput(texture) },
+      uNextTextureNeedsSrgbOutput: { value: this.needsSrgbOutput(texture) },
       uTime: { value: 0 },
       uBend: { value: 14 },
       uTransitionProgress: { value: 0 },
@@ -90,6 +94,8 @@ export class VideoPlane {
     this.uniforms.uTexture.value = texture;
     this.uniforms.uNextTexture.value = texture;
     this.uniforms.uTextureMix.value = 0;
+    this.uniforms.uTextureNeedsSrgbOutput.value = this.needsSrgbOutput(texture);
+    this.uniforms.uNextTextureNeedsSrgbOutput.value = this.needsSrgbOutput(texture);
     this.uniforms.uMediaSize.value.copy(mediaSize);
     this.uniforms.uNextMediaSize.value.copy(mediaSize);
   }
@@ -98,10 +104,15 @@ export class VideoPlane {
     this.uniforms.uNextTexture.value = texture;
     this.uniforms.uNextMediaSize.value.copy(mediaSize);
     this.uniforms.uTextureMix.value = 0;
+    this.uniforms.uNextTextureNeedsSrgbOutput.value = this.needsSrgbOutput(texture);
   }
 
   setActive(isActive: boolean) {
     this.uniforms.uActive.value = isActive ? 1 : 0;
+  }
+
+  private needsSrgbOutput(texture: THREE.Texture) {
+    return texture instanceof THREE.VideoTexture ? 0 : 1;
   }
 
   setObjectPosition(position: [number, number]) {

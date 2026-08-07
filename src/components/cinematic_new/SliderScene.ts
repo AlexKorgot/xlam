@@ -39,11 +39,19 @@ type SlideVideo = {
   isPosterSettled: boolean;
   isVideoReady: boolean;
   videoMediaSize: THREE.Vector2;
+  posterMediaSize: THREE.Vector2;
+  recoveryAttempts: number;
+  recoveryTimer: number | null;
   handleMetadata: () => void;
+  handleVideoError: () => void;
+  handleVideoWaiting: () => void;
+  handleVideoPlaying: () => void;
   lastRole: FilmStripSlideRole;
 };
 
 export type SliderPointerAction = 'open' | 'previous' | 'next';
+const VIDEO_STALL_RECOVERY_DELAY_MS = 2200;
+const MAX_VIDEO_RECOVERY_ATTEMPTS = 1;
 const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
 
 function wrapIndex(index: number, total: number) {
@@ -122,11 +130,10 @@ export class SliderScene {
     this.container.appendChild(this.renderer.domElement);
 
     this.slides.forEach((slide, index) => {
-      const video = this.createVideoElement(slide.videoSrc);
+      const video = this.createVideoElement(slide.videoSrc, index === this.activeIndex);
       const texture = this.createVideoTexture(video);
       const videoMediaSize = new THREE.Vector2(16, 9);
       const posterMediaSize = new THREE.Vector2(16, 9);
-      let hasPrimedPreview = false;
       const posterResource = this.createPosterTexture(
         slide.posterSrc,
         (loadedPosterTexture, width, height) => {
@@ -160,16 +167,6 @@ export class SliderScene {
 
         videoMediaSize.set(video.videoWidth || 16, video.videoHeight || 9);
 
-        if (index !== this.activeIndex && !hasPrimedPreview && video.readyState >= HTMLMediaElement.HAVE_METADATA) {
-          hasPrimedPreview = true;
-
-          try {
-            video.currentTime = Math.min(0.04, Number.isFinite(video.duration) ? Math.max(video.duration - 0.001, 0) : 0.04);
-          } catch {
-            // Seeking can fail before the browser has enough metadata; the slide will stay paused.
-          }
-        }
-
         if (!this.isVideoDrawable(video)) {
           return;
         }
@@ -185,11 +182,24 @@ export class SliderScene {
         slideVideo.videoMediaSize.copy(videoMediaSize);
         this.revealVideoTexture(index);
       };
+      const handleVideoError = () => {
+        this.scheduleVideoRecovery(index, true);
+      };
+      const handleVideoWaiting = () => {
+        this.scheduleVideoRecovery(index, false);
+      };
+      const handleVideoPlaying = () => {
+        this.clearVideoRecoveryTimer(index);
+      };
 
       video.addEventListener('loadedmetadata', handleMetadata);
       video.addEventListener('loadeddata', handleMetadata);
       video.addEventListener('canplay', handleMetadata);
       video.addEventListener('seeked', handleMetadata);
+      video.addEventListener('error', handleVideoError);
+      video.addEventListener('stalled', handleVideoWaiting);
+      video.addEventListener('waiting', handleVideoWaiting);
+      video.addEventListener('playing', handleVideoPlaying);
 
       plane.mesh.renderOrder = index === 0 ? 30 : 5;
       plane.setActive(index === 0);
@@ -207,11 +217,23 @@ export class SliderScene {
         isPosterSettled: false,
         isVideoReady: false,
         videoMediaSize,
+        posterMediaSize,
+        recoveryAttempts: 0,
+        recoveryTimer: null,
         handleMetadata,
+        handleVideoError,
+        handleVideoWaiting,
+        handleVideoPlaying,
         lastRole: index === 0 ? 'center' : this.getSlideRole(centeredOffset(index, this.slidePosition, this.slides.length)),
       });
       this.planes.push(plane);
       this.scene.add(plane.mesh);
+
+      handleMetadata();
+
+      if (video.error) {
+        handleVideoError();
+      }
     });
 
     this.resize();
@@ -484,15 +506,26 @@ export class SliderScene {
       posterTexture,
       posterImage,
       textureTween,
+      recoveryTimer,
       handleMetadata,
+      handleVideoError,
+      handleVideoWaiting,
+      handleVideoPlaying,
       handlePosterLoad,
       handlePosterError,
     }) => {
       textureTween?.kill();
+      if (recoveryTimer !== null) {
+        window.clearTimeout(recoveryTimer);
+      }
       video.removeEventListener('loadedmetadata', handleMetadata);
       video.removeEventListener('loadeddata', handleMetadata);
       video.removeEventListener('canplay', handleMetadata);
       video.removeEventListener('seeked', handleMetadata);
+      video.removeEventListener('error', handleVideoError);
+      video.removeEventListener('stalled', handleVideoWaiting);
+      video.removeEventListener('waiting', handleVideoWaiting);
+      video.removeEventListener('playing', handleVideoPlaying);
       posterImage.removeEventListener('load', handlePosterLoad);
       posterImage.removeEventListener('error', handlePosterError);
       video.pause();
@@ -575,12 +608,14 @@ export class SliderScene {
     );
   }
 
-  private createVideoElement(src: string) {
-    const video = acquirePreloadedVideo(src, { crossOrigin: 'anonymous' });
+  private createVideoElement(src: string, isActive: boolean) {
+    const video = acquirePreloadedVideo(src, {
+      crossOrigin: 'anonymous',
+      preload: isActive ? 'auto' : 'metadata',
+    });
     video.muted = true;
     video.loop = true;
     video.playsInline = true;
-    video.preload = 'auto';
 
     return video;
   }
@@ -661,6 +696,7 @@ export class SliderScene {
     if (
       !slideVideo ||
       !plane ||
+      index !== this.activeIndex ||
       !slideVideo.isPosterSettled ||
       !slideVideo.isVideoReady ||
       slideVideo.textureState !== 'poster'
@@ -689,27 +725,53 @@ export class SliderScene {
   }
 
   private async playActiveVideo() {
-    const activeVideo = this.slideVideos[this.activeIndex]?.video;
-
-    if (activeVideo) {
-      await this.playVideo(activeVideo);
-    }
+    await this.playVideo(this.activeIndex);
   }
 
-  private async playVideo(video: HTMLVideoElement) {
+  private async playVideo(index: number) {
+    const video = this.slideVideos[index]?.video;
+
+    if (!video) {
+      return;
+    }
+
     try {
       await video.play();
-    } catch {
-      this.callbacks.onAutoplayBlocked?.();
+    } catch (error) {
+      if (error instanceof DOMException) {
+        if (error.name === 'NotAllowedError') {
+          this.callbacks.onAutoplayBlocked?.();
+          return;
+        }
+
+        if (error.name === 'AbortError') {
+          return;
+        }
+      }
+
+      this.scheduleVideoRecovery(index, true);
     }
   }
 
   private activateSlideVideo(index: number, notify: boolean) {
     if (this.activeIndex !== index) {
-      this.pauseVideo(this.activeIndex);
+      const previousIndex = this.activeIndex;
+
+      this.pauseVideo(previousIndex);
+      this.showPosterTexture(previousIndex);
+      this.clearVideoRecoveryTimer(previousIndex);
     }
 
     this.activeIndex = index;
+
+    const activeSlideVideo = this.slideVideos[index];
+
+    if (activeSlideVideo) {
+      activeSlideVideo.recoveryAttempts = 0;
+      activeSlideVideo.video.preload = 'auto';
+      activeSlideVideo.handleMetadata();
+      this.revealVideoTexture(index);
+    }
 
     this.planes.forEach((plane, planeIndex) => {
       plane.setActive(planeIndex === index);
@@ -852,6 +914,75 @@ export class SliderScene {
       plane.uniforms.uTransitionProgress.value = 0;
       plane.uniforms.uVelocity.value = 0;
     });
+  }
+
+  private showPosterTexture(index: number) {
+    const slideVideo = this.slideVideos[index];
+    const plane = this.planes[index];
+
+    if (!slideVideo || !plane || slideVideo.textureState === 'poster') {
+      return;
+    }
+
+    slideVideo.textureTween?.kill();
+    slideVideo.textureTween = null;
+    slideVideo.textureState = 'poster';
+    plane.setTexture(slideVideo.posterTexture, slideVideo.posterMediaSize);
+  }
+
+  private clearVideoRecoveryTimer(index: number) {
+    const slideVideo = this.slideVideos[index];
+
+    if (!slideVideo || slideVideo.recoveryTimer === null) {
+      return;
+    }
+
+    window.clearTimeout(slideVideo.recoveryTimer);
+    slideVideo.recoveryTimer = null;
+  }
+
+  private scheduleVideoRecovery(index: number, immediate: boolean) {
+    const slideVideo = this.slideVideos[index];
+
+    if (!slideVideo || index !== this.activeIndex || this.isDestroyed) {
+      return;
+    }
+
+    if (immediate) {
+      this.clearVideoRecoveryTimer(index);
+    } else if (slideVideo.recoveryTimer !== null) {
+      return;
+    }
+
+    slideVideo.recoveryTimer = window.setTimeout(() => {
+      slideVideo.recoveryTimer = null;
+
+      if (index !== this.activeIndex || this.isDestroyed) {
+        return;
+      }
+
+      const hasMediaError = slideVideo.video.error !== null;
+      const isStillBuffering =
+        !slideVideo.video.paused &&
+        slideVideo.video.readyState < HTMLMediaElement.HAVE_FUTURE_DATA;
+
+      if (!hasMediaError && !isStillBuffering) {
+        return;
+      }
+
+      this.showPosterTexture(index);
+
+      if (slideVideo.recoveryAttempts >= MAX_VIDEO_RECOVERY_ATTEMPTS) {
+        return;
+      }
+
+      slideVideo.recoveryAttempts += 1;
+      slideVideo.isVideoReady = false;
+      slideVideo.video.pause();
+      slideVideo.video.preload = 'auto';
+      slideVideo.video.load();
+      void this.playVideo(index);
+    }, immediate ? 0 : VIDEO_STALL_RECOVERY_DELAY_MS);
   }
 
   private pauseVideo(index: number) {

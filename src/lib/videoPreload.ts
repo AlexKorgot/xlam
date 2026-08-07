@@ -7,6 +7,7 @@ type VideoCrossOrigin = 'anonymous' | 'use-credentials';
 
 type VideoPreloadOptions = {
   crossOrigin?: VideoCrossOrigin;
+  preload?: 'auto' | 'metadata' | 'none';
 };
 
 type VideoPreloadRecord = {
@@ -22,7 +23,7 @@ const getVideoPreloadKey = (src: string, crossOrigin?: VideoCrossOrigin) =>
 
 const createVideoPreloadRecord = (
   src: string,
-  { crossOrigin }: VideoPreloadOptions = {},
+  { crossOrigin, preload = 'auto' }: VideoPreloadOptions = {},
 ) => {
   const key = getVideoPreloadKey(src, crossOrigin);
   const video = document.createElement('video');
@@ -33,31 +34,60 @@ const createVideoPreloadRecord = (
     resolvePromise = resolve;
   });
 
-  const handleSettled = () => {
+  const cleanup = () => {
+    window.clearTimeout(timeoutId);
+    video.removeEventListener('canplaythrough', handleReady);
+    video.removeEventListener('loadeddata', handleReady);
+    video.removeEventListener('loadedmetadata', handleReady);
+    video.removeEventListener('error', handleFailure);
+  };
+
+  const handleReady = () => {
     if (isSettled) {
       return;
     }
 
     isSettled = true;
-    window.clearTimeout(timeoutId);
-    video.removeEventListener('canplaythrough', handleSettled);
-    video.removeEventListener('loadeddata', handleSettled);
-    video.removeEventListener('error', handleError);
+    cleanup();
     resolvePromise();
   };
 
-  const handleError = () => {
-    handleSettled();
-    videoRecords.delete(key);
-    videoPreloadPromises.delete(key);
+  const handleFailure = () => {
+    if (isSettled) {
+      return;
+    }
+
+    isSettled = true;
+    cleanup();
+
+    if (videoRecords.get(key)?.video === video) {
+      videoRecords.delete(key);
+      videoPreloadPromises.delete(key);
+    }
+
+    resolvePromise();
   };
 
-  const timeoutId = window.setTimeout(handleSettled, VIDEO_PRELOAD_TIMEOUT_MS);
+  const timeoutId = window.setTimeout(() => {
+    const requiredReadyState = preload === 'metadata'
+      ? HTMLMediaElement.HAVE_METADATA
+      : HTMLMediaElement.HAVE_CURRENT_DATA;
 
-  video.addEventListener('canplaythrough', handleSettled, { once: true });
-  video.addEventListener('loadeddata', handleSettled, { once: true });
-  video.addEventListener('error', handleError, { once: true });
-  video.preload = 'auto';
+    if (video.readyState >= requiredReadyState) {
+      handleReady();
+      return;
+    }
+
+    handleFailure();
+  }, VIDEO_PRELOAD_TIMEOUT_MS);
+
+  video.addEventListener('canplaythrough', handleReady, { once: true });
+  video.addEventListener('loadeddata', handleReady, { once: true });
+  if (preload === 'metadata') {
+    video.addEventListener('loadedmetadata', handleReady, { once: true });
+  }
+  video.addEventListener('error', handleFailure, { once: true });
+  video.preload = preload;
   video.muted = true;
   video.playsInline = true;
 
@@ -91,8 +121,13 @@ export function acquirePreloadedVideo(
   options: VideoPreloadOptions = {},
 ) {
   const key = getVideoPreloadKey(src, options.crossOrigin);
+  const record = videoRecords.get(key) ?? createVideoPreloadRecord(src, options);
 
-  return (videoRecords.get(key) ?? createVideoPreloadRecord(src, options)).video;
+  if (options.preload === 'auto' && record.video.preload !== 'auto') {
+    record.video.preload = 'auto';
+  }
+
+  return record.video;
 }
 
 export function releasePreloadedVideo(
