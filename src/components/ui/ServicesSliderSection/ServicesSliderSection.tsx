@@ -382,7 +382,7 @@ export function ServicesSliderSection({
 
   const slideCount = slides.length;
   const [selectedSlideIndex, setSelectedSlideIndex] = useState<number | null>(null);
-  const [renderedSlideIndex, setRenderedSlideIndex] = useState<number | null>(null);
+  const [renderedSlideIndex, setRenderedSlideIndex] = useState<number | null>(0);
   const renderedSlide =
     renderedSlideIndex === null ? null : slides[renderedSlideIndex];
   const activeSlideIndex = selectedSlideIndex ?? renderedSlideIndex;
@@ -423,10 +423,6 @@ export function ServicesSliderSection({
     setRenderedSlideIndex(nextIndex);
     setSelectedSlideIndex(nextIndex);
   }, [selectedSlideIndex, slideCount]);
-
-  const handleModalAfterClose = useCallback(() => {
-    setRenderedSlideIndex(null);
-  }, []);
 
   const wheelBridgeDirectionRef = useRef<'up' | 'down' | null>(null);
   const sectionContentRef = useRef<HTMLDivElement | null>(null);
@@ -776,12 +772,15 @@ export function ServicesSliderSection({
                       aria-label={`Открыть услугу ${slide.title}`}
                       onClick={() => openModal(index)}
                       onFocus={() => {
+                        setRenderedSlideIndex(index);
                         void preloadServiceModalBackground(slide.modal.backgroundImage);
                       }}
                       onPointerDown={() => {
+                        setRenderedSlideIndex(index);
                         void preloadServiceModalBackground(slide.modal.backgroundImage);
                       }}
                       onPointerEnter={() => {
+                        setRenderedSlideIndex(index);
                         void preloadServiceModalBackground(slide.modal.backgroundImage);
                       }}
                       onMouseEnter={
@@ -846,7 +845,6 @@ export function ServicesSliderSection({
           onClose={closeModal}
           onPrevious={showPreviousSlide}
           onNext={showNextSlide}
-          onAfterClose={handleModalAfterClose}
         />
       ) : null}
     </>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { GlitchBrandXIcon } from '@/src/components/ui/GlitchBrandXIcon';
 import GlitchText from '@/src/components/ui/GlitchText/GlitchText';
 import { BaseModal } from '@/src/components/ui/modal';
@@ -77,6 +77,7 @@ export function ServiceModal({
   );
   const [displayedState, setDisplayedState] =
     useState<DisplayedModalState>(nextDisplayedState);
+  const [preparedContent, setPreparedContent] = useState(content);
   const displayedStateRef = useRef(nextDisplayedState);
   const [isContentVisible, setIsContentVisible] = useState(true);
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
@@ -85,6 +86,21 @@ export function ServiceModal({
   const featureListRef = useRef<HTMLUListElement | null>(null);
   const featureScrollStopTimeoutRef = useRef<number | null>(null);
   const isFeatureSnapScrollingRef = useRef(false);
+
+  if (preparedContent !== content) {
+    setPreparedContent(content);
+
+    if (!isOpen) {
+      setDisplayedState(nextDisplayedState);
+      setIsContentVisible(true);
+    }
+  }
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      displayedStateRef.current = displayedState;
+    }
+  }, [displayedState, isOpen]);
 
   const clearContentSwitchTimers = () => {
     if (contentSwitchTimeoutRef.current !== null) {
