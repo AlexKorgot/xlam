@@ -57,6 +57,8 @@ const DESKTOP_LETTERS_HORIZONTAL_GUTTER = 80;
 const DESKTOP_LETTERS_MIN_SCALE = 0.49;
 const DESKTOP_LETTERS_MAX_SCALE = 1.25;
 const DESKTOP_LETTERS_GAP = 36;
+const TOP_LETTER_VIDEO_OBJECT_POSITION = '50% 21%';
+const BOTTOM_LETTER_VIDEO_OBJECT_POSITION = '50% 21%';
 const TOP_STATIC_LETTERS_WIDTH = 214 + 211 + 237;
 const TOP_M_NEGATIVE_MARGIN = 24;
 const BOTTOM_STATIC_LETTERS_WIDTH = 168 + 201 + 64 + 237;
@@ -567,7 +569,8 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     const neonPulse = (
         target: SVGPathElement,
         startAt: number,
-        isOutline = false
+        isOutline = false,
+        finalColor = '#ffffff',
     ) => {
         const tl = gsap.timeline();
 
@@ -615,26 +618,26 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
             toState('#1a1a1a', d3, '>', dimGlow);
             toState('#66FF66', d4, '>', strongGlow);
             toState('#dfffdc', d5, '>', midGlow);
-            toState('#ffffff', d6, '>', dimGlow);
+            toState(finalColor, d6, '>', finalColor === '#66FF66' ? strongGlow : dimGlow);
         } else if (mode === 1) {
             toState('#000000', d2, startAt, dimGlow);
             toState('#2a2a2a', d1, '>', dimGlow);
             toState('#66FF66', d4, '>', strongGlow);
             toState('#153815', d3, '>', midGlow);
             toState('#66FF66', d5, '>', strongGlow);
-            toState('#ffffff', d6, '>', dimGlow);
+            toState(finalColor, d6, '>', finalColor === '#66FF66' ? strongGlow : dimGlow);
         } else if (mode === 2) {
             toState('#0d0d0d', d1, startAt, dimGlow);
             toState('#ffffff', d1, '>', dimGlow);
             toState('#050505', d2, '>', dimGlow);
             toState('#66FF66', d3, '>', strongGlow);
-            toState('#ffffff', d6, '>', dimGlow);
+            toState(finalColor, d6, '>', finalColor === '#66FF66' ? strongGlow : dimGlow);
         } else {
             toState('#202020', d2, startAt, dimGlow);
             toState('#000000', d1, '>', dimGlow);
             toState('#66FF66', d4, '>', strongGlow);
             toState('#c8ffc8', d5, '>', midGlow);
-            toState('#ffffff', d6, '>', dimGlow);
+            toState(finalColor, d6, '>', finalColor === '#66FF66' ? strongGlow : dimGlow);
         }
 
         return tl;
@@ -667,13 +670,15 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
     const buildFlickerSection = (
         letterTargets: SVGPathElement[],
         outlineTargets: SVGPathElement[],
-        startAt: number
+        startAt: number,
+        persistentGreenLetterIndex: number,
     ) => {
         const tl = gsap.timeline();
 
         letterTargets.forEach((target, i) => {
             const delay = startAt + gsap.utils.random(0, 0.45) + i * 0.035;
-            tl.add(neonPulse(target, delay, false), 0);
+            const finalColor = i === persistentGreenLetterIndex ? '#66FF66' : '#ffffff';
+            tl.add(neonPulse(target, delay, false, finalColor), 0);
         });
 
         outlineTargets.forEach((target, i) => {
@@ -872,11 +877,11 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
 
 // 2. flicker обычных букв
             tl.add(
-                buildFlickerSection(topLetters, [], TOP_FLICKER_START),
+                buildFlickerSection(topLetters, [], TOP_FLICKER_START, 2),
                 0
             );
             tl.add(
-                buildFlickerSection(bottomLetters, [], BOTTOM_FLICKER_START),
+                buildFlickerSection(bottomLetters, [], BOTTOM_FLICKER_START, 3),
                 0
             );
 
@@ -1338,10 +1343,12 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     >
                         <video
                             ref={topVideoRef}
+                            loop
                             muted
                             playsInline
                             preload="none"
                             className="block h-full w-full object-cover"
+                            style={{objectPosition: TOP_LETTER_VIDEO_OBJECT_POSITION}}
                         />
                     </div>
 
@@ -1391,10 +1398,12 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     >
                         <video
                             ref={bottomVideoRef}
+                            loop
                             muted
                             playsInline
                             preload="none"
                             className="block h-full w-full object-cover"
+                            style={{objectPosition: BOTTOM_LETTER_VIDEO_OBJECT_POSITION}}
                         />
                     </div>
 

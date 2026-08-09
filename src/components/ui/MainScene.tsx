@@ -398,7 +398,7 @@ export const MainScene = () => {
         sectionChangeCallback={handleSectionChange}
         transitionStartCallback={handleTransitionStart}
       >
-        <FullPageSection id="intro" className="bg-transparent">
+        <FullPageSection id="intro" className="bg-black">
           <div className="sr-only">XLAM Media</div>
         </FullPageSection>
 
