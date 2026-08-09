@@ -757,6 +757,24 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
         activeSlide.topImage === incomingSlide.topImage &&
         activeSlide.bottomImage === incomingSlide.bottomImage &&
         activeSlide.imagePosition === incomingSlide.imagePosition;
+      const welcomeBase = incomingSlide.id === 'welcome'
+        ? incomingTextRef.current?.querySelector<HTMLElement>('[data-welcome-glitch-base]') ?? null
+        : null;
+      const welcomeTop = incomingSlide.id === 'welcome'
+        ? incomingTextRef.current?.querySelector<HTMLElement>('[data-welcome-glitch-top]') ?? null
+        : null;
+      const welcomeBottom = incomingSlide.id === 'welcome'
+        ? incomingTextRef.current?.querySelector<HTMLElement>('[data-welcome-glitch-bottom]') ?? null
+        : null;
+      const welcomeWhite = incomingSlide.id === 'welcome'
+        ? incomingTextRef.current?.querySelector<HTMLElement>('[data-welcome-glitch-white]') ?? null
+        : null;
+      const shouldAnimateWelcomeGlitch =
+        welcomeBase &&
+        welcomeTop &&
+        welcomeBottom &&
+        welcomeWhite &&
+        !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const timeline = gsap.timeline({
         defaults: {
           ease: 'power3.inOut',
@@ -817,6 +835,72 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
           },
           0,
         );
+
+      if (shouldAnimateWelcomeGlitch) {
+        gsap.set([welcomeTop, welcomeBottom, welcomeWhite], { autoAlpha: 0, x: 0 });
+
+        timeline
+          .addLabel('welcomeGlitch', 0.3)
+          .set([welcomeTop, welcomeBottom, welcomeWhite], { autoAlpha: 1 }, 'welcomeGlitch')
+          .to(
+            welcomeBase,
+            {
+              x: -8,
+              skewX: 18,
+              textShadow: '-2px 0 rgba(255,43,43,0.45), 3px 0 rgba(255,255,255,0.95), 7px 0 rgba(102,255,102,0.95)',
+              duration: 0.055,
+              ease: 'none',
+            },
+            'welcomeGlitch',
+          )
+          .to(welcomeTop, { x: -10, autoAlpha: 0.5, duration: 0.055, ease: 'none' }, 'welcomeGlitch')
+          .to(welcomeBottom, { x: 12, autoAlpha: 0.95, duration: 0.055, ease: 'none' }, 'welcomeGlitch')
+          .to(welcomeWhite, { x: 5, autoAlpha: 0.9, duration: 0.055, ease: 'none' }, 'welcomeGlitch')
+          .to(
+            welcomeBase,
+            {
+              x: 5,
+              skewX: -10,
+              textShadow: '-4px 0 rgba(255,255,255,0.85), 5px 0 rgba(102,255,102,0.9)',
+              duration: 0.05,
+              ease: 'none',
+            },
+            'welcomeGlitch+=0.09',
+          )
+          .to(welcomeTop, { x: 7, autoAlpha: 0.3, duration: 0.05, ease: 'none' }, 'welcomeGlitch+=0.09')
+          .to(welcomeBottom, { x: -8, autoAlpha: 0.85, duration: 0.05, ease: 'none' }, 'welcomeGlitch+=0.09')
+          .to(welcomeWhite, { x: -6, autoAlpha: 0.7, duration: 0.05, ease: 'none' }, 'welcomeGlitch+=0.09')
+          .to(
+            welcomeBase,
+            {
+              x: -3,
+              skewX: 5,
+              textShadow: '-1px 0 rgba(255,43,43,0.32), 2px 0 rgba(255,255,255,0.9), 4px 0 #66ff66',
+              duration: 0.045,
+              ease: 'none',
+            },
+            'welcomeGlitch+=0.18',
+          )
+          .to(welcomeTop, { x: -4, autoAlpha: 0.35, duration: 0.045, ease: 'none' }, 'welcomeGlitch+=0.18')
+          .to(welcomeBottom, { x: 5, autoAlpha: 0.75, duration: 0.045, ease: 'none' }, 'welcomeGlitch+=0.18')
+          .to(welcomeWhite, { x: 3, autoAlpha: 0.8, duration: 0.045, ease: 'none' }, 'welcomeGlitch+=0.18')
+          .to(
+            welcomeBase,
+            {
+              x: 0,
+              skewX: 0,
+              textShadow: 'none',
+              duration: 0.12,
+              ease: 'power2.out',
+            },
+            'welcomeGlitch+=0.28',
+          )
+          .to(
+            [welcomeTop, welcomeBottom, welcomeWhite],
+            { x: 0, autoAlpha: 0, duration: 0.12, ease: 'power2.out' },
+            'welcomeGlitch+=0.28',
+          );
+      }
 
       if (!keepArtworkStatic) {
         timeline
@@ -945,6 +1029,7 @@ function SlideArtwork({
   layerClassName,
   activeBreakpoint,
 }: SlideArtworkProps) {
+  const isWelcomeSlide = slide.id === 'welcome';
   const imagePosition = resolveImagePosition(slide.imagePosition, activeBreakpoint);
   const topImageStyle = {
     top: imagePosition.top,
@@ -1000,14 +1085,50 @@ function SlideArtwork({
       <div className="absolute left-1/2 top-1/2 z-30 w-[min(88vw,1381px)] -translate-x-1/2 -translate-y-1/2 text-center">
         <h2
           ref={textRef}
-          className="text-[clamp(1.85rem,5.6vw,3.75rem)] font-black uppercase leading-[1.12] text-black sm:leading-[1.16] lg:leading-[1.21]"
+          className={
+            isWelcomeSlide
+              ? 'text-[clamp(3rem,10vw,9.375rem)] font-black uppercase leading-[0.9] text-black'
+              : 'text-[clamp(1.85rem,5.6vw,3.75rem)] font-black uppercase leading-[1.12] text-black sm:leading-[1.16] lg:leading-[1.21]'
+          }
           style={{ willChange: 'transform, opacity, filter' }}
         >
-          {slide.lines.map((line) => (
-            <span key={line} className="block">
-              {line}
+          {isWelcomeSlide ? (
+            <span className="relative inline-block">
+              <span
+                data-welcome-glitch-base
+                className="relative z-10 inline-block"
+              >
+                {slide.lines[0]}
+              </span>
+              <span
+                aria-hidden="true"
+                data-welcome-glitch-top
+                className="absolute inset-0 z-20 inline-block text-[rgba(255,43,43,0.45)] opacity-0"
+              >
+                {slide.lines[0]}
+              </span>
+              <span
+                aria-hidden="true"
+                data-welcome-glitch-bottom
+                className="absolute inset-0 z-20 inline-block text-[#66ff66] opacity-0"
+              >
+                {slide.lines[0]}
+              </span>
+              <span
+                aria-hidden="true"
+                data-welcome-glitch-white
+                className="absolute inset-0 z-30 inline-block text-white opacity-0"
+              >
+                {slide.lines[0]}
+              </span>
             </span>
-          ))}
+          ) : (
+            slide.lines.map((line) => (
+              <span key={line} className="block">
+                {line}
+              </span>
+            ))
+          )}
         </h2>
       </div>
     </div>

@@ -1047,7 +1047,7 @@ export function CinematicVideoSlider({
             <p data-slide-label className="mx-auto mb-2 max-w-[28rem] text-[9px] font-black uppercase leading-none text-white/88 drop-shadow-[0_6px_16px_rgba(0,0,0,0.65)] md:text-[10px]">
               {activeSlide.eyebrow}
             </p>
-            <div className="relative mx-auto flex w-full items-center justify-center min-[800px]:gap-x-[clamp(1rem,2vw,2rem)]">
+            <div className="relative mx-auto flex w-full items-center justify-center min-[800px]:w-fit min-[800px]:max-w-full min-[800px]:gap-x-[100px]">
               <button
                 type="button"
                 className="pointer-events-auto hidden h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/18 text-lg font-black leading-none text-white/58 opacity-[0.48] transition-[border-color,color,opacity] duration-300 hover:border-[#66ff66]/55 hover:text-[#66ff66] group-hover:opacity-[0.9] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] focus-visible:opacity-100 min-[800px]:flex"
@@ -1060,7 +1060,7 @@ export function CinematicVideoSlider({
               </button>
               <h3
                 data-slide-label
-                className="mx-auto flex w-full items-center justify-center text-[1rem] font-black uppercase leading-none text-[#66ff66] drop-shadow-[0_10px_22px_rgba(0,0,0,0.62)] min-[800px]:min-h-10 min-[800px]:w-[clamp(14rem,20vw,20rem)] min-[800px]:shrink-0 md:text-[1.35rem] xl:text-[1.875rem]"
+                className="flex w-full items-center justify-center text-[1rem] font-black uppercase leading-none text-[#66ff66] drop-shadow-[0_10px_22px_rgba(0,0,0,0.62)] min-[800px]:min-h-10 min-[800px]:w-auto min-[800px]:shrink-0 md:text-[1.35rem] xl:text-[1.875rem]"
               >
                 {activeSlide.title}
               </h3>
