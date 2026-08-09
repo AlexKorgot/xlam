@@ -11,14 +11,23 @@ import {
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
 import { Container } from '@/src/components/ui/grid/Container';
-import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
+import { publicAssetPath } from '@/src/lib/publicAssetPath';
 
-const personImageOne = remoteImageAsset('/07A kopia_13 1.png', 388, 704);
-const personImageTwo = remoteImageAsset('/07A kopia_13 1 (1).png', 388, 704);
-const personImageThree = remoteImageAsset('/07A kopia_13 1 (2).png', 388, 704);
-const personImageFour = remoteImageAsset('/07A kopia_13 1 (3).png', 388, 704);
-const personImageFive = remoteImageAsset('/07A kopia_13 1 (4).png', 388, 704);
-const evgeniyMalovImage = remoteImageAsset('/evgeniy-malov.png', 648, 1176);
+const publicPersonImage = (filename: string): StaticImageData => ({
+  src: publicAssetPath(`/persones/${filename}.webp`),
+  width: 520,
+  height: 1280,
+});
+
+const aysarImage = publicPersonImage('altavil');
+const artemImage = publicPersonImage('zozulya');
+const glebImage = publicPersonImage('kuchunskiy');
+const valeriyaImage = publicPersonImage('valeria');
+const evgeniyImage = publicPersonImage('malov');
+const alexandrImage = publicPersonImage('glebov');
+const sergeyImage = publicPersonImage('kisilev');
+const alexeyImage = publicPersonImage('peizan');
+const romanImage = publicPersonImage('kovalev');
 
 type TeamMemberId =
   | 'aysar'
@@ -48,7 +57,7 @@ const teamItems: TeamItem[] = [
     memberId: 'aysar',
     name: 'Айсар Альтавил',
     role: 'CCO',
-    image: personImageOne,
+    image: aysarImage,
     roleClassName: 'lg:w-[141px]',
   },
   {
@@ -56,7 +65,7 @@ const teamItems: TeamItem[] = [
     memberId: 'artem',
     name: 'Артем Зозуля',
     role: 'Head of Creative',
-    image: personImageTwo,
+    image: artemImage,
     roleClassName: 'lg:w-[326px]',
   },
   {
@@ -64,7 +73,7 @@ const teamItems: TeamItem[] = [
     memberId: 'gleb',
     name: 'Глеб Кучинский',
     role: 'Director',
-    image: personImageThree,
+    image: glebImage,
     roleClassName: 'lg:w-[214px]',
   },
   {
@@ -72,7 +81,7 @@ const teamItems: TeamItem[] = [
     memberId: 'valeriya',
     name: 'Валерия Монастырская',
     role: 'Line Producer',
-    image: evgeniyMalovImage,
+    image: valeriyaImage,
     roleClassName: 'lg:w-[292px]',
   },
   {
@@ -80,7 +89,7 @@ const teamItems: TeamItem[] = [
     memberId: 'evgeniy',
     name: 'Евгений Малов',
     role: 'Art Director',
-    image: personImageFour,
+    image: evgeniyImage,
     roleClassName: 'lg:w-[272px]',
   },
   {
@@ -88,7 +97,7 @@ const teamItems: TeamItem[] = [
     memberId: 'alexandr',
     name: 'Александр Глебов',
     role: 'Aerial Cinematographer',
-    image: personImageFive,
+    image: alexandrImage,
     roleClassName: 'lg:w-[439px]',
   },
   {
@@ -96,7 +105,7 @@ const teamItems: TeamItem[] = [
     memberId: 'sergey',
     name: 'Сергей Киселев',
     role: 'AI Producer',
-    image: personImageOne,
+    image: sergeyImage,
     roleClassName: 'lg:w-[260px]',
     isMobileVisible: false,
   },
@@ -105,7 +114,7 @@ const teamItems: TeamItem[] = [
     memberId: 'alexey',
     name: 'Алексей Пейзан',
     role: 'Full-stack Developer',
-    image: personImageTwo,
+    image: alexeyImage,
     roleClassName: 'lg:w-[408px]',
     isMobileVisible: false,
   },
@@ -114,7 +123,7 @@ const teamItems: TeamItem[] = [
     memberId: 'roman',
     name: 'Роман Ковалев',
     role: 'CEO',
-    image: personImageThree,
+    image: romanImage,
     roleClassName: 'lg:w-[138px]',
     isMobileVisible: false,
   },
