@@ -9,6 +9,7 @@ import { AnimatedLogoNew, type AnimatedLogoHandle } from '@/src/components/ui/An
 import type { HeaderHandle } from '@/src/components/ui/Header/types';
 import { useContactModal } from '@/src/components/ui/contact-modal';
 import { FULLPAGE_SCROLL_EVENT } from '@/src/components/ui/FullPageScroll';
+import { Container } from '@/src/components/ui/grid/Container';
 
 gsap.registerPlugin(useGSAP);
 
@@ -148,7 +149,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
   };
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 hidden px-4 pt-5 sm:px-8 sm:pt-7 min-[1000px]:block">
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 hidden pt-5 sm:pt-7 min-[1000px]:block">
       {desktopBlur ? (
         <>
           <div
@@ -173,7 +174,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
           />
         </>
       ) : null}
-      <div className="relative mx-auto w-full max-w-[1740px] px-[15px]">
+      <Container>
         <header
           ref={headerRef}
           className="grid grid-cols-[1fr_auto_1fr] items-center font-normalidad font-medium uppercase"
@@ -242,7 +243,7 @@ const HeaderDesktop = forwardRef<HeaderHandle, HeaderDesktopProps>(function Head
             ) : null}
           </div>
         </header>
-      </div>
+      </Container>
     </div>
   );
 });

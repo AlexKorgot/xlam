@@ -1,6 +1,7 @@
 'use client';
 
 import FullPageSection from '@/src/components/ui/FullPageSection';
+import { Container } from '@/src/components/ui/grid/Container';
 import {
   FULLPAGE_SCROLL_EVENT,
   FULLPAGE_SCROLL_IGNORE_ATTR,
@@ -381,6 +382,8 @@ export function ServicesSliderSection({
   ];
 
   const slideCount = slides.length;
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
   const [selectedSlideIndex, setSelectedSlideIndex] = useState<number | null>(null);
   const [renderedSlideIndex, setRenderedSlideIndex] = useState<number | null>(0);
   const renderedSlide =
@@ -449,6 +452,50 @@ export function ServicesSliderSection({
     },
     [WheelGesturesPlugin({ forceWheelAxis: 'y' })],
   );
+
+  const scrollToLastSnap = useCallback(() => {
+    if (!emblaApi) {
+      return;
+    }
+
+    const lastSnapIndex = emblaApi.scrollSnapList().length - 1;
+
+    if (lastSnapIndex < 0) {
+      return;
+    }
+
+    lastSliderIntentRef.current = null;
+    emblaApi.scrollTo(lastSnapIndex);
+  }, [emblaApi]);
+
+  const scrollToFirstSnap = useCallback(() => {
+    if (!emblaApi || emblaApi.scrollSnapList().length === 0) {
+      return;
+    }
+
+    lastSliderIntentRef.current = null;
+    emblaApi.scrollTo(0);
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) {
+      return;
+    }
+
+    const syncScrollAvailability = () => {
+      setCanScrollPrev(emblaApi.canScrollPrev());
+      setCanScrollNext(emblaApi.canScrollNext());
+    };
+
+    syncScrollAvailability();
+    emblaApi.on('select', syncScrollAvailability);
+    emblaApi.on('reInit', syncScrollAvailability);
+
+    return () => {
+      emblaApi.off('select', syncScrollAvailability);
+      emblaApi.off('reInit', syncScrollAvailability);
+    };
+  }, [emblaApi]);
 
   useEffect(() => {
     if (!shouldLoadVideos) {
@@ -754,9 +801,13 @@ export function ServicesSliderSection({
 
   return (
     <>
-      <FullPageSection id="services" className="items-stretch bg-black px-4 py-[clamp(1rem,4vh,3rem)] text-white sm:px-8 min-[1000px]:pt-[var(--header-offset)]">
-        <div ref={sectionContentRef} className="flex h-full min-h-0 w-full max-w-[1740px] flex-col items-center justify-center gap-[clamp(0.75rem,2vh,2rem)] px-[15px]">
-          <div className="embla__wrapper h-[clamp(260px,58vh,560px)] max-h-[62%] w-screen min-[1000px]:w-full">
+      <FullPageSection id="services" className="items-stretch bg-black py-[clamp(1rem,4vh,3rem)] text-white min-[1000px]:pt-[var(--header-offset)]">
+        <Container
+          ref={sectionContentRef}
+          outerClassName="h-full min-h-0"
+          className="flex h-full min-h-0 flex-col items-center justify-center gap-[clamp(0.75rem,2vh,2rem)]"
+        >
+          <div className="embla__wrapper relative h-[clamp(260px,58vh,560px)] max-h-[62%] w-screen min-[1000px]:w-full">
             <div className="embla h-full">
               <div
                 className="h-full overflow-hidden"
@@ -824,6 +875,48 @@ export function ServicesSliderSection({
                 </div>
               </div>
             </div>
+            <button
+              type="button"
+              aria-label="Прокрутить к первым услугам"
+              disabled={!canScrollPrev}
+              onClick={scrollToFirstSnap}
+              className={`pointer-events-auto absolute -left-8 top-1/2 z-10 hidden -translate-y-1/2 cursor-pointer border-0 bg-transparent p-0 transition-[opacity,transform] duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#66FF66] disabled:pointer-events-none motion-reduce:transition-none min-[1000px]:block ${
+                canScrollPrev ? 'translate-x-0 opacity-100' : '-translate-x-2 opacity-0'
+              }`}
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="36"
+                viewBox="0 0 20 36"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="block h-9 w-5"
+              >
+                <path d="M0 18L13.2235 0H20V36H13.2235L0 18Z" fill="#66FF66" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              aria-label="Прокрутить к последним услугам"
+              disabled={!canScrollNext}
+              onClick={scrollToLastSnap}
+              className={`pointer-events-auto absolute -right-8 top-1/2 z-10 hidden -translate-y-1/2 cursor-pointer border-0 bg-transparent p-0 transition-[opacity,transform] duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#66FF66] disabled:pointer-events-none motion-reduce:transition-none min-[1000px]:block ${
+                canScrollNext ? 'translate-x-0 opacity-100' : 'translate-x-2 opacity-0'
+              }`}
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="36"
+                viewBox="0 0 20 36"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="block h-9 w-5"
+              >
+                <path d="M20 18L6.77655 0H0V36H6.77655L20 18Z" fill="#66FF66" />
+              </svg>
+            </button>
           </div>
           <div className="min-h-0 text-center" data-reveal>
             <p className="max-w-[1000px] m-auto text-[clamp(0.875rem,2.2vw,1.5625rem)] font-bold uppercase leading-[1.14] text-white mb-4">
@@ -833,7 +926,7 @@ export function ServicesSliderSection({
               ХЛАМ MEDI<span className="text-[#63ff45]">A</span>
             </p>
           </div>
-        </div>
+        </Container>
       </FullPageSection>
       {renderedSlide && previousSlide && nextSlide ? (
         <ServiceModal

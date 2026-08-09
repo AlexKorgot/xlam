@@ -8,14 +8,18 @@
 
 .featureBlock {
   --feature-delay: 0ms;
+  --feature-border-width: 1.346px;
+  --feature-glitch-green: #66ff66;
+  --feature-glitch-red: rgba(255, 43, 43, 0.48);
 
   position: relative;
+  isolation: isolate;
   display: flex;
   min-height: 44px;
   width: 100%;
   align-items: center;
   justify-content: center;
-  border: 1.346px solid #fff;
+  border: var(--feature-border-width) solid #fff;
   padding: 8px 10px;
   color: #fff;
   text-align: center;
@@ -26,6 +30,54 @@
   backdrop-filter: blur(2px);
   opacity: 0;
   transform: translateY(18px) scale(0.96);
+}
+
+.featureBlock::before,
+.featureBlock::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--feature-border-width) * -1);
+  z-index: 2;
+  border: var(--feature-border-width) solid var(--feature-glitch-green);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.featureBlock::before {
+  clip-path: inset(0 0 50% 0);
+}
+
+.featureBlock::after {
+  clip-path: inset(50% 0 0 0);
+}
+
+.featureText {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+}
+
+.featureTextBase {
+  display: block;
+}
+
+.featureTextEcho {
+  position: absolute;
+  inset: 0;
+  display: block;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.featureTextEchoTop {
+  color: var(--feature-glitch-red);
+  clip-path: inset(0 0 52% 0);
+}
+
+.featureTextEchoBottom {
+  color: var(--feature-glitch-green);
+  clip-path: inset(48% 0 0 0);
 }
 
 .featureListAnimated .featureBlock {
@@ -82,6 +134,236 @@
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes featureFrameGlitchTop {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+    box-shadow: none;
+  }
+
+  12% {
+    opacity: 0.95;
+    transform: translate3d(-4px, 0, 0);
+    box-shadow: -1px 0 var(--feature-glitch-red), 3px 0 var(--feature-glitch-green);
+  }
+
+  24% {
+    opacity: 0;
+    transform: translate3d(3px, 0, 0);
+  }
+
+  38% {
+    opacity: 0.85;
+    transform: translate3d(5px, 0, 0);
+    box-shadow: 1px 0 var(--feature-glitch-red), -3px 0 var(--feature-glitch-green);
+  }
+
+  52% {
+    opacity: 0.25;
+    transform: translate3d(-2px, 0, 0);
+  }
+
+  68% {
+    opacity: 0.8;
+    transform: translate3d(2px, 0, 0);
+  }
+
+  82% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes featureFrameGlitchBottom {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+    box-shadow: none;
+  }
+
+  10% {
+    opacity: 0.9;
+    transform: translate3d(3px, 0, 0);
+    box-shadow: 3px 0 var(--feature-glitch-green), -1px 0 var(--feature-glitch-red);
+  }
+
+  22% {
+    opacity: 0.15;
+    transform: translate3d(-5px, 0, 0);
+  }
+
+  36% {
+    opacity: 0;
+    transform: translate3d(2px, 0, 0);
+  }
+
+  50% {
+    opacity: 0.95;
+    transform: translate3d(-3px, 0, 0);
+    box-shadow: -3px 0 var(--feature-glitch-green), 1px 0 var(--feature-glitch-red);
+  }
+
+  66% {
+    opacity: 0.35;
+    transform: translate3d(4px, 0, 0);
+  }
+
+  80% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes featureTextGlitch {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) skewX(0deg);
+    text-shadow: none;
+  }
+
+  12% {
+    transform: translate3d(-2px, 0, 0) skewX(18deg);
+    text-shadow: -1px 0 var(--feature-glitch-red), 2px 0 var(--feature-glitch-green);
+  }
+
+  24% {
+    opacity: 0.3;
+    transform: translate3d(3px, 0, 0) skewX(0deg);
+    text-shadow: 2px 0 var(--feature-glitch-green);
+  }
+
+  34% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) skewX(-8deg);
+    text-shadow: none;
+  }
+
+  48% {
+    transform: translate3d(2px, 0, 0) skewX(0deg);
+    text-shadow: -1px 0 var(--feature-glitch-red), 2px 0 var(--feature-glitch-green);
+  }
+
+  62% {
+    transform: translate3d(-1px, 0, 0) skewX(5deg);
+  }
+
+  78% {
+    transform: translate3d(0, 0, 0) skewX(0deg);
+    text-shadow: none;
+  }
+}
+
+@keyframes featureTextEchoTopGlitch {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+
+  12% {
+    opacity: 0.55;
+    transform: translate3d(-3px, 0, 0);
+  }
+
+  28% {
+    opacity: 0;
+    transform: translate3d(2px, 0, 0);
+  }
+
+  42% {
+    opacity: 0.45;
+    transform: translate3d(3px, 0, 0);
+  }
+
+  58% {
+    opacity: 0;
+    transform: translate3d(-1px, 0, 0);
+  }
+
+  72% {
+    opacity: 0.4;
+    transform: translate3d(-2px, 0, 0);
+  }
+
+  84% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes featureTextEchoBottomGlitch {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+
+  10% {
+    opacity: 0.9;
+    transform: translate3d(2px, 0, 0);
+  }
+
+  24% {
+    opacity: 0;
+    transform: translate3d(-3px, 0, 0);
+  }
+
+  38% {
+    opacity: 0.95;
+    transform: translate3d(-2px, 0, 0);
+  }
+
+  54% {
+    opacity: 0;
+    transform: translate3d(2px, 0, 0);
+  }
+
+  68% {
+    opacity: 0.85;
+    transform: translate3d(3px, 0, 0);
+  }
+
+  82% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .featureBlock:hover::before {
+    animation: featureFrameGlitchTop 520ms steps(1, end);
+  }
+
+  .featureBlock:hover::after {
+    animation: featureFrameGlitchBottom 520ms steps(1, end);
+  }
+
+  .featureBlock:hover .featureTextBase {
+    animation: featureTextGlitch 520ms steps(1, end);
+  }
+
+  .featureBlock:hover .featureTextEchoTop {
+    animation: featureTextEchoTopGlitch 520ms steps(1, end);
+  }
+
+  .featureBlock:hover .featureTextEchoBottom {
+    animation: featureTextEchoBottomGlitch 520ms steps(1, end);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .featureBlock:hover::before,
+  .featureBlock:hover::after,
+  .featureBlock:hover .featureTextBase,
+  .featureBlock:hover .featureTextEchoTop,
+  .featureBlock:hover .featureTextEchoBottom {
+    animation: none;
   }
 }
 

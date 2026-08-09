@@ -15,6 +15,7 @@ import type {
 } from 'react';
 import gsap from 'gsap';
 import {useGSAP} from '@gsap/react';
+import {Container} from '@/src/components/ui/grid/Container';
 import type {SectionRenderState} from '@/src/lib/fullPageSectionState';
 
 export interface MorphSectionHandle {
@@ -1229,7 +1230,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
         <section
             ref={rootRef}
             className={[
-                'relative flex h-full min-h-0 w-full justify-center overflow-hidden px-6 py-[clamp(1rem,4vh,2.5rem)] md:px-10 min-[1000px]:px-0',
+                'relative flex h-full min-h-0 w-full justify-center overflow-hidden py-[clamp(1rem,4vh,2.5rem)]',
                 className,
             ].join(' ')}
         >
@@ -1274,8 +1275,10 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                     />
                 </button>
             </div>
-            <div className="relative z-10 flex h-full min-h-0 w-full px-4 sm:px-8">
-                <div className="mx-auto flex h-full min-h-0 w-full max-w-[1740px] flex-col items-center justify-center px-[15px]">
+            <Container
+                outerClassName="relative z-10 flex h-full min-h-0"
+                className="flex h-full min-h-0 flex-col items-center justify-center"
+            >
                     <div ref={lettersContainerRef} className="flex w-full flex-col items-center">
                     <div
                         className="relative z-10 shrink-0 overflow-visible"
@@ -1506,8 +1509,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 </p>
             </div>
                     </div>
-                </div>
-            </div>
+            </Container>
         </section>
     );
 });

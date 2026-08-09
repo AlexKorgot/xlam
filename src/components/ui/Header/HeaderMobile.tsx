@@ -6,6 +6,7 @@ import { useGSAP } from '@gsap/react';
 import dynamic from 'next/dynamic';
 import { AnimatedLogoNew, type AnimatedLogoHandle } from '@/src/components/ui/AnimatedLogoNew';
 import type { HeaderHandle } from '@/src/components/ui/Header/types';
+import { Container } from '@/src/components/ui/grid/Container';
 
 gsap.registerPlugin(useGSAP);
 
@@ -108,7 +109,7 @@ const HeaderMobile = forwardRef<HeaderHandle, HeaderMobileProps>(function Header
   }));
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 px-4 pt-5 sm:px-8 sm:pt-7 max-[999px]:[@media_(orientation:landscape)]:!px-4 max-[999px]:[@media_(orientation:landscape)]:!pt-3 min-[1000px]:hidden">
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 pt-5 sm:pt-7 max-[999px]:[@media_(orientation:landscape)]:!pt-3 min-[1000px]:hidden">
       <div
         aria-hidden="true"
         className="absolute inset-x-0 top-0 h-[calc(var(--header-offset)+4rem)] bg-transparent"
@@ -129,7 +130,7 @@ const HeaderMobile = forwardRef<HeaderHandle, HeaderMobileProps>(function Header
             'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 18%, rgba(0,0,0,0.5) 58%, transparent 100%)',
         }}
       />
-      <div className="relative mx-auto w-full max-w-[1740px] px-[15px]">
+      <Container>
         <header
           ref={headerRef}
           className="flex items-center justify-between font-normalidad font-medium uppercase"
@@ -146,7 +147,7 @@ const HeaderMobile = forwardRef<HeaderHandle, HeaderMobileProps>(function Header
             {shouldRenderControls ? <BurgerButtonNew /> : null}
           </div>
         </header>
-      </div>
+      </Container>
     </div>
   );
 });

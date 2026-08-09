@@ -46,6 +46,7 @@ export type FilmStripChromeLayout = FilmStripFrameMetrics & {
   bandTop: number;
   bandBottom: number;
   headingTop: number;
+  headingGap: number;
   bottomChromeTop: number;
   bottomChromeGap: number;
 };
@@ -215,7 +216,8 @@ export function getFilmStripChromeLayout(width: number, height: number): FilmStr
   const mobileBottomChromeHeight = isCompactLandscape ? 96 : 112;
   const desktopBottomGap = clamp(height * 0.035, 24, 58);
   const desktopBottomChromeGap = clamp(height * 0.026, 20, 30);
-  const desktopBottomChromeHeight = 122;
+  const desktopBottomChromeHeight = 150;
+  const desktopHeadingGap = clamp(22 + (width - 1440) * 0.058, 18, 50);
   const bottomChromeHeight = isMobile ? mobileBottomChromeHeight : desktopBottomChromeHeight;
   const bottomGap = isMobile ? mobileBottomGap : desktopBottomGap;
   const bottomChromeTop = Math.min(
@@ -231,6 +233,7 @@ export function getFilmStripChromeLayout(width: number, height: number): FilmStr
     bandTop,
     bandBottom,
     headingTop: bandTop,
+    headingGap: isMobile ? 0 : desktopHeadingGap,
     bottomChromeTop,
     bottomChromeGap: isMobile ? mobileBottomChromeGap : desktopBottomChromeGap,
   };

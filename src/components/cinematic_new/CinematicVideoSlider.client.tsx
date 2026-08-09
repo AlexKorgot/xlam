@@ -14,6 +14,7 @@ import {
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
 import { ModalPortal } from '@/src/components/ui/modal';
+import { Container } from '@/src/components/ui/grid/Container';
 import { cinematicSlides } from './data';
 import { getFilmStripChromeLayout } from './filmStripLayout';
 import type { SliderScene, SliderPointerAction } from './SliderScene';
@@ -22,10 +23,10 @@ import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
 import { useImagePreload } from '@/src/lib/imagePreload';
 import { useVideoPreload } from '@/src/lib/videoPreload';
 import type { SectionRenderState } from '@/src/lib/fullPageSectionState';
+import { publicAssetPath } from '@/src/lib/publicAssetPath';
 
 const dzenLogo = remoteImageAsset('/dzen.svg', 147, 44);
 const merLogo = remoteImageAsset('/mer.svg', 163, 35);
-const nikeLogo = remoteImageAsset('/nike.svg', 104, 37);
 
 gsap.registerPlugin(useGSAP);
 
@@ -43,13 +44,13 @@ type CinematicSectionStyle = CSSProperties & {
   '--cinematic-band-top': string;
   '--cinematic-band-bottom': string;
   '--cinematic-heading-top': string;
+  '--cinematic-heading-gap': string;
   '--cinematic-bottom-chrome-top': string;
   '--cinematic-bottom-chrome-gap': string;
 };
 
 const headingLead = '\u041d\u0410\u0428\u0418';
 const headingAccent = '\u041f\u0420\u041e\u0415\u041a\u0422\u042b';
-const openLabel = '\u0421\u043c\u043e\u0442\u0440\u0435\u0442\u044c';
 const previousGlyph = '\u2039';
 const nextGlyph = '\u203a';
 const sectionScrollThreshold = 48;
@@ -61,7 +62,17 @@ const openedSlideIncomingDelay =
   openedSlideTransitionDuration * (1 - openedSlideContentSwitchProgress) -
   openedSlideIncomingDuration -
   0.04;
-const tickerLogos = [nikeLogo, merLogo, dzenLogo, nikeLogo, merLogo, dzenLogo];
+const tickerLogos = [
+  { id: 'mer', src: merLogo, width: 163, height: 35, className: 'h-5 sm:h-6 md:h-7' },
+  { id: 'dzen', src: dzenLogo, width: 147, height: 44, className: 'h-5 sm:h-6 md:h-7' },
+  { id: 'studio', src: publicAssetPath('/partners/a (2).png'), width: 83, height: 102, className: 'h-8 sm:h-9 md:h-10' },
+  { id: 'farfor', src: publicAssetPath('/partners/a (3).png'), width: 133, height: 35, className: 'h-5 sm:h-6 md:h-7' },
+  { id: 'winline', src: publicAssetPath('/partners/a (4).png'), width: 147, height: 35, className: 'h-5 sm:h-6 md:h-7' },
+  { id: 'vivo', src: publicAssetPath('/partners/a (5).png'), width: 141, height: 44, className: 'h-5 sm:h-6 md:h-7' },
+  { id: 'eleven-twelve', src: publicAssetPath('/partners/a (6).png'), width: 94, height: 35, className: 'h-5 sm:h-6 md:h-7' },
+  { id: 'mark', src: publicAssetPath('/partners/a(7).png'), width: 34, height: 35, className: 'h-6 sm:h-7 md:h-8' },
+  { id: 'kredo', src: publicAssetPath('/partners/a(8).png'), width: 130, height: 35, className: 'h-5 sm:h-6 md:h-7' },
+];
 const cinematicActiveVideoPreloadSources = [cinematicSlides[0].videoSrc];
 const cinematicPosterPreloadSources = cinematicSlides.map((slide) => slide.posterSrc);
 
@@ -72,27 +83,35 @@ const getFocusableElements = (container: HTMLElement) =>
     ),
   ).filter((element) => !element.hasAttribute('disabled') && !element.getAttribute('aria-hidden'));
 
-function LogoTicker() {
-  const tickerGroup = [...tickerLogos, ...tickerLogos];
-
+function LogoTicker({ isRunning }: { isRunning: boolean }) {
   return (
     <div
-      className="pointer-events-none w-full max-w-[1740px] overflow-hidden opacity-80 [mask-image:linear-gradient(to_right,transparent_0%,#000_10%,#000_90%,transparent_100%)]"
+      className="pointer-events-none w-full overflow-hidden opacity-80 min-[800px]:mt-[clamp(1.25rem,2.5vh,2rem)] [contain:layout_paint] [mask-image:linear-gradient(to_right,transparent_0%,#000_10%,#000_90%,transparent_100%)]"
       aria-hidden="true"
     >
-      <div className="flex w-max items-center [animation:cinematic-logo-ticker_18s_linear_infinite]">
-        {[0, 1].map((groupIndex) => (
+      <div
+        className="flex min-h-10 w-max items-center [animation:cinematic-logo-ticker_18s_linear_infinite] md:min-h-12"
+        style={{
+          animationPlayState: isRunning ? 'running' : 'paused',
+          willChange: isRunning ? 'transform' : 'auto',
+        }}
+      >
+        {[0, 1, 2].map((groupIndex) => (
           <div
             key={groupIndex}
             className="flex shrink-0 items-center gap-9 pr-9 sm:gap-12 sm:pr-12"
           >
-            {tickerGroup.map((logo, index) => (
+            {tickerLogos.map((logo) => (
               <Image
-                key={`${groupIndex}-${index}-${logo.src}`}
-                src={logo}
+                key={`${groupIndex}-${logo.id}`}
+                src={logo.src}
                 alt=""
-                loading="lazy"
-                className="h-5 w-auto max-w-none shrink-0 object-contain sm:h-6 md:h-7"
+                width={logo.width}
+                height={logo.height}
+                loading={groupIndex === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+                unoptimized
+                className={`${logo.className} w-auto max-w-none shrink-0 object-contain`}
                 draggable={false}
               />
             ))}
@@ -106,7 +125,7 @@ function LogoTicker() {
           }
 
           to {
-            transform: translate3d(-50%, 0, 0);
+            transform: translate3d(-33.333333%, 0, 0);
           }
         }
       `}</style>
@@ -265,6 +284,7 @@ export function CinematicVideoSlider({
     '--cinematic-band-top': '38%',
     '--cinematic-band-bottom': '62%',
     '--cinematic-heading-top': '18%',
+    '--cinematic-heading-gap': '50px',
     '--cinematic-bottom-chrome-top': '68%',
     '--cinematic-bottom-chrome-gap': '20px',
   });
@@ -402,6 +422,7 @@ export function CinematicVideoSlider({
         '--cinematic-band-top': `${layout.bandTop}px`,
         '--cinematic-band-bottom': `${layout.bandBottom}px`,
         '--cinematic-heading-top': `${layout.headingTop}px`,
+        '--cinematic-heading-gap': `${layout.headingGap}px`,
         '--cinematic-bottom-chrome-top': `${layout.bottomChromeTop}px`,
         '--cinematic-bottom-chrome-gap': `${layout.bottomChromeGap}px`,
       });
@@ -999,64 +1020,71 @@ export function CinematicVideoSlider({
         </div>
 
         <div
-          className="absolute left-1/2 z-10 hidden w-full px-5 text-center opacity-[var(--cinematic-chrome-opacity)] min-[1000px]:block"
+          className="absolute left-1/2 z-10 hidden w-full text-center opacity-[var(--cinematic-chrome-opacity)] min-[1000px]:block"
           style={{
             top: 'var(--cinematic-heading-top)',
-            transform: 'translate(-50%, calc(-100% - 50px))',
+            transform: 'translate(-50%, calc(-100% - var(--cinematic-heading-gap)))',
           }}
         >
-          <h2 className="text-[2rem] font-black uppercase leading-none drop-shadow-[0_12px_30px_rgba(0,0,0,0.55)] md:text-[2.35rem] xl:text-[3rem]">
-            {headingLead} <span className="text-[#66ff66]">{headingAccent}</span>
-          </h2>
+          <Container>
+            <h2 className="text-[2rem] font-black uppercase leading-none drop-shadow-[0_12px_30px_rgba(0,0,0,0.55)] md:text-[2.35rem] xl:text-[3rem]">
+              {headingLead} <span className="text-[#66ff66]">{headingAccent}</span>
+            </h2>
+          </Container>
         </div>
 
         <div
-          className="absolute inset-x-0 z-10 flex flex-col items-center px-6 text-center opacity-[var(--cinematic-chrome-opacity)]"
+          className="absolute inset-x-0 z-10 opacity-[var(--cinematic-chrome-opacity)]"
           style={{
             top: 'var(--cinematic-bottom-chrome-top)',
-            gap: 'var(--cinematic-bottom-chrome-gap)',
           }}
         >
+          <Container
+            className="flex flex-col items-center text-center"
+            style={{ gap: 'var(--cinematic-bottom-chrome-gap)' }}
+          >
           <div ref={labelRef} className="w-full">
             <p data-slide-label className="mx-auto mb-2 max-w-[28rem] text-[9px] font-black uppercase leading-none text-white/88 drop-shadow-[0_6px_16px_rgba(0,0,0,0.65)] md:text-[10px]">
               {activeSlide.eyebrow}
             </p>
-            <h3
-              data-slide-label
-              className="mx-auto max-w-[34rem] text-[1rem] font-black uppercase leading-none text-[#66ff66] drop-shadow-[0_10px_22px_rgba(0,0,0,0.62)] md:text-[1.35rem] xl:text-[1.875rem]"
-            >
-              {activeSlide.title}
-            </h3>
-          </div>
-
-          <div className="pointer-events-auto hidden items-center gap-5 opacity-[0.48] transition-opacity duration-300 group-hover:opacity-[0.9] focus-within:opacity-100 min-[800px]:flex">
+            <div className="relative mx-auto flex w-full items-center justify-center min-[800px]:gap-x-[clamp(1rem,2vw,2rem)]">
+              <button
+                type="button"
+                className="pointer-events-auto hidden h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/18 text-lg font-black leading-none text-white/58 opacity-[0.48] transition-[border-color,color,opacity] duration-300 hover:border-[#66ff66]/55 hover:text-[#66ff66] group-hover:opacity-[0.9] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] focus-visible:opacity-100 min-[800px]:flex"
+                onClick={handlePrevious}
+                aria-label="Previous project"
+              >
+                <span className="flex h-full w-full items-center justify-center leading-none">
+                  <GlitchText size="18">{previousGlyph}</GlitchText>
+                </span>
+              </button>
+              <h3
+                data-slide-label
+                className="mx-auto flex w-full items-center justify-center text-[1rem] font-black uppercase leading-none text-[#66ff66] drop-shadow-[0_10px_22px_rgba(0,0,0,0.62)] min-[800px]:min-h-10 min-[800px]:w-[clamp(14rem,20vw,20rem)] min-[800px]:shrink-0 md:text-[1.35rem] xl:text-[1.875rem]"
+              >
+                {activeSlide.title}
+              </h3>
+              <button
+                type="button"
+                className="pointer-events-auto hidden h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/18 text-lg font-black leading-none text-white/58 opacity-[0.48] transition-[border-color,color,opacity] duration-300 hover:border-[#66ff66]/55 hover:text-[#66ff66] group-hover:opacity-[0.9] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] focus-visible:opacity-100 min-[800px]:flex"
+                onClick={handleNext}
+                aria-label="Next project"
+              >
+                <span className="flex h-full w-full items-center justify-center leading-none">
+                  <GlitchText size="18">{nextGlyph}</GlitchText>
+                </span>
+              </button>
+            </div>
             <button
               type="button"
-              className="grid h-9 w-9 place-items-center rounded-full border border-white/18 text-lg font-black text-white/58 transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"
-              onClick={handlePrevious}
-              aria-label="Previous project"
-            >
-              <GlitchText size="18">{previousGlyph}</GlitchText>
-            </button>
-            <button
-              type="button"
-              className="h-9 border border-white/20 px-6 text-[9px] font-black uppercase tracking-[0.28em] text-white/78 transition-colors hover:border-[#66ff66]/60 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:px-7 md:text-[10px]"
+              className="sr-only focus:not-sr-only focus:absolute focus:left-1/2 focus:top-full focus:z-20 focus:mt-3 focus:-translate-x-1/2 focus:border focus:border-[#66ff66] focus:bg-black focus:px-4 focus:py-2 focus:text-xs focus:font-black focus:uppercase focus:text-white focus:outline-none"
               onClick={handleOpen}
             >
-              <GlitchText>
-                {openLabel}
-              </GlitchText>
-            </button>
-            <button
-              type="button"
-              className="grid h-9 w-9 place-items-center rounded-full border border-white/18 text-lg font-black text-white/58 transition-colors hover:border-[#66ff66]/55 hover:text-[#66ff66] focus-visible:border-[#66ff66] focus-visible:text-[#66ff66] md:h-10 md:w-10"
-              onClick={handleNext}
-              aria-label="Next project"
-            >
-              <GlitchText size="18">{nextGlyph}</GlitchText>
+              Открыть {activeSlide.title}
             </button>
           </div>
-          <LogoTicker />
+          <LogoTicker isRunning={isChromeVisible} />
+          </Container>
         </div>
       </div>
 
@@ -1091,7 +1119,7 @@ export function CinematicVideoSlider({
               sheetTouchStartRef.current = null;
             }}
           >
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_12%,rgba(102,255,102,0.12),rgba(102,255,102,0)_28%),linear-gradient(180deg,rgba(0,0,0,0.24),rgba(0,0,0,0.62))] lg:bg-none" aria-hidden="true" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_12%,rgba(102,255,102,0.12),rgba(102,255,102,0)_28%)] lg:bg-none" aria-hidden="true" />
 
             <div ref={sheetContentRef} className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
               <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-white/28 lg:hidden [@media_(max-width:999.98px)_and_(orientation:landscape)]:hidden" aria-hidden="true" />

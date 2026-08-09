@@ -169,7 +169,21 @@ function FeatureBlock({
       className={`${styles.featureBlock} ${className ?? ""}`}
       style={revealStyle}
     >
-      <span className="text-balance">{label}</span>
+      <span className={`${styles.featureText} text-balance`}>
+        <span className={styles.featureTextBase}>{label}</span>
+        <span
+          aria-hidden="true"
+          className={`${styles.featureTextEcho} ${styles.featureTextEchoTop}`}
+        >
+          {label}
+        </span>
+        <span
+          aria-hidden="true"
+          className={`${styles.featureTextEcho} ${styles.featureTextEchoBottom}`}
+        >
+          {label}
+        </span>
+      </span>
     </li>
   );
 }

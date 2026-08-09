@@ -10,6 +10,7 @@ import {
   FULLPAGE_TOUCH_SWIPE_THRESHOLD,
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
+import { Container } from '@/src/components/ui/grid/Container';
 import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
 
 const personImageOne = remoteImageAsset('/07A kopia_13 1.png', 388, 704);
@@ -407,12 +408,14 @@ export function TeamSection() {
       className="relative isolate h-full min-h-0 overflow-hidden bg-black font-normalidad text-white"
       aria-labelledby="team-heading"
     >
-      <div className="mx-auto flex h-full min-h-0 w-full max-w-[1920px] flex-col px-[18px] pb-8 pt-0 sm:px-8 lg:px-[92px] lg:pb-0">
-        <div className="relative mx-auto flex min-h-0 w-full flex-1 flex-col pt-[clamp(58px,11svh,92px)] max-lg:[@media_(orientation:landscape)]:justify-center max-lg:[@media_(orientation:landscape)]:pt-[var(--header-offset)] sm:pt-24 lg:max-w-[1740px] lg:justify-center lg:pt-0">
+      <Container
+        outerClassName="h-full min-h-0"
+        className="flex h-full min-h-0 flex-col pb-8 pt-[clamp(58px,11svh,92px)] max-lg:[@media_(orientation:landscape)]:justify-center max-lg:[@media_(orientation:landscape)]:pt-[var(--header-offset)] sm:pt-24 lg:justify-center lg:pb-0 lg:pt-0"
+      >
           <div className="relative z-50 max-w-[740px] max-lg:[@media_(orientation:landscape)]:max-w-[46vw]">
             <h2
               id="team-heading"
-              className="text-[38px] font-black uppercase leading-[1.21] tracking-normal text-white max-lg:[@media_(orientation:landscape)]:text-[32px] sm:text-[64px] lg:text-[90px]"
+              className="text-[2rem] font-black uppercase leading-none tracking-normal text-white md:text-[2.35rem] xl:text-[3rem]"
             >
               Команд<span className="text-[#66ff66]">а</span>
             </h2>
@@ -478,8 +481,7 @@ export function TeamSection() {
               ))}
             </ul>
           </div>
-        </div>
-      </div>
+      </Container>
     </section>
   );
 }
@@ -524,13 +526,13 @@ function TeamRow({
             isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
           )}
         />
-        <span className="relative flex w-full min-w-0 flex-col items-start gap-[4px] px-[8px] py-[6px] max-lg:[@media_(orientation:landscape)]:!h-full max-lg:[@media_(orientation:landscape)]:!flex-row max-lg:[@media_(orientation:landscape)]:!items-center max-lg:[@media_(orientation:landscape)]:!gap-3 max-lg:[@media_(orientation:landscape)]:!py-[3px] sm:flex-row sm:items-start sm:gap-4 sm:px-[9px] sm:py-2 lg:h-full lg:gap-[28px] lg:px-[10px] lg:py-0 lg:pt-[11px]">
-          <span className="max-w-full truncate whitespace-nowrap text-[16px] font-medium leading-[0.99] tracking-normal max-lg:[@media_(orientation:landscape)]:!leading-[1.12] max-lg:[@media_(orientation:landscape)]:text-[15px] sm:text-[22px] lg:text-[28px] max-[1400px]:text-[24px]">
+        <span className="relative flex w-full min-w-0 flex-col items-start justify-center gap-[4px] px-[8px] py-[6px] max-lg:[@media_(orientation:landscape)]:!h-full max-lg:[@media_(orientation:landscape)]:!flex-row max-lg:[@media_(orientation:landscape)]:!items-center max-lg:[@media_(orientation:landscape)]:!justify-start max-lg:[@media_(orientation:landscape)]:!gap-3 max-lg:[@media_(orientation:landscape)]:!py-[3px] sm:flex-row sm:items-center sm:justify-start sm:gap-4 sm:px-[9px] sm:py-2 lg:h-full lg:gap-[28px] lg:px-[10px] lg:py-0">
+          <span className="max-w-full translate-y-[0.08em] truncate whitespace-nowrap text-[16px] font-medium leading-none max-lg:[@media_(orientation:landscape)]:!text-[15px] sm:text-[22px] lg:text-[24px] min-[1401px]:text-[28px]">
             {item.name}
           </span>
           <span
             className={clsx(
-              'inline-flex h-5 w-[176px] items-center justify-center px-2.5 text-center text-[10px] font-medium leading-none transition-colors max-lg:[@media_(orientation:landscape)]:h-4 max-lg:[@media_(orientation:landscape)]:w-[150px] max-lg:[@media_(orientation:landscape)]:text-[9px] sm:h-6 sm:min-w-[207px] sm:text-[12px] lg:h-5 lg:min-w-0 lg:text-[16px]',
+              'inline-flex h-4 w-[176px] items-center justify-center px-2.5 text-center text-[10px] font-medium leading-none transition-colors max-lg:[@media_(orientation:landscape)]:!h-4 max-lg:[@media_(orientation:landscape)]:w-[150px] max-lg:[@media_(orientation:landscape)]:text-[9px] sm:h-[22px] sm:min-w-[207px] sm:text-[12px] lg:h-6 lg:min-w-0 lg:text-[16px] min-[1401px]:h-7',
               item.roleClassName,
               isActive
                 ? 'bg-black text-white'

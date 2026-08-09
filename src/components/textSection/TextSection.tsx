@@ -269,7 +269,7 @@ const baseSlides: TextSlide[] = [
   },
   {
     id: 'noise',
-    lines: ['Мы не','Работаем по правилам','индустрии', '- мы пишем новые'],
+    lines: ['Не','Работаем по правилам','индустрии', '- мы пишем новые'],
     topImage: GreenTop,
     bottomImage: GreenBottom,
     imagePosition: {

@@ -22,6 +22,7 @@ import Spring from '@/src/lib/assets/main/spring.webp';
 import Tube from '@/src/lib/assets/main/tube.webp';
 import FurryX from '@/src/lib/assets/main/x.webp';
 import FullPageSection from '@/src/components/ui/FullPageSection';
+import { Container } from '@/src/components/ui/grid/Container';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
 
 export interface SecondSectionDesignHandle {
@@ -942,7 +943,10 @@ export const SecondSectionDesign = forwardRef<
           ref={sectionRef}
           className="relative h-full w-full overflow-hidden"
         >
-          <div className="pointer-events-none absolute inset-0 z-10 mx-auto w-full max-w-[1710px] overflow-visible">
+          <Container
+            outerClassName="pointer-events-none absolute inset-0 z-10 h-full"
+            className="h-full overflow-visible"
+          >
             <div
               className={`absolute left-1/2 top-1/2 origin-center -translate-x-1/2 -translate-y-1/2 ${activeArtStage.className}`}
               style={{
@@ -995,7 +999,7 @@ export const SecondSectionDesign = forwardRef<
                 );
               })}
             </div>
-          </div>
+          </Container>
 
           <div
             ref={titleRef}

@@ -8,6 +8,7 @@ import type {
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { useContactModal } from '@/src/components/ui/contact-modal';
+import { Container } from '@/src/components/ui/grid/Container';
 import { mediaAssetPath } from '@/src/lib/mediaAssetPath';
 import type { SectionRenderState } from '@/src/lib/fullPageSectionState';
 
@@ -523,9 +524,10 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle, MobileXHe
         </button>
       </div>
 
-      <div
+      <Container
         ref={contentRef}
-        className="relative z-20 flex h-full w-full flex-col items-center px-[30px] pb-[max(2rem,env(safe-area-inset-bottom))] pt-[calc(var(--header-offset)+0.75rem)]"
+        outerClassName="relative z-20 h-full"
+        className="flex h-full flex-col items-center pb-[max(2rem,env(safe-area-inset-bottom))] pt-[calc(var(--header-offset)+0.75rem)]"
       >
         <div className="relative flex min-h-0 flex-1 items-center justify-center self-stretch">
           <div className="absolute left-1/2 top-1/2 aspect-[376/360] w-[min(88vw,calc(50svh*376/360),376px)] -translate-x-1/2 -translate-y-[52%]">
@@ -607,7 +609,7 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle, MobileXHe
             Заказать проект
           </button>
         </div>
-      </div>
+      </Container>
     </section>
   );
 });
