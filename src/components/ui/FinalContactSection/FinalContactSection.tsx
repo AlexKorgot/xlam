@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import FullPageSection from '@/src/components/ui/FullPageSection';
 import { useContactModal } from '@/src/components/ui/contact-modal';
 import { Container } from '@/src/components/ui/grid/Container';
-import { mediaAssetPath } from '@/src/lib/mediaAssetPath';
+import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import { useNearViewport } from '@/src/lib/useNearViewport';
 
 const leftSocialItems = [
@@ -21,8 +21,8 @@ const rightSocialItems = [
     href: 'https://max.ru/join/I5TMiVG9fJau4wFy0PUUkWiXfL2NnHvfYRsBPucE7FQ',
   },
 ];
-const mobileVideoSrc = mediaAssetPath('/mobile.mp4');
-const desktopVideoSrc = mediaAssetPath('/desktop.mp4');
+const mobileVideoSrc = publicAssetPath('/footer/mobile.mp4');
+const desktopVideoSrc = publicAssetPath('/footer/desktop.mp4');
 
 export function FinalContactSection() {
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
@@ -122,11 +122,6 @@ export function FinalContactSection() {
                   aria-hidden="true"
                 />
               ) : null}
-
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 z-10 bg-[linear-gradient(90deg,#000_0%,rgba(0,0,0,0.96)_3%,rgba(0,0,0,0.82)_8%,rgba(0,0,0,0.6)_14%,rgba(0,0,0,0.38)_21%,rgba(0,0,0,0.18)_28%,rgba(0,0,0,0)_35%,rgba(0,0,0,0)_65%,rgba(0,0,0,0.18)_72%,rgba(0,0,0,0.38)_79%,rgba(0,0,0,0.6)_86%,rgba(0,0,0,0.82)_92%,rgba(0,0,0,0.96)_97%,#000_100%)]"
-              />
 
               <button
                 type="button"
