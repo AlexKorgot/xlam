@@ -63,7 +63,7 @@ export function ContactModalNew({ isOpen, onClose }: ContactModalNewProps) {
             <h2
               id={titleId}
               tabIndex={-1}
-              className="max-w-[320px] text-[clamp(24px,6.6vw,30px)] font-black uppercase leading-[0.86] tracking-0 text-black outline-none"
+              className="max-w-[320px] text-[clamp(24px,6.6vw,30px)] font-black uppercase leading-[1.08] tracking-0 text-black outline-none"
             >
               Поговорим
               <br />

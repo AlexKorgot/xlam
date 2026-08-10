@@ -81,7 +81,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
               <h2
                 id={titleId}
                 tabIndex={-1}
-                className="max-w-[336px] text-[28px] font-black uppercase leading-[0.88] tracking-0 text-black outline-none max-[999px]:[@media_(orientation:landscape)]:text-[25px] min-[1000px]:text-[clamp(2.15rem,9vw,32px)] min-[1000px]:leading-[0.86]"
+                className="max-w-[336px] text-[28px] font-black uppercase leading-[1.08] tracking-0 text-black outline-none max-[999px]:[@media_(orientation:landscape)]:text-[25px] min-[1000px]:text-[clamp(2.15rem,9vw,32px)]"
               >
                 Поговорим о вашей идее?
               </h2>

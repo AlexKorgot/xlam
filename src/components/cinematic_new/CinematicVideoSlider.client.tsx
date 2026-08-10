@@ -72,6 +72,8 @@ const tickerLogos = [
   { id: 'eleven-twelve', src: publicAssetPath('/partners/a (6).png'), width: 94, height: 35, className: 'h-5 sm:h-6 md:h-7' },
   { id: 'mark', src: publicAssetPath('/partners/a(7).png'), width: 34, height: 35, className: 'h-6 sm:h-7 md:h-8' },
   { id: 'kredo', src: publicAssetPath('/partners/a(8).png'), width: 130, height: 35, className: 'h-5 sm:h-6 md:h-7' },
+  { id: 'men', src: publicAssetPath('/partners/m.png'), width: 96, height: 35, className: 'h-5 sm:h-6 md:h-7' },
+  { id: 'frosto-foods', src: publicAssetPath('/partners/f.png'), width: 88, height: 35, className: 'h-5 sm:h-6 md:h-7' },
 ];
 const cinematicActiveVideoPreloadSources = [cinematicSlides[0].videoSrc];
 const cinematicPosterPreloadSources = cinematicSlides.map((slide) => slide.posterSrc);

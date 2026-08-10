@@ -672,7 +672,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
         letterTargets: SVGPathElement[],
         outlineTargets: SVGPathElement[],
         startAt: number,
-        persistentGreenLetterIndex: number,
+        persistentGreenLetterIndex?: number,
     ) => {
         const tl = gsap.timeline();
 
@@ -878,7 +878,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
 
 // 2. flicker обычных букв
             tl.add(
-                buildFlickerSection(topLetters, [], TOP_FLICKER_START, 2),
+                buildFlickerSection(topLetters.slice(0, 2), [], TOP_FLICKER_START),
                 0
             );
             tl.add(
