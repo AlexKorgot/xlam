@@ -9,16 +9,20 @@ import {
     type PointerEvent,
 } from 'react';
 import gsap from 'gsap';
+import {Observer} from 'gsap/all';
 import {useGSAP} from '@gsap/react';
 import Link from "next/link";
 import {usePathname} from 'next/navigation';
-import {FULLPAGE_SCROLL_EVENT} from '@/src/components/ui/FullPageScroll';
+import {
+    FULLPAGE_SCROLL_EVENT,
+    FULLPAGE_WHEEL_STOP_DELAY,
+} from '@/src/components/ui/FullPageScroll';
 import {
     GlitchLogo,
     type GlitchLogoHandle,
 } from '@/src/components/ui/GlitchLogo';
 
-gsap.registerPlugin(useGSAP);
+gsap.registerPlugin(Observer, useGSAP);
 
 export interface AnimatedLogoHandle {
     setProgress: (progress: number) => void;
@@ -78,6 +82,7 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
         const progressRef = useRef(initialProgressValue);
         const heroGlitchArmedRef = useRef(initialProgressValue >= 1);
         const initialHeroGlitchPlayedRef = useRef(false);
+        const wheelGestureLockedRef = useRef(false);
         const styles = logoVariants[variant];
         const initialCenterLogoStyle = getInitialCenterLogoStyle(initialProgressValue);
         const initialHeaderLogoStyle = getInitialHeaderLogoStyle(initialProgressValue);
@@ -253,6 +258,52 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
 
             centerGlitchRef.current?.play();
         };
+
+        const requestFullPageScroll = (direction: 'up' | 'down') => {
+            if (wheelGestureLockedRef.current) {
+                return;
+            }
+
+            wheelGestureLockedRef.current = true;
+
+            window.dispatchEvent(
+                new CustomEvent(FULLPAGE_SCROLL_EVENT, {
+                    detail: {direction},
+                }),
+            );
+        };
+
+        useGSAP(() => {
+            if (
+                (pathname !== '/' && pathname !== '/main') ||
+                !containerRef.current
+            ) {
+                return;
+            }
+
+            const observer = Observer.create({
+                target: containerRef.current,
+                type: 'wheel',
+                onDown: () => requestFullPageScroll('down'),
+                onUp: () => requestFullPageScroll('up'),
+                onStop: () => {
+                    wheelGestureLockedRef.current = false;
+                },
+                onStopDelay: FULLPAGE_WHEEL_STOP_DELAY,
+                tolerance: 14,
+                preventDefault: true,
+                ignoreCheck: (event) => {
+                    const wheelEvent = event as globalThis.WheelEvent;
+
+                    return Math.abs(wheelEvent.deltaY) <= Math.abs(wheelEvent.deltaX);
+                },
+            });
+
+            return () => {
+                observer.kill();
+                wheelGestureLockedRef.current = false;
+            };
+        }, {scope: containerRef, dependencies: [pathname]});
 
         return (
             <div ref={containerRef} className="relative">

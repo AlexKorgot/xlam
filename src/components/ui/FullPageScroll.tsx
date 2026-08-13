@@ -13,6 +13,7 @@ export const FULLPAGE_SCROLL_EVENT = 'fullpage-scroll-request';
 export const FULLPAGE_SECTION_REVEAL_DELAY = 0.24;
 export const FULLPAGE_TOUCH_SWIPE_THRESHOLD = 18;
 export const FULLPAGE_TOUCH_AXIS_LOCK_RATIO = 1.12;
+export const FULLPAGE_WHEEL_STOP_DELAY = 0.25;
 const FULLPAGE_BLOCKED_TRANSITION_MIN_LOCK_MS = 950;
 const FULLPAGE_BLOCKED_TRANSITION_WHEEL_QUIET_MS = 180;
 
@@ -58,6 +59,7 @@ export default function FullPageScroll({
   const fullPageHeightRef = useRef(0);
   const blockedTransitionTimeoutRef = useRef<number | null>(null);
   const blockedTransitionStartedAtRef = useRef<number | null>(null);
+  const wheelGestureLockedRef = useRef(false);
 
   const getViewportHeight = useCallback(() => {
     const visualHeight = window.visualViewport?.height;
@@ -345,11 +347,30 @@ export default function FullPageScroll({
 
       const root = containerRef.current;
 
+      const handleObservedWheel = (direction: 'up' | 'down') => {
+        if (wheelGestureLockedRef.current) {
+          return;
+        }
+
+        wheelGestureLockedRef.current = true;
+
+        if (direction === 'down') {
+          handleScrollDown();
+          return;
+        }
+
+        handleScrollUp();
+      };
+
       const observer = Observer.create({
         target: root,
         type: 'wheel',
-        onDown: handleScrollDown,
-        onUp: handleScrollUp,
+        onDown: () => handleObservedWheel('down'),
+        onUp: () => handleObservedWheel('up'),
+        onStop: () => {
+          wheelGestureLockedRef.current = false;
+        },
+        onStopDelay: FULLPAGE_WHEEL_STOP_DELAY,
         wheelSpeed: 1,
         tolerance: 14,
         preventDefault: true,
@@ -447,6 +468,7 @@ export default function FullPageScroll({
         window.visualViewport?.removeEventListener('scroll', handleResize);
         window.removeEventListener('keydown', handleKeyDown);
         touchStartRef.current = null;
+        wheelGestureLockedRef.current = false;
         releaseBlockedTransitionLock();
         animationRef.current?.kill();
       };

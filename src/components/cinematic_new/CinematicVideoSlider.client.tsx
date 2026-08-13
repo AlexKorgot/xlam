@@ -57,7 +57,7 @@ const sectionScrollThreshold = 48;
 const sectionScrollUnlockDelay = 700;
 const openedSlideTransitionDuration = 0.96;
 const openedSlideContentSwitchProgress = 0.42;
-const openedSlideIncomingDuration = 0.32;
+const openedSlideIncomingDuration = 0.52;
 const openedSlideIncomingDelay =
   openedSlideTransitionDuration * (1 - openedSlideContentSwitchProgress) -
   openedSlideIncomingDuration -
@@ -154,14 +154,14 @@ function OpenedSheetBody({
     <div className="grid min-w-0 gap-7 lg:gap-y-10 min-[1920px]:grid-cols-[minmax(0,0.9fr)_minmax(0,0.78fr)] min-[1920px]:items-start min-[1920px]:gap-x-[clamp(1.25rem,2vw,3rem)]">
       <div className="min-w-0">
         <div data-case-heading className="opacity-0">
-          <p className="mb-2 text-[10px] font-black uppercase leading-none tracking-[0.24em] text-white/58 lg:mb-3 lg:text-[clamp(2rem,3vw,4.1rem)] lg:tracking-normal lg:text-white lg:drop-shadow-[0_4px_20px_rgba(0,0,0,0.65)]">
+          <p className="mb-2 text-[10px] font-black uppercase leading-none tracking-[0.24em] text-white/58 min-[1000px]:drop-shadow-none lg:mb-3 lg:text-[clamp(2rem,3vw,4.1rem)] lg:tracking-normal lg:text-white">
             {slide.opened.titleLead}
           </p>
           <h3
             ref={titleRef}
             id={titleId}
             tabIndex={titleRef ? -1 : undefined}
-            className="max-w-[18ch] text-[2.1rem] font-black uppercase leading-[0.88] text-[#66ff66] outline-none drop-shadow-[0_18px_48px_rgba(0,0,0,0.74)] sm:text-[3.3rem] lg:max-w-none lg:text-[clamp(4rem,6vw,8.45rem)]"
+            className="max-w-[18ch] text-[2.1rem] font-black uppercase leading-[0.88] text-[#66ff66] outline-none drop-shadow-[0_18px_48px_rgba(0,0,0,0.74)] sm:text-[3.3rem] min-[1000px]:drop-shadow-none lg:max-w-none lg:text-[clamp(4rem,6vw,8.45rem)]"
           >
             {slide.opened.titleAccent}
           </h3>
@@ -169,7 +169,7 @@ function OpenedSheetBody({
 
         <p
           data-case-content
-          className="mt-6 max-w-[64rem] text-[15px] font-black leading-[1.08] text-white opacity-0 drop-shadow-[0_4px_20px_rgba(0,0,0,0.45)] transition-[color] duration-300 sm:text-[18px] lg:mt-8 lg:max-w-[52rem] lg:text-[clamp(1.1rem,1.28vw,1.5rem)]"
+          className="mt-6 max-w-[64rem] text-[15px] font-black leading-[1.08] text-white opacity-0 drop-shadow-[0_4px_20px_rgba(0,0,0,0.45)] transition-[color] duration-300 sm:text-[18px] min-[1000px]:drop-shadow-none lg:mt-8 lg:max-w-[52rem] lg:text-[clamp(1.1rem,1.28vw,1.5rem)]"
         >
           {slide.opened.body}
         </p>
@@ -754,8 +754,8 @@ export function CinematicVideoSlider({
       const sheetContent = sheetContentRef.current;
       const contentItems = sheet.querySelectorAll('[data-case-content]');
       const headingItems = sheet.querySelectorAll('[data-case-heading]');
-      const usesDesktopModalMotion = window.innerWidth >= 1024;
-      const shouldAnimateSheetContentHeight = window.innerWidth >= 1024;
+      const usesDesktopModalMotion = window.innerWidth >= 1000;
+      const shouldAnimateSheetContentHeight = window.innerWidth >= 1000;
 
       gsap.to(chromeRef.current, {
         '--cinematic-chrome-opacity': isChromeVisible ? 1 : 0,
@@ -794,33 +794,29 @@ export function CinematicVideoSlider({
         if (isIncomingOpenedContent) {
           openedSlidingContentRevealedRef.current = true;
 
-          gsap.fromTo(
-            headingItems,
-            { autoAlpha: 0, y: 10 },
-            {
-              autoAlpha: 1,
-              y: 0,
-              duration: openedSlideIncomingDuration,
-              stagger: 0.035,
-              ease: 'power2.out',
-              delay: openedSlideIncomingDelay,
-              overwrite: 'auto',
-            },
-          );
+          const incomingContentTimeline = gsap.timeline({
+            delay: openedSlideIncomingDelay,
+            defaults: { ease: 'power3.out', overwrite: 'auto' },
+          });
 
-          gsap.fromTo(
-            contentItems,
-            { autoAlpha: 0, y: 14 },
-            {
-              autoAlpha: 1,
-              y: 0,
-              duration: openedSlideIncomingDuration,
-              stagger: 0.035,
-              ease: 'power2.out',
-              delay: openedSlideIncomingDelay,
-              overwrite: 'auto',
-            },
-          );
+          incomingContentTimeline
+            .fromTo(
+              headingItems,
+              { autoAlpha: 0, y: 14 },
+              { autoAlpha: 1, y: 0, duration: openedSlideIncomingDuration },
+              0,
+            )
+            .fromTo(
+              contentItems,
+              { autoAlpha: 0, y: 18 },
+              {
+                autoAlpha: 1,
+                y: 0,
+                duration: openedSlideIncomingDuration,
+                stagger: 0.055,
+              },
+              0.08,
+            );
         } else {
           openedSlidingContentRevealedRef.current = false;
 
@@ -852,7 +848,7 @@ export function CinematicVideoSlider({
         wasOpenedVisibleRef.current = true;
 
         const wasSheetVisible = isSheetVisibleRef.current;
-        const contentDelay = wasSheetVisible ? 0.04 : overlayState === 'opened' ? 0 : 0.62;
+        const contentDelay = wasSheetVisible ? 0.04 : overlayState === 'opened' ? 0 : 0.4;
 
         if (!sheetContentHeightTweenRef.current && shouldAnimateSheetContentHeight && wasSheetVisible && previousSheetContentHeightRef.current !== null) {
           const previousHeight = previousSheetContentHeightRef.current;
@@ -894,9 +890,9 @@ export function CinematicVideoSlider({
               scale: 1,
               y: 0,
               yPercent: 0,
-              duration: 0.62,
+              duration: 0.72,
               ease: 'power3.out',
-              delay: overlayState === 'opened' ? 0 : 0.18,
+              delay: overlayState === 'opened' ? 0 : 0.14,
             },
           );
         } else {
@@ -907,31 +903,29 @@ export function CinematicVideoSlider({
           gsap.set([headingItems, contentItems], { autoAlpha: 1, y: 0 });
           openedSlidingContentRevealedRef.current = false;
         } else {
-          gsap.fromTo(
-            headingItems,
-            { autoAlpha: 0, y: wasSheetVisible ? 6 : 12 },
-            {
-              autoAlpha: 1,
-              y: 0,
-              duration: 0.26,
-              stagger: 0.035,
-              ease: 'power2.out',
-              delay: contentDelay,
-            },
-          );
+          const contentEntranceTimeline = gsap.timeline({
+            delay: contentDelay,
+            defaults: { ease: 'power3.out', overwrite: 'auto' },
+          });
 
-          gsap.fromTo(
-            contentItems,
-            { autoAlpha: 0, y: 12 },
-            {
-              autoAlpha: 1,
-              y: 0,
-              duration: 0.3,
-              stagger: 0.035,
-              ease: 'power2.out',
-              delay: contentDelay,
-            },
-          );
+          contentEntranceTimeline
+            .fromTo(
+              headingItems,
+              { autoAlpha: 0, y: wasSheetVisible ? 10 : 18 },
+              { autoAlpha: 1, y: 0, duration: 0.56 },
+              0,
+            )
+            .fromTo(
+              contentItems,
+              { autoAlpha: 0, y: wasSheetVisible ? 14 : 22 },
+              {
+                autoAlpha: 1,
+                y: 0,
+                duration: 0.62,
+                stagger: 0.065,
+              },
+              0.1,
+            );
         }
         return;
       }
@@ -1101,7 +1095,7 @@ export function CinematicVideoSlider({
         >
         <button
           type="button"
-          className="absolute inset-0 bg-black/34 backdrop-blur-[1px] sm:bg-black/58 sm:backdrop-blur-[2px] lg:bg-transparent lg:backdrop-blur-none"
+          className="absolute inset-0 bg-black/34 backdrop-blur-[1px] sm:bg-black/58 sm:backdrop-blur-[2px] min-[1000px]:!bg-transparent min-[1000px]:!backdrop-blur-none"
           onClick={handleClose}
           aria-label="Close project details"
           tabIndex={-1}
@@ -1114,14 +1108,14 @@ export function CinematicVideoSlider({
             aria-modal="true"
             aria-labelledby="cinematic-project-title"
             tabIndex={-1}
-            className="relative flex max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1rem)] w-full max-w-[94rem] flex-col overflow-hidden rounded-[8px] border border-white/16 bg-[#030707]/88 text-white opacity-0 shadow-[0_30px_120px_rgba(0,0,0,0.78)] outline-none backdrop-blur-xl sm:max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1.5rem)] sm:bg-[#030707]/82 lg:h-full lg:max-h-none lg:max-w-full lg:rounded-none lg:border-transparent lg:bg-transparent lg:shadow-none lg:backdrop-blur-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:h-full [@media_(max-width:999.98px)_and_(orientation:landscape)]:max-h-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:max-w-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:rounded-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:border-0 [@media_(max-width:999.98px)_and_(orientation:landscape)]:bg-[#030707]/74 [@media_(max-width:999.98px)_and_(orientation:landscape)]:shadow-none"
+            className="relative flex max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1rem)] w-full max-w-[94rem] flex-col overflow-hidden rounded-[8px] border border-white/16 bg-[#030707]/88 text-white opacity-0 shadow-[0_30px_120px_rgba(0,0,0,0.78)] outline-none backdrop-blur-xl sm:max-h-[calc(var(--fullpage-height,100svh)-var(--header-offset)-1.5rem)] sm:bg-[#030707]/82 min-[1000px]:!bg-transparent min-[1000px]:shadow-none min-[1000px]:!backdrop-blur-none lg:h-full lg:max-h-none lg:max-w-full lg:rounded-none lg:border-transparent [@media_(max-width:999.98px)_and_(orientation:landscape)]:h-full [@media_(max-width:999.98px)_and_(orientation:landscape)]:max-h-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:max-w-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:rounded-none [@media_(max-width:999.98px)_and_(orientation:landscape)]:border-0 [@media_(max-width:999.98px)_and_(orientation:landscape)]:bg-[#030707]/74 [@media_(max-width:999.98px)_and_(orientation:landscape)]:shadow-none"
             onPointerDown={handleSheetPointerDown}
             onPointerUp={handleSheetPointerUp}
             onPointerCancel={() => {
               sheetTouchStartRef.current = null;
             }}
           >
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_12%,rgba(102,255,102,0.12),rgba(102,255,102,0)_28%)] lg:bg-none" aria-hidden="true" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_12%,rgba(102,255,102,0.12),rgba(102,255,102,0)_28%)] min-[1000px]:bg-none" aria-hidden="true" />
 
             <div ref={sheetContentRef} className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
               <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-white/28 lg:hidden [@media_(max-width:999.98px)_and_(orientation:landscape)]:hidden" aria-hidden="true" />

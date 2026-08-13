@@ -9,12 +9,11 @@ import {
   FULLPAGE_TOUCH_SWIPE_THRESHOLD,
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
-import { mediaAssetPath } from '@/src/lib/mediaAssetPath';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import { useNearViewport } from '@/src/lib/useNearViewport';
 import useEmblaCarousel from 'embla-carousel-react';
 import WheelGesturesPlugin from 'embla-carousel-wheel-gestures';
-import Image from 'next/image';
+import type { StaticImageData } from 'next/image';
 import {
   useCallback,
   useEffect,
@@ -31,6 +30,16 @@ import {
   serviceModalBackgroundList,
   serviceModalBackgrounds,
 } from './serviceModalBackground';
+import aiPosterDesktop from './assets/3.desktop.webp';
+import aiPosterMobile from './assets/3.mobile.webp';
+import b2bPosterDesktop from './assets/2.desktop.webp';
+import b2bPosterMobile from './assets/2.mobile.webp';
+import showPosterDesktop from './assets/1.desktop.webp';
+import showPosterMobile from './assets/1.mobile.webp';
+import adsPosterDesktop from './assets/4.desktop.webp';
+import adsPosterMobile from './assets/4.mobile.webp';
+import brandPosterDesktop from './assets/5.desktop.webp';
+import brandPosterMobile from './assets/5.mobile.webp';
 
 type ServiceVideoRef = RefObject<HTMLVideoElement | null>;
 
@@ -40,25 +49,62 @@ type VideoRefConfig = {
   handleMouseEnter: (ref: ServiceVideoRef) => () => void;
 };
 
+type ServicePoster = Readonly<{
+  desktop: StaticImageData;
+  mobile: StaticImageData;
+}>;
+
 type ServiceSlide = {
   id: string;
   title: string;
   description: string;
   videoSrc?: string;
-  posterSrc: string;
+  poster: ServicePoster;
   modal: ServiceModalContent;
   videoRefConfig?: VideoRefConfig;
 };
 
 type ServiceVideoMediaProps = {
-  posterSrc: string;
+  poster: ServicePoster;
   shouldLoad: boolean;
   videoRef: ServiceVideoRef;
   videoSrc: string;
 };
 
+type ServicePosterMediaProps = {
+  className?: string;
+  onError?: () => void;
+  onLoad?: () => void;
+  poster: ServicePoster;
+};
+
+function ServicePosterMedia({
+  className = '',
+  onError,
+  onLoad,
+  poster,
+}: ServicePosterMediaProps) {
+  return (
+    <picture className="pointer-events-none absolute inset-0 block h-full w-full">
+      <source media="(max-width: 999.98px)" srcSet={poster.mobile.src} />
+      <img
+        src={poster.desktop.src}
+        alt=""
+        aria-hidden="true"
+        width={poster.desktop.width}
+        height={poster.desktop.height}
+        loading="lazy"
+        decoding="async"
+        onLoad={onLoad}
+        onError={onError}
+        className={`h-full w-full object-cover ${className}`}
+      />
+    </picture>
+  );
+}
+
 function ServiceVideoMedia({
-  posterSrc,
+  poster,
   shouldLoad,
   videoRef,
   videoSrc,
@@ -79,15 +125,11 @@ function ServiceVideoMedia({
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[radial-gradient(circle_at_50%_42%,rgba(99,255,69,0.14),rgba(0,0,0,0.96)_68%)]">
-      <Image
-        src={posterSrc}
-        alt=""
-        fill
-        sizes="(min-width: 1000px) 25vw, (min-width: 600px) 33vw, 50vw"
-        loading="lazy"
+      <ServicePosterMedia
+        poster={poster}
         onLoad={() => setIsPosterReady(true)}
         onError={() => setIsPosterReady(true)}
-        className={`pointer-events-none object-cover transition-opacity duration-300 ${
+        className={`transition-opacity duration-300 ${
           isPosterReady ? 'opacity-100' : 'opacity-0'
         }`}
       />
@@ -316,7 +358,10 @@ export function ServicesSliderSection({
         'ОТ ИДЕИ ДО ПРЕМЬЕРЫ: РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР',
       modal: showModalContent,
       videoSrc: publicAssetPath('/video/show.mp4'),
-      posterSrc: mediaAssetPath('/3.jpg'),
+      poster: {
+        desktop: showPosterDesktop,
+        mobile: showPosterMobile,
+      },
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -330,7 +375,10 @@ export function ServicesSliderSection({
           'ПРОИЗВОДИМ СИСТЕМНЫЙ КОНТЕНТ: ИМИДЖ, ПРОДУКТ, КОММУНИКАЦИИ',
       modal: b2bModalContent,
       videoSrc: publicAssetPath('/video/b2b.mp4'),
-      posterSrc: mediaAssetPath('/2.jpg'),
+      poster: {
+        desktop: aiPosterDesktop,
+        mobile: aiPosterMobile,
+      },
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -344,7 +392,10 @@ export function ServicesSliderSection({
         'ДЕЛАЕМ РЕКЛАМУ, КОТОРУЮ ПЕРЕСЫЛАЮТ ДРУЗЬЯМ',
       modal: adsModalContent,
       videoSrc: publicAssetPath('/video/ads.mp4'),
-      posterSrc: mediaAssetPath('/4.jpg'),
+      poster: {
+        desktop: b2bPosterDesktop,
+        mobile: b2bPosterMobile,
+      },
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -358,7 +409,10 @@ export function ServicesSliderSection({
         'СОЗДАЕМ ВИЗУАЛ НОВОГО ПОКОЛЕНИЯ С ПОМОЩЬЮ ИИ',
       modal: brandingModalContent,
       videoSrc: publicAssetPath('/video/ai.mp4'),
-      posterSrc: mediaAssetPath('/1.jpg'),
+      poster: {
+        desktop: adsPosterDesktop,
+        mobile: adsPosterMobile,
+      },
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -372,7 +426,10 @@ export function ServicesSliderSection({
         'ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ',
       modal: brandModalContent,
       videoSrc: publicAssetPath('/video/branding.mp4'),
-      posterSrc: mediaAssetPath('/5.jpg'),
+      poster: {
+        desktop: brandPosterDesktop,
+        mobile: brandPosterMobile,
+      },
       videoRefConfig: {
         ref: useRef<HTMLVideoElement | null>(null),
         handleMouseLeave: (ref) => handleLeave(ref),
@@ -848,20 +905,13 @@ export function ServicesSliderSection({
                       <div className="relative h-full w-full overflow-hidden">
                         {slide.videoSrc && slide.videoRefConfig ? (
                           <ServiceVideoMedia
-                            posterSrc={slide.posterSrc}
+                            poster={slide.poster}
                             shouldLoad={shouldLoadVideos}
                             videoRef={slide.videoRefConfig.ref}
                             videoSrc={slide.videoSrc}
                           />
                         ) : (
-                          <Image
-                            className="pointer-events-none object-cover"
-                            src={slide.posterSrc}
-                            alt=""
-                            fill
-                            sizes="(min-width: 1000px) 25vw, (min-width: 600px) 33vw, 50vw"
-                            loading="lazy"
-                          />
+                          <ServicePosterMedia poster={slide.poster} />
                         )}
                         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex w-full flex-col items-center px-1.5 text-center min-[1000px]:pb-[25px]">
                           <p className="hidden max-w-[260px] text-[12px] leading-[1.12] min-[1000px]:block mb-2">{slide.description}</p>
