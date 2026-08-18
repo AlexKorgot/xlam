@@ -9,10 +9,18 @@ The section cycles through short text statements. Each statement owns a top artw
 ## Assets
 
 - `assets/img/general_bg.png`: persistent background pattern image with pointer parallax.
-- `assets/img/blue_top.png`: current MVP top artwork.
-- `assets/img/blue_bottom.png`: current MVP bottom artwork.
+- `assets/img/blue_top.png` and `blue_bottom.png`: `smooth` slide artwork.
+- `assets/img/green_top.png` and `green_bottom.png`: `noise` slide artwork.
+- `assets/img/gray_top.png` and `gray_bottom.png`: `idea` and `welcome` slide artwork.
 
-The slide data is already structured for unique `topImage` and `bottomImage` values per text. The MVP reuses the same two artwork files for all five slides because no alternate artwork files exist yet.
+Landscape WebP variants and mobile portrait crops live in `public/text-section`.
+Portrait crops preserve each mobile artwork slot's aspect ratio so the browser does
+not download a mostly cropped 1920px landscape image. Regenerate those crops after
+changing a PNG master:
+
+```bash
+npm run images:text-section
+```
 
 ## Configuration
 
@@ -23,6 +31,10 @@ The slide data is already structured for unique `topImage` and `bottomImage` val
 ```
 
 Use a larger interval if the copy needs more reading time. The current animation duration is internal to the component and tuned for the `5000ms` MVP rhythm.
+
+The optional `isActive` flag starts a low-priority preload for only the next
+slide's top and bottom artwork. Each completed slide then primes the following
+unique pair; the `welcome` slide reuses the cached gray artwork.
 
 ## Integration
 

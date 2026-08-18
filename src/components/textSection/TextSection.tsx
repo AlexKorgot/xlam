@@ -1,7 +1,5 @@
 'use client';
 
-/* eslint-disable @next/next/no-img-element -- static export uses explicit responsive WebP source sets */
-
 import {
   useCallback,
   useEffect,
@@ -29,7 +27,21 @@ type ResponsiveImageAsset = {
   sizes: string;
   width: number;
   height: number;
+  sources?: ReadonlyArray<ResponsiveImageSource>;
 };
+
+type ResponsiveImageSource = {
+  media: string;
+  srcSet: string;
+  sizes: string;
+};
+
+type ResponsiveImageVariant = readonly [number, `/${string}`];
+
+const compactPortraitMedia = '(orientation: portrait) and (max-width: 399px)';
+const tallPortraitMedia =
+  '(orientation: portrait) and (min-width: 400px) and (max-width: 639px)';
+const mobilePortraitMedia = '(orientation: portrait) and (max-width: 639px)';
 
 const artworkImageSizes = [
   '(max-width: 399px) 1280px',
@@ -41,10 +53,11 @@ const artworkImageSizes = [
 ].join(', ');
 
 function responsiveImageAsset(
-  variants: ReadonlyArray<readonly [number, `/${string}`]>,
+  variants: ReadonlyArray<ResponsiveImageVariant>,
   width: number,
   height: number,
   sizes: string,
+  sources?: ReadonlyArray<ResponsiveImageSource>,
 ): ResponsiveImageAsset {
   const fallback = variants[variants.length - 1];
 
@@ -60,7 +73,31 @@ function responsiveImageAsset(
     sizes,
     width,
     height,
+    sources,
   };
+}
+
+function responsiveImageSource(
+  media: string,
+  variants: ReadonlyArray<ResponsiveImageVariant>,
+): ResponsiveImageSource {
+  return {
+    media,
+    srcSet: variants
+      .map(([variantWidth, path]) => `${publicAssetPath(path)} ${variantWidth}w`)
+      .join(', '),
+    sizes: '100vw',
+  };
+}
+
+function mobilePortraitSources(
+  compactVariants: ReadonlyArray<ResponsiveImageVariant>,
+  tallVariants: ReadonlyArray<ResponsiveImageVariant>,
+) {
+  return [
+    responsiveImageSource(compactPortraitMedia, compactVariants),
+    responsiveImageSource(tallPortraitMedia, tallVariants),
+  ];
 }
 
 const GeneralBackground = responsiveImageAsset(
@@ -72,6 +109,11 @@ const GeneralBackground = responsiveImageAsset(
   1920,
   1080,
   '110vw',
+  [
+    responsiveImageSource(mobilePortraitMedia, [
+      [499, '/text-section/general-bg-portrait-499w.webp'],
+    ]),
+  ],
 );
 const BlueTop = responsiveImageAsset(
   [
@@ -83,6 +125,13 @@ const BlueTop = responsiveImageAsset(
   1920,
   890,
   artworkImageSizes,
+  mobilePortraitSources(
+    [
+      [390, '/text-section/blue-top-portrait-compact-390w.webp'],
+      [723, '/text-section/blue-top-portrait-compact-723w.webp'],
+    ],
+    [[491, '/text-section/blue-top-portrait-tall-491w.webp']],
+  ),
 );
 const BlueBottom = responsiveImageAsset(
   [
@@ -94,6 +143,13 @@ const BlueBottom = responsiveImageAsset(
   1920,
   730,
   artworkImageSizes,
+  mobilePortraitSources(
+    [
+      [390, '/text-section/blue-bottom-portrait-compact-390w.webp'],
+      [647, '/text-section/blue-bottom-portrait-compact-647w.webp'],
+    ],
+    [[402, '/text-section/blue-bottom-portrait-tall-402w.webp']],
+  ),
 );
 const GreenTop = responsiveImageAsset(
   [
@@ -105,6 +161,13 @@ const GreenTop = responsiveImageAsset(
   1920,
   970,
   artworkImageSizes,
+  mobilePortraitSources(
+    [
+      [390, '/text-section/green-top-portrait-compact-390w.webp'],
+      [756, '/text-section/green-top-portrait-compact-756w.webp'],
+    ],
+    [[472, '/text-section/green-top-portrait-tall-472w.webp']],
+  ),
 );
 const GreenBottom = responsiveImageAsset(
   [
@@ -116,6 +179,13 @@ const GreenBottom = responsiveImageAsset(
   1920,
   840,
   artworkImageSizes,
+  mobilePortraitSources(
+    [
+      [390, '/text-section/green-bottom-portrait-compact-390w.webp'],
+      [655, '/text-section/green-bottom-portrait-compact-655w.webp'],
+    ],
+    [[409, '/text-section/green-bottom-portrait-tall-409w.webp']],
+  ),
 );
 const GrayTop = responsiveImageAsset(
   [
@@ -127,6 +197,13 @@ const GrayTop = responsiveImageAsset(
   1920,
   930,
   artworkImageSizes,
+  mobilePortraitSources(
+    [
+      [390, '/text-section/gray-top-portrait-compact-390w.webp'],
+      [788, '/text-section/gray-top-portrait-compact-788w.webp'],
+    ],
+    [[513, '/text-section/gray-top-portrait-tall-513w.webp']],
+  ),
 );
 const GrayBottom = responsiveImageAsset(
   [
@@ -138,6 +215,13 @@ const GrayBottom = responsiveImageAsset(
   1920,
   820,
   artworkImageSizes,
+  mobilePortraitSources(
+    [
+      [390, '/text-section/gray-bottom-portrait-compact-390w.webp'],
+      [666, '/text-section/gray-bottom-portrait-compact-666w.webp'],
+    ],
+    [[399, '/text-section/gray-bottom-portrait-tall-399w.webp']],
+  ),
 );
 
 type TextSlide = {
@@ -179,6 +263,55 @@ type TextSlideImagePositionConfig = Partial<{
 
 interface TextSectionProps {
   intervalMs?: number;
+  isActive?: boolean;
+}
+
+interface ResponsiveImageProps {
+  asset: ResponsiveImageAsset;
+  className: string;
+}
+
+function ResponsiveImage({ asset, className }: ResponsiveImageProps) {
+  return (
+    <picture className="contents">
+      {asset.sources?.map((source) => (
+        <source
+          key={source.media}
+          type="image/webp"
+          media={source.media}
+          srcSet={source.srcSet}
+          sizes={source.sizes}
+        />
+      ))}
+      <img
+        src={asset.src}
+        srcSet={asset.srcSet}
+        sizes={asset.sizes}
+        width={asset.width}
+        height={asset.height}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        className={className}
+      />
+    </picture>
+  );
+}
+
+function preloadResponsiveImage(asset: ResponsiveImageAsset) {
+  const matchingSource = asset.sources?.find((source) =>
+    window.matchMedia(source.media).matches,
+  );
+  const image = new Image();
+
+  image.decoding = 'async';
+  image.fetchPriority = 'low';
+  image.sizes = matchingSource?.sizes ?? asset.sizes;
+  image.srcset = matchingSource?.srcSet ?? asset.srcSet;
+  image.src = asset.src;
+
+  return image.decode().catch(() => undefined);
 }
 
 const scrollIgnoreAttr = { [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' } as const;
@@ -221,10 +354,7 @@ const baseSlides: TextSlide[] = [
         lg: '0',
         xl: '0',
         '2xl': '0',
-        '3xl': '-150px',
-        '4xl': '-100px',
-        '5xl': '0',
-        '6xl': '0',
+        '3xl': '0',
       },
       bottom: {
         base: defaultImagePosition.bottom,
@@ -234,10 +364,7 @@ const baseSlides: TextSlide[] = [
         lg: '0',
         xl: '0',
         '2xl': '0',
-        '3xl': '-150px',
-        '4xl': '-100px',
-        '5xl': '0',
-        '6xl': '0',
+        '3xl': '0',
       },
       topHeight: {
         base: '480px',
@@ -247,10 +374,7 @@ const baseSlides: TextSlide[] = [
         lg: '520px',
         xl: '590px',
         '2xl': '710px',
-        '3xl': '890px',
-        '4xl': '980px',
-        '5xl': '1060px',
-        '6xl': '1280px',
+        '3xl': 'max(80dvh, 40vw)',
       },
       bottomHeight: {
         base: '440px',
@@ -260,10 +384,7 @@ const baseSlides: TextSlide[] = [
         lg: '430px',
         xl: '490px',
         '2xl': '585px',
-        '3xl': '730px',
-        '4xl': '800px',
-        '5xl': '870px',
-        '6xl': '1200px',
+        '3xl': 'max(60dvh, 29vw)',
       },
     },
   },
@@ -280,10 +401,7 @@ const baseSlides: TextSlide[] = [
         lg: '0',
         xl: '0',
         '2xl': '0',
-        '3xl': '-40px',
-        '4xl': '-150px',
-        '5xl': '-150px',
-        '6xl': '0',
+        '3xl': '0',
       },
       bottom: {
         base: defaultImagePosition.bottom,
@@ -293,9 +411,6 @@ const baseSlides: TextSlide[] = [
         xl: '0',
         '2xl': '0',
         '3xl': '0',
-        '4xl': '0',
-        '5xl': '-150px',
-        '6xl': '0',
       },
       topHeight: {
         base: '500px',
@@ -305,23 +420,17 @@ const baseSlides: TextSlide[] = [
         lg: '520px',
         xl: '590px',
         '2xl': '710px',
-        '3xl': '890px',
-        '4xl': '1010px',
-        '5xl': '1080px',
-        '6xl': '1300px',
+        '3xl': 'max(82dvh, 41vw)',
       },
       bottomHeight: {
         base: '500px',
         xs: '850px',
         sm: '300px',
         md: '350px',
-        lg: '430px',
-        xl: '490px',
-        '2xl': '585px',
-        '3xl': '730px',
-        '4xl': '790px',
-        '5xl': '870px',
-        '6xl': '1300px',
+        lg: '500px',
+        xl: '590px',
+        '2xl': '680px',
+        '3xl': 'max(77dvh, 39vw)',
       },
     },
   },
@@ -339,9 +448,6 @@ const baseSlides: TextSlide[] = [
         xl: '0',
         '2xl': '0',
         '3xl': '0',
-        '4xl': '0',
-        '5xl': '-150px',
-        '6xl': '0',
       },
       bottom: {
         base: defaultImagePosition.bottom,
@@ -351,9 +457,6 @@ const baseSlides: TextSlide[] = [
         xl: '0',
         '2xl': '0',
         '3xl': '0',
-        '4xl': '0',
-        '5xl': '-150px',
-        '6xl': '0',
       },
       topHeight: {
         base: '460px',
@@ -363,10 +466,7 @@ const baseSlides: TextSlide[] = [
         lg: '520px',
         xl: '590px',
         '2xl': '710px',
-        '3xl': '870px',
-        '4xl': '960px',
-        '5xl': '1060px',
-        '6xl': '1400px',
+        '3xl': 'max(83dvh, 42vw)',
       },
       bottomHeight: {
         base: '480px',
@@ -376,10 +476,7 @@ const baseSlides: TextSlide[] = [
         lg: '430px',
         xl: '490px',
         '2xl': '585px',
-        '3xl': '710px',
-        '4xl': '780px',
-        '5xl': '860px',
-        '6xl': '1300px',
+        '3xl': 'max(65dvh, 32vw)',
       },
     },
   },
@@ -468,7 +565,7 @@ const resolveImagePosition = (
   ),
 });
 
-export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
+export function TextSection({ intervalMs = 5000, isActive = false }: TextSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const backgroundRef = useRef<HTMLDivElement>(null);
   const activeTextRef = useRef<HTMLHeadingElement>(null);
@@ -486,6 +583,7 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
   const inputLockRef = useRef(false);
   const inputUnlockTimeoutRef = useRef<number | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const preloadedSlideIdsRef = useRef(new Set<string>());
   const [activeIndex, setActiveIndex] = useState(0);
   const [incomingIndex, setIncomingIndex] = useState<number | null>(null);
   const [activeImagePositionBreakpoint, setActiveImagePositionBreakpoint] =
@@ -523,6 +621,34 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
   useEffect(() => {
     incomingIndexRef.current = incomingIndex;
   }, [incomingIndex]);
+
+  useEffect(() => {
+    if (!isActive) {
+      return;
+    }
+
+    const currentSlide = slides[activeIndex];
+    const nextSlide = slides[activeIndex + 1];
+
+    if (!nextSlide || preloadedSlideIdsRef.current.has(nextSlide.id)) {
+      return;
+    }
+
+    preloadedSlideIdsRef.current.add(nextSlide.id);
+
+    const reusesCurrentArtwork =
+      nextSlide.topImage === currentSlide.topImage &&
+      nextSlide.bottomImage === currentSlide.bottomImage;
+
+    if (reusesCurrentArtwork) {
+      return;
+    }
+
+    void Promise.all([
+      preloadResponsiveImage(nextSlide.topImage),
+      preloadResponsiveImage(nextSlide.bottomImage),
+    ]);
+  }, [activeIndex, isActive]);
 
   const requestParentSectionScroll = useCallback((direction: 'up' | 'down') => {
     window.dispatchEvent(
@@ -972,16 +1098,8 @@ export function TextSection({ intervalMs = 5000 }: TextSectionProps) {
           aria-hidden="true"
           style={{ willChange: 'transform' }}
         >
-          <img
-            src={GeneralBackground.src}
-            srcSet={GeneralBackground.srcSet}
-            sizes={GeneralBackground.sizes}
-            width={GeneralBackground.width}
-            height={GeneralBackground.height}
-            alt=""
-            aria-hidden="true"
-            loading="lazy"
-            decoding="async"
+          <ResponsiveImage
+            asset={GeneralBackground}
             className="absolute inset-0 h-full w-full object-cover"
           />
         </div>
@@ -1049,16 +1167,8 @@ function SlideArtwork({
         className="absolute left-1/2 w-screen -translate-x-1/2"
         style={topImageStyle}
       >
-        <img
-          src={slide.topImage.src}
-          srcSet={slide.topImage.srcSet}
-          sizes={slide.topImage.sizes}
-          width={slide.topImage.width}
-          height={slide.topImage.height}
-          alt=""
-          aria-hidden="true"
-          loading="lazy"
-          decoding="async"
+        <ResponsiveImage
+          asset={slide.topImage}
           className="absolute inset-0 h-full w-full object-cover object-bottom"
         />
       </div>
@@ -1068,16 +1178,8 @@ function SlideArtwork({
         className="absolute left-1/2 w-screen -translate-x-1/2"
         style={bottomImageStyle}
       >
-        <img
-          src={slide.bottomImage.src}
-          srcSet={slide.bottomImage.srcSet}
-          sizes={slide.bottomImage.sizes}
-          width={slide.bottomImage.width}
-          height={slide.bottomImage.height}
-          alt=""
-          aria-hidden="true"
-          loading="lazy"
-          decoding="async"
+        <ResponsiveImage
+          asset={slide.bottomImage}
           className="absolute inset-0 h-full w-full object-cover object-top"
         />
       </div>

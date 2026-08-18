@@ -550,7 +550,7 @@ export default function FullPageScroll({
     >
       <div
         ref={containerRef}
-        className="absolute left-0 top-0 w-full touch-none"
+        className="absolute left-0 top-0 w-full touch-pinch-zoom"
         style={{ willChange: 'transform' }}
       >
         {children}
