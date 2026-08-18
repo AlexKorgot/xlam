@@ -11,8 +11,10 @@ import {
 } from '@/src/components/ui/FullPageScroll';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import { useNearViewport } from '@/src/lib/useNearViewport';
+import { useGSAP } from '@gsap/react';
 import useEmblaCarousel from 'embla-carousel-react';
 import WheelGesturesPlugin from 'embla-carousel-wheel-gestures';
+import gsap from 'gsap';
 import type { StaticImageData } from 'next/image';
 import {
   useCallback,
@@ -40,6 +42,8 @@ import adsPosterDesktop from './assets/4.desktop.webp';
 import adsPosterMobile from './assets/4.mobile.webp';
 import brandPosterDesktop from './assets/5.desktop.webp';
 import brandPosterMobile from './assets/5.mobile.webp';
+
+gsap.registerPlugin(useGSAP);
 
 type ServiceVideoRef = RefObject<HTMLVideoElement | null>;
 
@@ -181,6 +185,9 @@ function ServiceVideoMedia({
 
 interface ServicesSliderSectionProps {
   allowSectionScrollOnEdges?: boolean;
+  isActive?: boolean;
+  onDiscoveryHintPlayed?: () => void;
+  shouldPlayDiscoveryHint?: boolean;
 }
 
 const scrollIgnoreAttr = { [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' } as const;
@@ -331,6 +338,9 @@ const brandModalContent: ServiceModalContent = {
 
 export function ServicesSliderSection({
   allowSectionScrollOnEdges = false,
+  isActive = false,
+  onDiscoveryHintPlayed,
+  shouldPlayDiscoveryHint = true,
 }: ServicesSliderSectionProps) {
   const handleLeave = (ref: ServiceVideoRef) => {
     return () => {
@@ -439,8 +449,6 @@ export function ServicesSliderSection({
   ];
 
   const slideCount = slides.length;
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(false);
   const [selectedSlideIndex, setSelectedSlideIndex] = useState<number | null>(null);
   const [renderedSlideIndex, setRenderedSlideIndex] = useState<number | null>(0);
   const renderedSlide =
@@ -496,6 +504,8 @@ export function ServicesSliderSection({
   const isSliderHoveredRef = useRef(false);
   const lastSliderIntentRef = useRef<'up' | 'down' | null>(null);
   const sectionTouchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const discoveryHintPlayedRef = useRef(false);
+  const shouldPlayDiscoveryHintRef = useRef(shouldPlayDiscoveryHint);
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
@@ -510,49 +520,98 @@ export function ServicesSliderSection({
     [WheelGesturesPlugin({ forceWheelAxis: 'y' })],
   );
 
-  const scrollToLastSnap = useCallback(() => {
-    if (!emblaApi) {
-      return;
-    }
+  useGSAP(
+    () => {
+      if (
+        !isActive ||
+        !shouldPlayDiscoveryHintRef.current ||
+        discoveryHintPlayedRef.current ||
+        !emblaApi
+      ) {
+        return;
+      }
 
-    const lastSnapIndex = emblaApi.scrollSnapList().length - 1;
+      const viewportNode = emblaApi.rootNode();
+      const slideVisuals = emblaApi
+        .slideNodes()
+        .map((slideNode) =>
+          slideNode.querySelector<HTMLElement>('[data-service-slide-visual]'),
+        )
+        .filter((slideVisual): slideVisual is HTMLElement => slideVisual !== null);
 
-    if (lastSnapIndex < 0) {
-      return;
-    }
+      if (slideVisuals.length < 2) {
+        return;
+      }
 
-    lastSliderIntentRef.current = null;
-    emblaApi.scrollTo(lastSnapIndex);
-  }, [emblaApi]);
+      const markHintPlayed = () => {
+        if (discoveryHintPlayedRef.current) {
+          return;
+        }
 
-  const scrollToFirstSnap = useCallback(() => {
-    if (!emblaApi || emblaApi.scrollSnapList().length === 0) {
-      return;
-    }
+        discoveryHintPlayedRef.current = true;
+        onDiscoveryHintPlayed?.();
+      };
 
-    lastSliderIntentRef.current = null;
-    emblaApi.scrollTo(0);
-  }, [emblaApi]);
+      if (
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+        emblaApi.selectedScrollSnap() !== 0 ||
+        !emblaApi.canScrollNext()
+      ) {
+        markHintPlayed();
+        return;
+      }
 
-  useEffect(() => {
-    if (!emblaApi) {
-      return;
-    }
+      const removeInteractionListeners = () => {
+        viewportNode.removeEventListener('pointerdown', cancelHint);
+        viewportNode.removeEventListener('wheel', cancelHint);
+      };
 
-    const syncScrollAvailability = () => {
-      setCanScrollPrev(emblaApi.canScrollPrev());
-      setCanScrollNext(emblaApi.canScrollNext());
-    };
+      const cancelHint = () => {
+        timeline.progress(1).kill();
+        removeInteractionListeners();
+        markHintPlayed();
+      };
 
-    syncScrollAvailability();
-    emblaApi.on('select', syncScrollAvailability);
-    emblaApi.on('reInit', syncScrollAvailability);
+      const timeline = gsap.timeline({
+        delay: 0.65,
+        onComplete: removeInteractionListeners,
+        onStart: markHintPlayed,
+      });
 
-    return () => {
-      emblaApi.off('select', syncScrollAvailability);
-      emblaApi.off('reInit', syncScrollAvailability);
-    };
-  }, [emblaApi]);
+      viewportNode.addEventListener('pointerdown', cancelHint, { once: true });
+      viewportNode.addEventListener('wheel', cancelHint, {
+        once: true,
+        passive: true,
+      });
+
+      timeline
+        .set(slideVisuals, { willChange: 'transform' })
+        .to(slideVisuals, {
+          xPercent: -20,
+          duration: 0.45,
+          ease: 'power2.out',
+        })
+        .to(slideVisuals, {
+          xPercent: 0,
+          duration: 0.55,
+          ease: 'power2.inOut',
+        })
+        .set(slideVisuals, { clearProps: 'transform,willChange' });
+
+      return () => {
+        removeInteractionListeners();
+      };
+    },
+    {
+      dependencies: [
+        emblaApi,
+        isActive,
+        onDiscoveryHintPlayed,
+      ],
+      revertOnUpdate: true,
+      scope: sectionContentRef,
+    },
+  );
 
   useEffect(() => {
     if (!shouldLoadVideos) {
@@ -902,7 +961,10 @@ export function ServicesSliderSection({
                           : undefined
                       }
                     >
-                      <div className="relative h-full w-full overflow-hidden">
+                      <div
+                        data-service-slide-visual
+                        className="relative h-full w-full overflow-hidden"
+                      >
                         {slide.videoSrc && slide.videoRefConfig ? (
                           <ServiceVideoMedia
                             poster={slide.poster}
@@ -925,48 +987,6 @@ export function ServicesSliderSection({
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              aria-label="Прокрутить к первым услугам"
-              disabled={!canScrollPrev}
-              onClick={scrollToFirstSnap}
-              className={`pointer-events-auto absolute -left-8 top-1/2 z-10 hidden -translate-y-1/2 cursor-pointer border-0 bg-transparent p-0 transition-[opacity,transform] duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#66FF66] disabled:pointer-events-none motion-reduce:transition-none min-[1000px]:block ${
-                canScrollPrev ? 'translate-x-0 opacity-100' : '-translate-x-2 opacity-0'
-              }`}
-            >
-              <svg
-                aria-hidden="true"
-                width="20"
-                height="36"
-                viewBox="0 0 20 36"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="block h-9 w-5"
-              >
-                <path d="M0 18L13.2235 0H20V36H13.2235L0 18Z" fill="#66FF66" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              aria-label="Прокрутить к последним услугам"
-              disabled={!canScrollNext}
-              onClick={scrollToLastSnap}
-              className={`pointer-events-auto absolute -right-8 top-1/2 z-10 hidden -translate-y-1/2 cursor-pointer border-0 bg-transparent p-0 transition-[opacity,transform] duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#66FF66] disabled:pointer-events-none motion-reduce:transition-none min-[1000px]:block ${
-                canScrollNext ? 'translate-x-0 opacity-100' : 'translate-x-2 opacity-0'
-              }`}
-            >
-              <svg
-                aria-hidden="true"
-                width="20"
-                height="36"
-                viewBox="0 0 20 36"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="block h-9 w-5"
-              >
-                <path d="M20 18L6.77655 0H0V36H6.77655L20 18Z" fill="#66FF66" />
-              </svg>
-            </button>
           </div>
           <div className="min-h-0 text-center" data-reveal>
             <p className="max-w-[1000px] m-auto text-[clamp(0.875rem,2.2vw,1.5625rem)] font-bold uppercase leading-[1.14] text-white mb-4">

@@ -151,6 +151,7 @@ export const MainScene = () => {
   const [activeSectionIndex, setActiveSectionIndex] = useState(INTRO_SECTION_INDEX);
   const [transitionTargetIndex, setTransitionTargetIndex] = useState<number | null>(null);
   const [hasMountedMorphSection, setHasMountedMorphSection] = useState(false);
+  const [hasPlayedServicesDiscoveryHint, setHasPlayedServicesDiscoveryHint] = useState(false);
   const [hasVisitedProjectsSection, setHasVisitedProjectsSection] = useState(false);
   const responsiveMorphMode = useResponsiveMorphMode();
   const responsiveMorphModeRef = useRef(responsiveMorphMode);
@@ -320,6 +321,10 @@ export const MainScene = () => {
     secondSectionRef.current?.setProgress(progress);
   }, [setHeaderProgress]);
 
+  const handleServicesDiscoveryHintPlayed = useCallback(() => {
+    setHasPlayedServicesDiscoveryHint(true);
+  }, []);
+
   const handleTransitionStart = useCallback((startIndex: number, targetIndex: number) => {
     clearMorphStartTimeout();
     setTransitionTargetIndex(targetIndex);
@@ -456,7 +461,12 @@ export const MainScene = () => {
           sectionIndex={SERVICES_SECTION_INDEX}
           sectionId="services"
         >
-          <ServicesSliderSection allowSectionScrollOnEdges />
+          <ServicesSliderSection
+            allowSectionScrollOnEdges
+            isActive={activeSectionIndex === SERVICES_SECTION_INDEX}
+            onDiscoveryHintPlayed={handleServicesDiscoveryHintPlayed}
+            shouldPlayDiscoveryHint={!hasPlayedServicesDiscoveryHint}
+          />
         </DeferredSection>
 
         <DeferredSection
