@@ -498,7 +498,10 @@ export const MainScene = () => {
           sectionId="text-section"
           fallbackClassName="bg-white"
         >
-          <TextSection intervalMs={0} />
+          <TextSection
+            intervalMs={0}
+            isActive={activeSectionIndex === TEXT_SECTION_INDEX}
+          />
         </DeferredSection>
 
         <DeferredSection
