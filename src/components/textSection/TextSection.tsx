@@ -266,6 +266,8 @@ interface TextSectionProps {
   isActive?: boolean;
 }
 
+type TextSlideSlot = 'a' | 'b';
+
 interface ResponsiveImageProps {
   asset: ResponsiveImageAsset;
   className: string;
@@ -568,12 +570,12 @@ const resolveImagePosition = (
 export function TextSection({ intervalMs = 5000, isActive = false }: TextSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const backgroundRef = useRef<HTMLDivElement>(null);
-  const activeTextRef = useRef<HTMLHeadingElement>(null);
-  const activeTopRef = useRef<HTMLDivElement>(null);
-  const activeBottomRef = useRef<HTMLDivElement>(null);
-  const incomingTextRef = useRef<HTMLHeadingElement>(null);
-  const incomingTopRef = useRef<HTMLDivElement>(null);
-  const incomingBottomRef = useRef<HTMLDivElement>(null);
+  const slotATextRef = useRef<HTMLHeadingElement>(null);
+  const slotATopRef = useRef<HTMLDivElement>(null);
+  const slotABottomRef = useRef<HTMLDivElement>(null);
+  const slotBTextRef = useRef<HTMLHeadingElement>(null);
+  const slotBTopRef = useRef<HTMLDivElement>(null);
+  const slotBBottomRef = useRef<HTMLDivElement>(null);
   const backgroundXToRef = useRef<((value: number) => void) | null>(null);
   const backgroundYToRef = useRef<((value: number) => void) | null>(null);
   const activeIndexRef = useRef(0);
@@ -586,11 +588,15 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
   const preloadedSlideIdsRef = useRef(new Set<string>());
   const [activeIndex, setActiveIndex] = useState(0);
   const [incomingIndex, setIncomingIndex] = useState<number | null>(null);
+  const [activeSlot, setActiveSlot] = useState<TextSlideSlot>('a');
   const [activeImagePositionBreakpoint, setActiveImagePositionBreakpoint] =
     useState<TextSlideImagePositionBreakpoint>('base');
 
   const activeSlide = slides[activeIndex];
   const incomingSlide = incomingIndex === null ? null : slides[incomingIndex];
+  const slotAIsActive = activeSlot === 'a';
+  const slotASlide = slotAIsActive ? activeSlide : incomingSlide ?? activeSlide;
+  const slotBSlide = slotAIsActive ? incomingSlide ?? activeSlide : activeSlide;
 
   useEffect(() => {
     const updateActiveBreakpoint = () => {
@@ -856,15 +862,33 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
         return;
       }
 
+      const activeTextNode = slotAIsActive
+        ? slotATextRef.current
+        : slotBTextRef.current;
+      const activeTopNode = slotAIsActive
+        ? slotATopRef.current
+        : slotBTopRef.current;
+      const activeBottomNode = slotAIsActive
+        ? slotABottomRef.current
+        : slotBBottomRef.current;
+      const incomingTextNode = slotAIsActive
+        ? slotBTextRef.current
+        : slotATextRef.current;
+      const incomingTopNode = slotAIsActive
+        ? slotBTopRef.current
+        : slotATopRef.current;
+      const incomingBottomNode = slotAIsActive
+        ? slotBBottomRef.current
+        : slotABottomRef.current;
       const activeNodes = [
-        activeTextRef.current,
-        activeTopRef.current,
-        activeBottomRef.current,
+        activeTextNode,
+        activeTopNode,
+        activeBottomNode,
       ];
       const incomingNodes = [
-        incomingTextRef.current,
-        incomingTopRef.current,
-        incomingBottomRef.current,
+        incomingTextNode,
+        incomingTopNode,
+        incomingBottomNode,
       ];
 
       if (activeNodes.some((node) => !node) || incomingNodes.some((node) => !node)) {
@@ -884,16 +908,16 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
         activeSlide.bottomImage === incomingSlide.bottomImage &&
         activeSlide.imagePosition === incomingSlide.imagePosition;
       const welcomeBase = incomingSlide.id === 'welcome'
-        ? incomingTextRef.current?.querySelector<HTMLElement>('[data-welcome-glitch-base]') ?? null
+        ? incomingTextNode?.querySelector<HTMLElement>('[data-welcome-glitch-base]') ?? null
         : null;
       const welcomeTop = incomingSlide.id === 'welcome'
-        ? incomingTextRef.current?.querySelector<HTMLElement>('[data-welcome-glitch-top]') ?? null
+        ? incomingTextNode?.querySelector<HTMLElement>('[data-welcome-glitch-top]') ?? null
         : null;
       const welcomeBottom = incomingSlide.id === 'welcome'
-        ? incomingTextRef.current?.querySelector<HTMLElement>('[data-welcome-glitch-bottom]') ?? null
+        ? incomingTextNode?.querySelector<HTMLElement>('[data-welcome-glitch-bottom]') ?? null
         : null;
       const welcomeWhite = incomingSlide.id === 'welcome'
-        ? incomingTextRef.current?.querySelector<HTMLElement>('[data-welcome-glitch-white]') ?? null
+        ? incomingTextNode?.querySelector<HTMLElement>('[data-welcome-glitch-white]') ?? null
         : null;
       const shouldAnimateWelcomeGlitch =
         welcomeBase &&
@@ -907,30 +931,31 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
         },
         onComplete: () => {
           setActiveIndex(incomingIndex);
+          setActiveSlot(slotAIsActive ? 'b' : 'a');
           setIncomingIndex(null);
         },
       });
 
-      gsap.set(incomingTextRef.current, {
+      gsap.set(incomingTextNode, {
         autoAlpha: 0,
         y: textEnterY,
         scale: textEnterScale,
         filter: 'blur(10px)',
       });
       if (keepArtworkStatic) {
-        gsap.set([incomingTopRef.current, incomingBottomRef.current], {
+        gsap.set([incomingTopNode, incomingBottomNode], {
           autoAlpha: 1,
           y: 0,
           scale: 1,
         });
       } else {
-        gsap.set(incomingTopRef.current, {
+        gsap.set(incomingTopNode, {
           autoAlpha: 0,
           y: -artEnterDistance,
           scale: artMotionScale,
           transformOrigin: '50% 100%',
         });
-        gsap.set(incomingBottomRef.current, {
+        gsap.set(incomingBottomNode, {
           autoAlpha: 0,
           y: artEnterDistance,
           scale: artMotionScale,
@@ -940,7 +965,7 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
 
       timeline
         .to(
-          activeTextRef.current,
+          activeTextNode,
           {
             autoAlpha: 0,
             y: -34,
@@ -951,7 +976,7 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
           0,
         )
         .to(
-          incomingTextRef.current,
+          incomingTextNode,
           {
             autoAlpha: 1,
             y: 0,
@@ -1031,7 +1056,7 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
       if (!keepArtworkStatic) {
         timeline
           .to(
-            activeTopRef.current,
+            activeTopNode,
             {
               autoAlpha: 0,
               y: -artExitDistance,
@@ -1042,7 +1067,7 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
             0,
           )
           .to(
-            activeBottomRef.current,
+            activeBottomNode,
             {
               autoAlpha: 0,
               y: artExitDistance,
@@ -1053,7 +1078,7 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
             0,
           )
           .to(
-            incomingTopRef.current,
+            incomingTopNode,
             {
               autoAlpha: 1,
               y: 0,
@@ -1063,7 +1088,7 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
             0,
           )
           .to(
-            incomingBottomRef.current,
+            incomingBottomNode,
             {
               autoAlpha: 1,
               y: 0,
@@ -1105,26 +1130,24 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
         </div>
 
         <SlideArtwork
-          key={`active-${activeSlide.id}`}
-          slide={activeSlide}
-          textRef={activeTextRef}
-          topRef={activeTopRef}
-          bottomRef={activeBottomRef}
-          layerClassName="z-10"
+          slide={slotASlide}
+          textRef={slotATextRef}
+          topRef={slotATopRef}
+          bottomRef={slotABottomRef}
+          layerClassName={slotAIsActive ? 'z-10' : incomingSlide ? 'z-20' : 'hidden z-0'}
+          ariaHidden={!slotAIsActive}
           activeBreakpoint={activeImagePositionBreakpoint}
         />
 
-        {incomingSlide ? (
-          <SlideArtwork
-            key={`incoming-${incomingSlide.id}`}
-            slide={incomingSlide}
-            textRef={incomingTextRef}
-            topRef={incomingTopRef}
-            bottomRef={incomingBottomRef}
-            layerClassName="z-20"
-            activeBreakpoint={activeImagePositionBreakpoint}
-          />
-        ) : null}
+        <SlideArtwork
+          slide={slotBSlide}
+          textRef={slotBTextRef}
+          topRef={slotBTopRef}
+          bottomRef={slotBBottomRef}
+          layerClassName={!slotAIsActive ? 'z-10' : incomingSlide ? 'z-20' : 'hidden z-0'}
+          ariaHidden={slotAIsActive}
+          activeBreakpoint={activeImagePositionBreakpoint}
+        />
       </section>
     </FullPageSection>
   );
@@ -1136,6 +1159,7 @@ interface SlideArtworkProps {
   topRef: RefObject<HTMLDivElement | null>;
   bottomRef: RefObject<HTMLDivElement | null>;
   layerClassName: string;
+  ariaHidden: boolean;
   activeBreakpoint: TextSlideImagePositionBreakpoint;
 }
 
@@ -1145,6 +1169,7 @@ function SlideArtwork({
   topRef,
   bottomRef,
   layerClassName,
+  ariaHidden,
   activeBreakpoint,
 }: SlideArtworkProps) {
   const isWelcomeSlide = slide.id === 'welcome';
@@ -1161,7 +1186,10 @@ function SlideArtwork({
   } as CSSProperties;
 
   return (
-    <div className={`pointer-events-none absolute inset-0 ${layerClassName}`}>
+    <div
+      className={`pointer-events-none absolute inset-0 ${layerClassName}`}
+      aria-hidden={ariaHidden}
+    >
       <div
         ref={topRef}
         className="absolute left-1/2 w-screen -translate-x-1/2"

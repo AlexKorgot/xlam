@@ -280,6 +280,7 @@ export function CinematicVideoSlider({
   const openedSlidingContentRevealedRef = useRef(false);
   const overlayStateRef = useRef<CinematicOverlayState>('slider');
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isActiveMediaLoading, setIsActiveMediaLoading] = useState(true);
   const [pendingOpenedIndex, setPendingOpenedIndex] = useState<number | null>(null);
   const [overlayState, setOverlayState] = useState<CinematicOverlayState>('slider');
   const [sectionStyle, setSectionStyle] = useState<CinematicSectionStyle>({
@@ -357,6 +358,7 @@ export function CinematicVideoSlider({
         slides,
         runtimeActive: isActiveRef.current,
         onActiveSlideChange: setActiveIndex,
+        onActiveMediaLoadingChange: setIsActiveMediaLoading,
         onOverlayStateChange: setOverlayState,
         onOpenedSlideTargetChange: setPendingOpenedIndex,
       });
@@ -1000,6 +1002,17 @@ export function CinematicVideoSlider({
       <div className="pointer-events-none absolute inset-0 z-[-1] bg-[radial-gradient(ellipse_85%_55%_at_50%_46%,rgba(69,130,148,0.42)_0%,rgba(69,130,148,0.22)_34%,rgba(0,0,0,0)_72%)]" />
 
       <div ref={canvasHostRef} className="absolute inset-0 z-0 cursor-pointer touch-manipulation" />
+
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-0 z-[5] flex items-center justify-center transition-opacity duration-200 ${
+          isActive && isActiveMediaLoading ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <span className="relative flex h-28 w-28 items-center justify-center rounded-full border-4 border-[#63ff45]/25 border-r-[#63ff45] border-t-[#63ff45] bg-black/25 shadow-[0_0_48px_rgba(99,255,69,0.38)] animate-spin sm:h-36 sm:w-36 md:h-44 md:w-44 md:border-[5px] lg:h-[200px] lg:w-[200px] lg:border-[6px]">
+          <span className="h-4 w-4 rotate-45 bg-[#63ff45] shadow-[0_0_24px_rgba(99,255,69,0.9)] sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
+        </span>
+      </div>
 
       <div
         ref={chromeRef}

@@ -31,6 +31,7 @@ export type CinematicSlide = {
 
 export type SliderSceneCallbacks = {
   onActiveSlideChange?: (index: number) => void;
+  onActiveMediaLoadingChange?: (isLoading: boolean) => void;
   onOverlayStateChange?: (state: CinematicOverlayState) => void;
   onOpenedSlideTargetChange?: (index: number | null) => void;
   onAutoplayBlocked?: () => void;

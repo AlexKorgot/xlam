@@ -41,14 +41,17 @@ type SlideVideo = {
   textureState: 'poster' | 'transitioning' | 'video';
   isPosterSettled: boolean;
   isVideoReady: boolean;
+  isVideoLoading: boolean;
   videoMediaSize: THREE.Vector2;
   posterMediaSize: THREE.Vector2;
   recoveryAttempts: number;
   recoveryTimer: number | null;
   handleMetadata: () => void;
+  handleVideoLoadStart: () => void;
   handleVideoError: () => void;
   handleVideoWaiting: () => void;
   handleVideoPlaying: () => void;
+  handleVideoSuspend: () => void;
   lastRole: FilmStripSlideRole;
 };
 
@@ -163,6 +166,7 @@ export class SliderScene {
 
           slideVideo.isPosterSettled = true;
           this.revealVideoTexture(index);
+          this.syncActiveMediaLoading();
         },
         index * POSTER_BITMAP_STAGGER_MS,
       );
@@ -190,19 +194,64 @@ export class SliderScene {
 
         texture.needsUpdate = true;
         slideVideo.isVideoReady = true;
+        slideVideo.isVideoLoading = false;
         slideVideo.videoMediaSize.copy(videoMediaSize);
         this.revealVideoTexture(index);
+        this.syncActiveMediaLoading();
+      };
+      const handleVideoLoadStart = () => {
+        const slideVideo = this.slideVideos[index];
+
+        if (!slideVideo) {
+          return;
+        }
+
+        slideVideo.isVideoLoading = true;
+        this.syncActiveMediaLoading();
       };
       const handleVideoError = () => {
+        const slideVideo = this.slideVideos[index];
+
+        if (slideVideo) {
+          slideVideo.isVideoReady = false;
+          slideVideo.isVideoLoading = false;
+          this.syncActiveMediaLoading();
+        }
+
         this.scheduleVideoRecovery(index, true);
       };
       const handleVideoWaiting = () => {
+        const slideVideo = this.slideVideos[index];
+
+        if (slideVideo) {
+          slideVideo.isVideoLoading = true;
+          this.syncActiveMediaLoading();
+        }
+
         this.scheduleVideoRecovery(index, false);
       };
       const handleVideoPlaying = () => {
+        const slideVideo = this.slideVideos[index];
+
+        if (slideVideo) {
+          slideVideo.isVideoLoading = false;
+          this.syncActiveMediaLoading();
+        }
+
         this.clearVideoRecoveryTimer(index);
       };
+      const handleVideoSuspend = () => {
+        const slideVideo = this.slideVideos[index];
 
+        if (!slideVideo || slideVideo.isVideoReady) {
+          return;
+        }
+
+        slideVideo.isVideoLoading = false;
+        this.syncActiveMediaLoading();
+      };
+
+      video.addEventListener('loadstart', handleVideoLoadStart);
       video.addEventListener('loadedmetadata', handleMetadata);
       video.addEventListener('loadeddata', handleMetadata);
       video.addEventListener('canplay', handleMetadata);
@@ -211,6 +260,7 @@ export class SliderScene {
       video.addEventListener('stalled', handleVideoWaiting);
       video.addEventListener('waiting', handleVideoWaiting);
       video.addEventListener('playing', handleVideoPlaying);
+      video.addEventListener('suspend', handleVideoSuspend);
 
       plane.mesh.renderOrder = index === 0 ? 30 : 5;
       plane.setActive(index === 0);
@@ -229,14 +279,17 @@ export class SliderScene {
         textureState: 'poster',
         isPosterSettled: false,
         isVideoReady: false,
+        isVideoLoading: !this.isVideoDrawable(video) && video.error === null,
         videoMediaSize,
         posterMediaSize,
         recoveryAttempts: 0,
         recoveryTimer: null,
         handleMetadata,
+        handleVideoLoadStart,
         handleVideoError,
         handleVideoWaiting,
         handleVideoPlaying,
+        handleVideoSuspend,
         lastRole: index === 0 ? 'center' : this.getSlideRole(centeredOffset(index, this.slidePosition, this.slides.length)),
       });
       this.planes.push(plane);
@@ -252,6 +305,7 @@ export class SliderScene {
     this.resize();
     this.bindObservers();
     this.pauseInactiveVideos();
+    this.syncActiveMediaLoading();
 
     if (this.isRuntimeActive) {
       this.start();
@@ -571,9 +625,11 @@ export class SliderScene {
       textureTween,
       recoveryTimer,
       handleMetadata,
+      handleVideoLoadStart,
       handleVideoError,
       handleVideoWaiting,
       handleVideoPlaying,
+      handleVideoSuspend,
       handlePosterLoad,
       handlePosterError,
     }) => {
@@ -581,6 +637,7 @@ export class SliderScene {
       if (recoveryTimer !== null) {
         window.clearTimeout(recoveryTimer);
       }
+      video.removeEventListener('loadstart', handleVideoLoadStart);
       video.removeEventListener('loadedmetadata', handleMetadata);
       video.removeEventListener('loadeddata', handleMetadata);
       video.removeEventListener('canplay', handleMetadata);
@@ -589,6 +646,7 @@ export class SliderScene {
       video.removeEventListener('stalled', handleVideoWaiting);
       video.removeEventListener('waiting', handleVideoWaiting);
       video.removeEventListener('playing', handleVideoPlaying);
+      video.removeEventListener('suspend', handleVideoSuspend);
       posterImage.removeEventListener('load', handlePosterLoad);
       posterImage.removeEventListener('error', handlePosterError);
       cancelPosterPreparation();
@@ -807,6 +865,18 @@ export class SliderScene {
     return texture;
   }
 
+  private syncActiveMediaLoading() {
+    const activeSlideVideo = this.slideVideos[this.activeIndex];
+
+    if (!activeSlideVideo) {
+      return;
+    }
+
+    this.callbacks.onActiveMediaLoadingChange?.(
+      !activeSlideVideo.isPosterSettled || activeSlideVideo.isVideoLoading,
+    );
+  }
+
   private isVideoDrawable(video: HTMLVideoElement) {
     return (
         video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
@@ -900,9 +970,13 @@ export class SliderScene {
     if (activeSlideVideo) {
       activeSlideVideo.recoveryAttempts = 0;
       activeSlideVideo.video.preload = 'auto';
+      activeSlideVideo.isVideoLoading =
+        !this.isVideoDrawable(activeSlideVideo.video) && activeSlideVideo.video.error === null;
       activeSlideVideo.handleMetadata();
       this.revealVideoTexture(index);
     }
+
+    this.syncActiveMediaLoading();
 
     this.planes.forEach((plane, planeIndex) => {
       plane.setActive(planeIndex === index);
@@ -1114,6 +1188,8 @@ export class SliderScene {
 
       slideVideo.recoveryAttempts += 1;
       slideVideo.isVideoReady = false;
+      slideVideo.isVideoLoading = true;
+      this.syncActiveMediaLoading();
       slideVideo.video.pause();
       slideVideo.video.preload = 'auto';
       slideVideo.video.load();
