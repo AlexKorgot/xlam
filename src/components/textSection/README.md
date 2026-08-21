@@ -14,9 +14,12 @@ The section cycles through short text statements. Each statement owns a top artw
 - `assets/img/gray_top.png` and `gray_bottom.png`: `idea` and `welcome` slide artwork.
 
 Landscape WebP variants and mobile portrait crops live in `public/text-section`.
-Portrait crops preserve each mobile artwork slot's aspect ratio so the browser does
-not download a mostly cropped 1920px landscape image. Regenerate those crops after
-changing a PNG master:
+Portrait screens up to `639px` use a compact crop below `800px` viewport height and
+a tall crop from `800px`; mobile landscape uses the smallest suitable landscape
+variant. This keeps the artwork composition tied to the viewport shape instead of
+a single width threshold. The browser selects the closest resolution for the
+viewport width and device pixel ratio. Regenerate the crops after changing a PNG
+master:
 
 ```bash
 npm run images:text-section

@@ -20,6 +20,7 @@ import {
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
+import styles from './TextSection.module.scss';
 
 type ResponsiveImageAsset = {
   src: string;
@@ -38,19 +39,13 @@ type ResponsiveImageSource = {
 
 type ResponsiveImageVariant = readonly [number, `/${string}`];
 
-const compactPortraitMedia = '(orientation: portrait) and (max-width: 399px)';
+const compactPortraitMedia =
+  '(orientation: portrait) and (max-width: 639px) and (max-height: 799px)';
 const tallPortraitMedia =
-  '(orientation: portrait) and (min-width: 400px) and (max-width: 639px)';
+  '(orientation: portrait) and (max-width: 639px) and (min-height: 800px)';
 const mobilePortraitMedia = '(orientation: portrait) and (max-width: 639px)';
 
-const artworkImageSizes = [
-  '(max-width: 399px) 1280px',
-  '(max-width: 639px) 1920px',
-  '(max-width: 1023px) 960px',
-  '(max-width: 1279px) 1280px',
-  '(max-width: 1535px) 1600px',
-  '1920px',
-].join(', ');
+const artworkImageSizes = '100vw';
 
 function responsiveImageAsset(
   variants: ReadonlyArray<ResponsiveImageVariant>,
@@ -80,13 +75,14 @@ function responsiveImageAsset(
 function responsiveImageSource(
   media: string,
   variants: ReadonlyArray<ResponsiveImageVariant>,
+  sizes = '100vw',
 ): ResponsiveImageSource {
   return {
     media,
     srcSet: variants
       .map(([variantWidth, path]) => `${publicAssetPath(path)} ${variantWidth}w`)
       .join(', '),
-    sizes: '100vw',
+    sizes,
   };
 }
 
@@ -112,7 +108,7 @@ const GeneralBackground = responsiveImageAsset(
   [
     responsiveImageSource(mobilePortraitMedia, [
       [499, '/text-section/general-bg-portrait-499w.webp'],
-    ]),
+    ], '110vw'),
   ],
 );
 const BlueTop = responsiveImageAsset(
@@ -319,20 +315,19 @@ function preloadResponsiveImage(asset: ResponsiveImageAsset) {
 const scrollIgnoreAttr = { [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' } as const;
 const slideWheelThreshold = 48;
 const slideInputUnlockDelay = 700;
-const imagePositionBreakpoints: Array<{
-  key: Exclude<TextSlideImagePositionBreakpoint, 'base'>;
-  minWidth: number;
-}> = [
-  { key: 'xs', minWidth:  400 },
-  { key: 'sm', minWidth: 640 },
-  { key: 'md', minWidth: 768 },
-  { key: 'lg', minWidth: 1024 },
-  { key: 'xl', minWidth: 1280 },
-  { key: '2xl', minWidth: 1536 },
-  { key: '3xl', minWidth: 1920 },
-  { key: '4xl', minWidth: 2240 },
-  { key: '5xl', minWidth: 2560 },
-  { key: '6xl', minWidth: 3000 },
+const imagePositionBreakpoints: Array<
+  Exclude<TextSlideImagePositionBreakpoint, 'base'>
+> = [
+  'xs',
+  'sm',
+  'md',
+  'lg',
+  'xl',
+  '2xl',
+  '3xl',
+  '4xl',
+  '5xl',
+  '6xl',
 ];
 const defaultImagePosition: TextSlideImagePosition = {
   top: '0',
@@ -494,22 +489,6 @@ const slides: TextSlide[] = [
   },
 ];
 
-const getActiveImagePositionBreakpoint = (): TextSlideImagePositionBreakpoint => {
-  if (typeof window === 'undefined') {
-    return 'base';
-  }
-
-  for (let index = imagePositionBreakpoints.length - 1; index >= 0; index -= 1) {
-    const breakpoint = imagePositionBreakpoints[index];
-
-    if (window.matchMedia(`(min-width: ${breakpoint.minWidth}px)`).matches) {
-      return breakpoint.key;
-    }
-  }
-
-  return 'base';
-};
-
 const resolveResponsivePositionValue = (
   value: ResponsivePositionValue | undefined,
   fallback: string,
@@ -527,11 +506,11 @@ const resolveResponsivePositionValue = (
     activeBreakpoint === 'base'
       ? -1
       : imagePositionBreakpoints.findIndex(
-          (breakpoint) => breakpoint.key === activeBreakpoint,
+          (breakpoint) => breakpoint === activeBreakpoint,
         );
 
   for (let index = activeBreakpointIndex; index >= 0; index -= 1) {
-    const breakpointValue = value[imagePositionBreakpoints[index].key];
+    const breakpointValue = value[imagePositionBreakpoints[index]];
 
     if (breakpointValue) {
       return breakpointValue;
@@ -567,6 +546,31 @@ const resolveImagePosition = (
   ),
 });
 
+const imagePositionBreakpointKeys: TextSlideImagePositionBreakpoint[] = [
+  'base',
+  ...imagePositionBreakpoints,
+];
+
+const createArtworkStyle = (
+  config: TextSlideImagePositionConfig | undefined,
+  side: 'top' | 'bottom',
+) => {
+  const customProperties: Record<string, string> = {};
+
+  imagePositionBreakpointKeys.forEach((breakpoint) => {
+    const position = resolveImagePosition(config, breakpoint);
+
+    customProperties[`--artwork-offset-${breakpoint}`] = position[side];
+    customProperties[`--artwork-height-${breakpoint}`] =
+      side === 'top' ? position.topHeight : position.bottomHeight;
+  });
+
+  return {
+    ...customProperties,
+    willChange: 'transform, opacity',
+  } as CSSProperties;
+};
+
 export function TextSection({ intervalMs = 5000, isActive = false }: TextSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const backgroundRef = useRef<HTMLDivElement>(null);
@@ -589,36 +593,12 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
   const [activeIndex, setActiveIndex] = useState(0);
   const [incomingIndex, setIncomingIndex] = useState<number | null>(null);
   const [activeSlot, setActiveSlot] = useState<TextSlideSlot>('a');
-  const [activeImagePositionBreakpoint, setActiveImagePositionBreakpoint] =
-    useState<TextSlideImagePositionBreakpoint>('base');
 
   const activeSlide = slides[activeIndex];
   const incomingSlide = incomingIndex === null ? null : slides[incomingIndex];
   const slotAIsActive = activeSlot === 'a';
   const slotASlide = slotAIsActive ? activeSlide : incomingSlide ?? activeSlide;
   const slotBSlide = slotAIsActive ? incomingSlide ?? activeSlide : activeSlide;
-
-  useEffect(() => {
-    const updateActiveBreakpoint = () => {
-      setActiveImagePositionBreakpoint(getActiveImagePositionBreakpoint());
-    };
-
-    updateActiveBreakpoint();
-
-    const mediaQueries = imagePositionBreakpoints.map((breakpoint) =>
-      window.matchMedia(`(min-width: ${breakpoint.minWidth}px)`),
-    );
-
-    mediaQueries.forEach((mediaQuery) => {
-      mediaQuery.addEventListener('change', updateActiveBreakpoint);
-    });
-
-    return () => {
-      mediaQueries.forEach((mediaQuery) => {
-        mediaQuery.removeEventListener('change', updateActiveBreakpoint);
-      });
-    };
-  }, []);
 
   useEffect(() => {
     activeIndexRef.current = activeIndex;
@@ -1136,7 +1116,6 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
           bottomRef={slotABottomRef}
           layerClassName={slotAIsActive ? 'z-10' : incomingSlide ? 'z-20' : 'hidden z-0'}
           ariaHidden={!slotAIsActive}
-          activeBreakpoint={activeImagePositionBreakpoint}
         />
 
         <SlideArtwork
@@ -1146,7 +1125,6 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
           bottomRef={slotBBottomRef}
           layerClassName={!slotAIsActive ? 'z-10' : incomingSlide ? 'z-20' : 'hidden z-0'}
           ariaHidden={slotAIsActive}
-          activeBreakpoint={activeImagePositionBreakpoint}
         />
       </section>
     </FullPageSection>
@@ -1160,7 +1138,6 @@ interface SlideArtworkProps {
   bottomRef: RefObject<HTMLDivElement | null>;
   layerClassName: string;
   ariaHidden: boolean;
-  activeBreakpoint: TextSlideImagePositionBreakpoint;
 }
 
 function SlideArtwork({
@@ -1170,20 +1147,10 @@ function SlideArtwork({
   bottomRef,
   layerClassName,
   ariaHidden,
-  activeBreakpoint,
 }: SlideArtworkProps) {
   const isWelcomeSlide = slide.id === 'welcome';
-  const imagePosition = resolveImagePosition(slide.imagePosition, activeBreakpoint);
-  const topImageStyle = {
-    top: imagePosition.top,
-    height: imagePosition.topHeight,
-    willChange: 'transform, opacity',
-  } as CSSProperties;
-  const bottomImageStyle = {
-    bottom: imagePosition.bottom,
-    height: imagePosition.bottomHeight,
-    willChange: 'transform, opacity',
-  } as CSSProperties;
+  const topImageStyle = createArtworkStyle(slide.imagePosition, 'top');
+  const bottomImageStyle = createArtworkStyle(slide.imagePosition, 'bottom');
 
   return (
     <div
@@ -1192,7 +1159,7 @@ function SlideArtwork({
     >
       <div
         ref={topRef}
-        className="absolute left-1/2 w-screen -translate-x-1/2"
+        className={`${styles.artwork} ${styles.topArtwork} absolute left-1/2 w-screen -translate-x-1/2`}
         style={topImageStyle}
       >
         <ResponsiveImage
@@ -1203,7 +1170,7 @@ function SlideArtwork({
 
       <div
         ref={bottomRef}
-        className="absolute left-1/2 w-screen -translate-x-1/2"
+        className={`${styles.artwork} ${styles.bottomArtwork} absolute left-1/2 w-screen -translate-x-1/2`}
         style={bottomImageStyle}
       >
         <ResponsiveImage

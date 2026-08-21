@@ -1,0 +1,85 @@
+.artwork {
+  --artwork-offset: var(--artwork-offset-base);
+  --artwork-height: var(--artwork-height-base);
+
+  height: var(--artwork-height);
+}
+
+.topArtwork {
+  top: var(--artwork-offset);
+}
+
+.bottomArtwork {
+  bottom: var(--artwork-offset);
+}
+
+@mixin use-artwork-breakpoint($breakpoint) {
+  --artwork-offset: var(--artwork-offset-#{$breakpoint});
+  --artwork-height: var(--artwork-height-#{$breakpoint});
+}
+
+@media (orientation: portrait) and (max-width: 639px) and (min-height: 800px) {
+  .artwork {
+    @include use-artwork-breakpoint('xs');
+  }
+}
+
+@media (orientation: landscape) and (max-width: 639px) {
+  .artwork {
+    @include use-artwork-breakpoint('sm');
+  }
+}
+
+@media (min-width: 640px) {
+  .artwork {
+    @include use-artwork-breakpoint('sm');
+  }
+}
+
+@media (min-width: 768px) {
+  .artwork {
+    @include use-artwork-breakpoint('md');
+  }
+}
+
+@media (min-width: 1024px) {
+  .artwork {
+    @include use-artwork-breakpoint('lg');
+  }
+}
+
+@media (min-width: 1280px) {
+  .artwork {
+    @include use-artwork-breakpoint('xl');
+  }
+}
+
+@media (min-width: 1536px) {
+  .artwork {
+    @include use-artwork-breakpoint('2xl');
+  }
+}
+
+@media (min-width: 1920px) {
+  .artwork {
+    @include use-artwork-breakpoint('3xl');
+  }
+}
+
+@media (min-width: 2240px) {
+  .artwork {
+    @include use-artwork-breakpoint('4xl');
+  }
+}
+
+@media (min-width: 2560px) {
+  .artwork {
+    @include use-artwork-breakpoint('5xl');
+  }
+}
+
+@media (min-width: 3000px) {
+  .artwork {
+    @include use-artwork-breakpoint('6xl');
+  }
+}
