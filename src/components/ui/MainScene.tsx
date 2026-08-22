@@ -338,7 +338,7 @@ export const MainScene = () => {
     }
 
     if (
-      startIndex === SECOND_SECTION_INDEX &&
+      startIndex !== MORPH_SECTION_INDEX &&
       targetIndex === MORPH_SECTION_INDEX &&
       responsiveMorphModeRef.current === 'desktop'
     ) {
