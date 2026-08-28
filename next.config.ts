@@ -18,6 +18,9 @@ const mediaBaseUrl = (
 
 const nextConfig: NextConfig = {
     output: 'export',
+    turbopack: {
+        root: process.cwd(),
+    },
     images: {
         unoptimized: true,
         remotePatterns: [new URL(`${mediaBaseUrl}/**`)],

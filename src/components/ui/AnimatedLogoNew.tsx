@@ -310,7 +310,7 @@ export const AnimatedLogoNew = forwardRef<AnimatedLogoHandle, AnimatedLogoNewPro
                 <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center">
                     <div
                         ref={centerLogoRef}
-                        className={`${styles.centerWidthClass} pointer-events-auto`}
+                        className={`${styles.centerWidthClass} ${variant === 'mobile' ? 'pointer-events-none' : 'pointer-events-auto'}`}
                         style={initialCenterLogoStyle}
                         onPointerEnter={handleHeroLogoPointerEnter}
                     >

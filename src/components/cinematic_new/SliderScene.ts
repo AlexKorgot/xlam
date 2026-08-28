@@ -29,6 +29,7 @@ type FilmStripSlideRole = 'center' | 'side' | 'buffer' | 'sleeping';
 
 type SlideVideo = {
   index: number;
+  videoSrc: string;
   video: HTMLVideoElement;
   texture: THREE.VideoTexture;
   posterTexture: THREE.Texture;
@@ -142,7 +143,11 @@ export class SliderScene {
     this.container.appendChild(this.renderer.domElement);
 
     this.slides.forEach((slide, index) => {
-      const video = this.createVideoElement(slide.videoSrc, index === this.activeIndex);
+      const containerWidth = this.container.getBoundingClientRect().width || window.innerWidth;
+      const videoSrc = isFilmStripMobileViewport(containerWidth)
+        ? slide.mobileVideoSrc ?? slide.videoSrc
+        : slide.videoSrc;
+      const video = this.createVideoElement(videoSrc, index === this.activeIndex);
       const texture = this.createVideoTexture(video);
       const videoMediaSize = new THREE.Vector2(16, 9);
       const posterMediaSize = new THREE.Vector2(16, 9);
@@ -267,6 +272,7 @@ export class SliderScene {
 
       this.slideVideos.push({
         index,
+        videoSrc,
         video,
         texture,
         posterTexture,
@@ -616,6 +622,7 @@ export class SliderScene {
 
     this.slideVideos.forEach(({
       index,
+      videoSrc,
       video,
       texture,
       posterTexture,
@@ -651,7 +658,7 @@ export class SliderScene {
       posterImage.removeEventListener('error', handlePosterError);
       cancelPosterPreparation();
       video.pause();
-      releasePreloadedVideo(this.slides[index].videoSrc, video, { crossOrigin: 'anonymous' });
+      releasePreloadedVideo(videoSrc, video, { crossOrigin: 'anonymous' });
       releasePreloadedImage(this.slides[index].posterSrc, posterImage, { crossOrigin: 'anonymous' });
       video.removeAttribute('src');
       video.load();

@@ -177,7 +177,7 @@ function OpenedSheetBody({
         {slide.opened.secondaryBody ? (
           <p
             data-case-content
-            className="mt-7 max-w-[30rem] text-[15px] font-medium leading-[1.18] text-white/84 opacity-0 transition-[color] duration-300 sm:text-[18px] lg:mt-[clamp(2.2rem,5vh,4.5rem)] lg:max-w-[52rem] lg:text-[clamp(1.02rem,1.15vw,1.38rem)]"
+            className="mt-7 max-w-[30rem] whitespace-pre-line text-[15px] font-medium leading-[1.18] text-white/84 opacity-0 transition-[color] duration-300 sm:text-[18px] lg:mt-[clamp(2.2rem,5vh,4.5rem)] lg:max-w-[52rem] lg:text-[clamp(1.02rem,1.15vw,1.38rem)]"
           >
             {slide.opened.secondaryBody}
           </p>
