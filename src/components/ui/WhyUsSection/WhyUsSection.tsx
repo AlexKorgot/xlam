@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Container } from "@/src/components/ui/grid/Container";
 import { mediaAssetPath } from "@/src/lib/mediaAssetPath";
 import { useNearViewport } from "@/src/lib/useNearViewport";
+import ballsPoster from "./why-us-balls.png";
 import styles from "./WhyUsSection.module.scss";
 
 type FeatureBlockData = {
@@ -116,12 +117,13 @@ export function WhyUsSection() {
         className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover min-[1000px]:object-contain"
         muted
         playsInline
+        poster={ballsPoster.src}
         preload="none"
         src={shouldLoadVideo ? mediaAssetPath("/balls.mp4") : undefined}
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(0,0,0,0.14)_28%,rgba(0,0,0,0.62)_58%,rgba(0,0,0,0.82)_100%)] lg:hidden"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(0,0,0,0.12)_32%,rgba(0,0,0,0.32)_58%,rgba(0,0,0,0.62)_82%,rgba(0,0,0,0.82)_100%)] lg:hidden"
       />
       <Container>
         <div className="relative z-10 flex min-h-0 flex-col items-center">

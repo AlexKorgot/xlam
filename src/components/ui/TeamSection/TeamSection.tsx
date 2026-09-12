@@ -130,13 +130,13 @@ const teamItems: TeamItem[] = [
 ];
 
 export function TeamSection() {
-  const [activeId, setActiveId] = useState('valeriya');
+  const [activeId, setActiveId] = useState(teamItems[0].id);
   const [isMobilePicker, setIsMobilePicker] = useState(false);
   const listRef = useRef<HTMLUListElement | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const scrollStopTimeoutRef = useRef<number | null>(null);
   const isSnapScrollingRef = useRef(false);
-  const hasCenteredInitialItemRef = useRef(false);
+  const hasAlignedInitialItemRef = useRef(false);
   const activeItem =
     teamItems.find((item) => item.id === activeId) ?? teamItems[3];
   const pickerItems = teamItems.map((item) => ({
@@ -171,18 +171,15 @@ export function TeamSection() {
     );
   };
 
-  const scrollRowToListCenter = (row: HTMLLIElement, behavior: ScrollBehavior) => {
+  const scrollRowToListStart = (row: HTMLLIElement, behavior: ScrollBehavior) => {
     const list = listRef.current;
 
     if (!list) {
       return;
     }
 
-    const rowTop = row.offsetTop;
-    const targetScrollTop = rowTop - (list.clientHeight - row.offsetHeight) / 2;
-
     list.scrollTo({
-      top: Math.max(0, targetScrollTop),
+      top: Math.max(0, row.offsetTop),
       behavior,
     });
   };
@@ -201,7 +198,7 @@ export function TeamSection() {
     };
   }, []);
 
-  const selectCenteredListItem = useCallback((snapToItem = true) => {
+  const selectFirstVisibleListItem = useCallback((snapToItem = true) => {
     const list = listRef.current;
 
     if (!list || !isMobilePickerViewport()) {
@@ -209,15 +206,14 @@ export function TeamSection() {
     }
 
     const listRect = list.getBoundingClientRect();
-    const listCenterY = listRect.top + listRect.height / 2;
+    const listTop = listRect.top;
     const rows = Array.from(list.querySelectorAll<HTMLLIElement>('[data-team-item-id]'));
     let closestRow: HTMLLIElement | null = null;
     let closestDistance = Number.POSITIVE_INFINITY;
 
     for (const row of rows) {
       const rowRect = row.getBoundingClientRect();
-      const rowCenterY = rowRect.top + rowRect.height / 2;
-      const distance = Math.abs(rowCenterY - listCenterY);
+      const distance = Math.abs(rowRect.top - listTop);
 
       if (distance < closestDistance) {
         closestDistance = distance;
@@ -233,7 +229,7 @@ export function TeamSection() {
 
     if (snapToItem && closestRow) {
       isSnapScrollingRef.current = true;
-      scrollRowToListCenter(closestRow, 'smooth');
+      scrollRowToListStart(closestRow, 'smooth');
 
       window.setTimeout(() => {
         isSnapScrollingRef.current = false;
@@ -243,7 +239,7 @@ export function TeamSection() {
     setActiveId(nextId);
   }, []);
 
-  const scheduleCenteredSelection = useCallback(
+  const scheduleFirstVisibleSelection = useCallback(
     (delay = 150) => {
       if (scrollStopTimeoutRef.current !== null) {
         window.clearTimeout(scrollStopTimeoutRef.current);
@@ -251,13 +247,13 @@ export function TeamSection() {
 
       scrollStopTimeoutRef.current = window.setTimeout(() => {
         scrollStopTimeoutRef.current = null;
-        selectCenteredListItem();
+        selectFirstVisibleListItem();
       }, delay);
     },
-    [selectCenteredListItem],
+    [selectFirstVisibleListItem],
   );
 
-  const centerAndSelectItem = useCallback((id: string) => {
+  const alignAndSelectItem = useCallback((id: string) => {
     const list = listRef.current;
 
     if (!list || !isMobilePickerViewport()) {
@@ -267,14 +263,13 @@ export function TeamSection() {
 
     const rows = Array.from(list.querySelectorAll<HTMLLIElement>(`[data-team-item-id="${id}"]`));
     const listRect = list.getBoundingClientRect();
-    const listCenterY = listRect.top + listRect.height / 2;
+    const listTop = listRect.top;
     let row: HTMLLIElement | null = null;
     let closestDistance = Number.POSITIVE_INFINITY;
 
     for (const candidate of rows) {
       const rowRect = candidate.getBoundingClientRect();
-      const rowCenterY = rowRect.top + rowRect.height / 2;
-      const distance = Math.abs(rowCenterY - listCenterY);
+      const distance = Math.abs(rowRect.top - listTop);
 
       if (distance < closestDistance) {
         closestDistance = distance;
@@ -288,7 +283,7 @@ export function TeamSection() {
     }
 
     isSnapScrollingRef.current = true;
-    scrollRowToListCenter(row, 'smooth');
+    scrollRowToListStart(row, 'smooth');
     setActiveId(id);
 
     window.setTimeout(() => {
@@ -301,27 +296,20 @@ export function TeamSection() {
       return undefined;
     }
 
-    if (hasCenteredInitialItemRef.current) {
+    if (hasAlignedInitialItemRef.current) {
       return undefined;
     }
 
-    hasCenteredInitialItemRef.current = true;
+    hasAlignedInitialItemRef.current = true;
     const list = listRef.current;
 
     if (!list || !isMobilePickerViewport()) {
       return undefined;
     }
 
-    const activeIndex = teamItems.findIndex((item) => item.id === activeId);
-    const rowHeight = window.matchMedia('(orientation: landscape)').matches
-      ? 48
-      : window.matchMedia('(min-width: 640px)').matches
-        ? 70
-        : 54;
-
     isSnapScrollingRef.current = true;
     list.scrollTo({
-      top: Math.max(0, activeIndex) * rowHeight,
+      top: 0,
       behavior: 'auto',
     });
 
@@ -359,7 +347,7 @@ export function TeamSection() {
       return;
     }
 
-    scheduleCenteredSelection();
+    scheduleFirstVisibleSelection();
   };
 
   const handleListPointerDown = (event: React.PointerEvent<HTMLUListElement>) => {
@@ -398,7 +386,7 @@ export function TeamSection() {
     const direction = getFullPageSwipeDirection(deltaY);
 
     if (canScrollList(direction)) {
-      scheduleCenteredSelection(180);
+      scheduleFirstVisibleSelection(180);
       return;
     }
 
@@ -409,7 +397,7 @@ export function TeamSection() {
 
   const handleListPointerCancel = () => {
     touchStartRef.current = null;
-    scheduleCenteredSelection(220);
+    scheduleFirstVisibleSelection(220);
   };
 
   return (
@@ -462,11 +450,11 @@ export function TeamSection() {
           <div className="relative z-30 mt-4 h-[390px] min-h-0 w-full max-w-full flex-none overflow-hidden max-lg:[@media_(orientation:landscape)]:mt-3 max-lg:[@media_(orientation:landscape)]:h-[144px] max-lg:[@media_(orientation:landscape)]:max-w-[54vw] sm:h-[430px] lg:mt-[17px] lg:h-auto lg:flex-none lg:overflow-visible">
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute left-0 right-[4px] top-1/2 z-20 hidden h-[54px] -translate-y-1/2 bg-[#66ff66]/[0.06] shadow-[0_0_42px_rgba(102,255,102,0.16)] max-lg:block max-lg:[@media_(orientation:landscape)]:h-[48px] sm:h-[70px]"
+              className="pointer-events-none absolute left-0 right-[4px] top-0 z-20 hidden h-[54px] bg-[#66ff66]/[0.06] shadow-[0_0_42px_rgba(102,255,102,0.16)] max-lg:block max-lg:[@media_(orientation:landscape)]:h-[48px] sm:h-[70px]"
             />
             <ul
               ref={listRef}
-              className="relative z-10 h-full min-h-0 w-full max-w-full flex-1 touch-pan-y snap-y snap-mandatory overflow-y-auto overflow-x-hidden overscroll-contain py-[168px] pr-1 [mask-image:linear-gradient(to_bottom,transparent_0%,#000_12%,#000_50%,#000_88%,transparent_100%)] [scrollbar-width:none] max-lg:[@media_(orientation:landscape)]:py-[48px] sm:py-[180px] lg:h-auto lg:flex-none lg:snap-none lg:overflow-visible lg:py-0 lg:pr-0 lg:[mask-image:none] [&::-webkit-scrollbar]:hidden"
+              className="relative z-10 h-full min-h-0 w-full max-w-full flex-1 touch-pan-y snap-y snap-mandatory overflow-y-auto overflow-x-hidden overscroll-contain pb-[336px] pr-1 [mask-image:linear-gradient(to_bottom,#000_0%,#000_88%,transparent_100%)] [scrollbar-width:none] max-lg:[@media_(orientation:landscape)]:!pb-[96px] sm:pb-[360px] lg:h-auto lg:flex-none lg:snap-none lg:overflow-visible lg:pb-0 lg:pr-0 lg:[mask-image:none] [&::-webkit-scrollbar]:hidden"
               {...{ [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' }}
               onScroll={handleListScroll}
               onWheel={handleListWheel}
@@ -485,7 +473,7 @@ export function TeamSection() {
                       setActiveId(item.id);
                     }
                   }}
-                  onSelect={() => centerAndSelectItem(item.id)}
+                  onSelect={() => alignAndSelectItem(item.id)}
                 />
               ))}
             </ul>
@@ -513,7 +501,7 @@ function TeamRow({
       data-team-item-id={item.id}
       data-team-cycle={cycle}
       className={clsx(
-        'snap-center lg:border-t lg:border-white/55 lg:last:border-b',
+        'snap-start lg:border-t lg:border-white/55 lg:last:border-b',
       )}
     >
       <button

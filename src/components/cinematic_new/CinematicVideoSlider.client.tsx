@@ -1069,9 +1069,15 @@ export function CinematicVideoSlider({
               </button>
               <h3
                 data-slide-label
-                className="flex w-full items-center justify-center text-[1rem] font-black uppercase leading-none text-[#66ff66] drop-shadow-[0_10px_22px_rgba(0,0,0,0.62)] min-[800px]:min-h-10 min-[800px]:w-auto min-[800px]:shrink-0 md:text-[1.35rem] xl:text-[1.875rem]"
+                className="relative flex w-full items-center justify-center text-[1rem] font-black uppercase leading-none text-[#66ff66] drop-shadow-[0_10px_22px_rgba(0,0,0,0.62)] min-[800px]:min-h-10 min-[800px]:w-auto min-[800px]:shrink-0 md:text-[1.35rem] xl:text-[1.875rem]"
               >
-                {activeSlide.title}
+                {/* Reserve the reference title width so navigation stays fixed across projects. */}
+                <span aria-hidden="true" className="hidden whitespace-nowrap min-[800px]:invisible min-[800px]:block">
+                  «Стыдно знать»
+                </span>
+                <span className="min-[800px]:absolute min-[800px]:inset-0 min-[800px]:flex min-[800px]:items-center min-[800px]:justify-center">
+                  {activeSlide.title}
+                </span>
               </h3>
               <button
                 type="button"
