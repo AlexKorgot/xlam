@@ -208,16 +208,22 @@ export function TeamSection() {
     const listRect = list.getBoundingClientRect();
     const listTop = listRect.top;
     const rows = Array.from(list.querySelectorAll<HTMLLIElement>('[data-team-item-id]'));
-    let closestRow: HTMLLIElement | null = null;
+    const isAtListEnd =
+      list.scrollTop + list.clientHeight >= list.scrollHeight - scrollEdgeThreshold;
+    let closestRow: HTMLLIElement | null = isAtListEnd
+      ? (rows[rows.length - 1] ?? null)
+      : null;
     let closestDistance = Number.POSITIVE_INFINITY;
 
-    for (const row of rows) {
-      const rowRect = row.getBoundingClientRect();
-      const distance = Math.abs(rowRect.top - listTop);
+    if (!isAtListEnd) {
+      for (const row of rows) {
+        const rowRect = row.getBoundingClientRect();
+        const distance = Math.abs(rowRect.top - listTop);
 
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestRow = row;
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestRow = row;
+        }
       }
     }
 
@@ -454,7 +460,7 @@ export function TeamSection() {
             />
             <ul
               ref={listRef}
-              className="relative z-10 h-full min-h-0 w-full max-w-full flex-1 touch-pan-y snap-y snap-mandatory overflow-y-auto overflow-x-hidden overscroll-contain pb-[336px] pr-1 [mask-image:linear-gradient(to_bottom,#000_0%,#000_88%,transparent_100%)] [scrollbar-width:none] max-lg:[@media_(orientation:landscape)]:!pb-[96px] sm:pb-[360px] lg:h-auto lg:flex-none lg:snap-none lg:overflow-visible lg:pb-0 lg:pr-0 lg:[mask-image:none] [&::-webkit-scrollbar]:hidden"
+              className="relative z-10 h-full min-h-0 w-full max-w-full flex-1 touch-pan-y snap-y snap-mandatory overflow-y-auto overflow-x-hidden overscroll-contain pb-12 pr-1 [mask-image:linear-gradient(to_bottom,#000_0%,#000_88%,transparent_100%)] [scrollbar-width:none] max-lg:[@media_(orientation:landscape)]:!pb-[18px] sm:pb-[52px] lg:h-auto lg:flex-none lg:snap-none lg:overflow-visible lg:pb-0 lg:pr-0 lg:[mask-image:none] [&::-webkit-scrollbar]:hidden"
               {...{ [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' }}
               onScroll={handleListScroll}
               onWheel={handleListWheel}

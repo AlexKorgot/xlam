@@ -126,6 +126,8 @@ type ServiceSlideCardProps = {
 
 export function ServiceSlideCard({ slide, index, shouldLoad, onOpen, onPrepare }: ServiceSlideCardProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const shouldSplitMobileTitle = slide.id === 'show' || slide.id === 'b2b';
+  const [mobileTitleFirstLine, ...mobileTitleRest] = slide.title.split(' ');
 
   return (
     <button
@@ -173,7 +175,16 @@ export function ServiceSlideCard({ slide, index, shouldLoad, onOpen, onPrepare }
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex w-full flex-col items-center px-1.5 text-center min-[1000px]:pb-[25px]">
           <p className="hidden max-w-[260px] text-[12px] leading-[1.12] min-[1000px]:block mb-2">{slide.description}</p>
           <h4 className="line-clamp-2 text-[22px] font-black leading-none text-[#63ff45] [text-shadow:-4px_5px_18px_rgba(0,0,0,0.82)] min-[1000px]:line-clamp-none min-[1000px]:text-[18px] min-[1430px]:text-[30px]">
-            {slide.title}
+            {shouldSplitMobileTitle ? (
+              <>
+                <span className="min-[1000px]:hidden">
+                  {mobileTitleFirstLine}
+                  <br />
+                  {mobileTitleRest.join(' ')}
+                </span>
+                <span className="hidden min-[1000px]:inline">{slide.title}</span>
+              </>
+            ) : slide.title}
           </h4>
         </div>
       </div>
