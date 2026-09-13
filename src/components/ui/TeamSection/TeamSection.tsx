@@ -19,15 +19,15 @@ const publicPersonImage = (filename: string): StaticImageData => ({
   height: 1280,
 });
 
-const aysarImage = publicPersonImage('altavil');
-const artemImage = publicPersonImage('zozulya');
-const glebImage = publicPersonImage('kuchunskiy');
-const valeriyaImage = publicPersonImage('valeria');
-const evgeniyImage = publicPersonImage('malov');
-const alexandrImage = publicPersonImage('glebov');
-const sergeyImage = publicPersonImage('kisilev');
-const alexeyImage = publicPersonImage('peizan');
-const romanImage = publicPersonImage('kovalev');
+const aysarImage = publicPersonImage('character_6');
+const artemImage = publicPersonImage('character_1');
+const glebImage = publicPersonImage('character_2');
+const valeriyaImage = publicPersonImage('character_7');
+const evgeniyImage = publicPersonImage('character_3');
+const alexandrImage = publicPersonImage('character_9');
+const sergeyImage = publicPersonImage('character_5');
+const alexeyImage = publicPersonImage('character_8');
+const romanImage = publicPersonImage('character_4');
 
 type TeamMemberId =
   | 'aysar'
@@ -447,7 +447,7 @@ export function TeamSection() {
             )}
           </div>
 
-          <div className="relative z-30 mt-4 h-[390px] min-h-0 w-full max-w-full flex-none overflow-hidden max-lg:[@media_(orientation:landscape)]:mt-3 max-lg:[@media_(orientation:landscape)]:h-[144px] max-lg:[@media_(orientation:landscape)]:max-w-[54vw] sm:h-[430px] lg:mt-[17px] lg:h-auto lg:flex-none lg:overflow-visible">
+          <div className="relative z-30 mt-8 h-[390px] min-h-0 w-full max-w-full flex-none overflow-hidden max-lg:[@media_(orientation:landscape)]:mt-3 max-lg:[@media_(orientation:landscape)]:h-[144px] max-lg:[@media_(orientation:landscape)]:max-w-[54vw] sm:h-[430px] lg:mt-[17px] lg:h-auto lg:flex-none lg:overflow-visible">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute left-0 right-[4px] top-0 z-20 hidden h-[54px] bg-[#66ff66]/[0.06] shadow-[0_0_42px_rgba(102,255,102,0.16)] max-lg:block max-lg:[@media_(orientation:landscape)]:h-[48px] sm:h-[70px]"
