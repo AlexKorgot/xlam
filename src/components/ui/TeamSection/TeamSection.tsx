@@ -135,6 +135,7 @@ export function TeamSection() {
   const listRef = useRef<HTMLUListElement | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const scrollStopTimeoutRef = useRef<number | null>(null);
+  const snapScrollStopTimeoutRef = useRef<number | null>(null);
   const isSnapScrollingRef = useRef(false);
   const hasAlignedInitialItemRef = useRef(false);
   const activeItem =
@@ -259,6 +260,17 @@ export function TeamSection() {
     [selectFirstVisibleListItem],
   );
 
+  const scheduleSnapScrollRelease = useCallback((delay = 160) => {
+    if (snapScrollStopTimeoutRef.current !== null) {
+      window.clearTimeout(snapScrollStopTimeoutRef.current);
+    }
+
+    snapScrollStopTimeoutRef.current = window.setTimeout(() => {
+      snapScrollStopTimeoutRef.current = null;
+      isSnapScrollingRef.current = false;
+    }, delay);
+  }, []);
+
   const alignAndSelectItem = useCallback((id: string) => {
     const list = listRef.current;
 
@@ -288,14 +300,16 @@ export function TeamSection() {
       return;
     }
 
+    if (scrollStopTimeoutRef.current !== null) {
+      window.clearTimeout(scrollStopTimeoutRef.current);
+      scrollStopTimeoutRef.current = null;
+    }
+
     isSnapScrollingRef.current = true;
     scrollRowToListStart(row, 'smooth');
     setActiveId(id);
-
-    window.setTimeout(() => {
-      isSnapScrollingRef.current = false;
-    }, 260);
-  }, []);
+    scheduleSnapScrollRelease(350);
+  }, [scheduleSnapScrollRelease]);
 
   useEffect(() => {
     if (!isMobilePicker) {
@@ -329,6 +343,10 @@ export function TeamSection() {
       if (scrollStopTimeoutRef.current !== null) {
         window.clearTimeout(scrollStopTimeoutRef.current);
       }
+
+      if (snapScrollStopTimeoutRef.current !== null) {
+        window.clearTimeout(snapScrollStopTimeoutRef.current);
+      }
     };
   }, [activeId, isMobilePicker]);
 
@@ -350,6 +368,7 @@ export function TeamSection() {
     }
 
     if (isSnapScrollingRef.current) {
+      scheduleSnapScrollRelease();
       return;
     }
 

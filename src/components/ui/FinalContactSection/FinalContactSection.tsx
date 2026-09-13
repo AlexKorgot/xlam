@@ -135,7 +135,10 @@ export function FinalContactSection() {
             </div>
           </div>
 
-          <footer className="relative z-20 flex shrink-0 flex-col items-center gap-2 text-center text-[12px] leading-[1.2] text-[#6E6E6E] [&>p]:min-w-0 min-[1000px]:grid min-[1000px]:grid-cols-4 min-[1000px]:items-start min-[1000px]:gap-8 min-[1000px]:pb-5 min-[1000px]:text-left">
+          <footer
+            className="relative z-20 flex shrink-0 flex-col items-center gap-2 text-center text-[12px] leading-[1.2] text-[#6E6E6E] [&>p]:min-w-0 min-[1000px]:grid min-[1000px]:grid-cols-4 min-[1000px]:items-start min-[1000px]:gap-8 min-[1000px]:pb-5 min-[1000px]:text-left"
+            style={{ display: 'none' }}
+          >
             <p>
               Общество с ограниченной ответственностью «ХЛАМ МЕДИА»
               <br />
