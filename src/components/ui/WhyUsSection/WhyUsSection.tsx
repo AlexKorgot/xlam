@@ -123,7 +123,7 @@ export function WhyUsSection() {
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(0,0,0,0.12)_32%,rgba(0,0,0,0.32)_58%,rgba(0,0,0,0.62)_82%,rgba(0,0,0,0.82)_100%)] lg:hidden"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(0deg,rgba(0,0,0,0.1)_0%,rgba(0,0,0,0.12)_32%,rgba(0,0,0,0.32)_58%,rgba(0,0,0,0.62)_82%,rgba(0,0,0,0.82)_100%)] lg:hidden"
       />
       <Container>
         <div className="relative z-10 flex min-h-0 flex-col items-center">

@@ -22,7 +22,6 @@ import {
 import type { MorphSectionHandle } from '@/src/components/MorphSection';
 import { useHeaderProgress } from '@/src/components/ui/Header/HeaderProvider';
 import type { MobileXHeroSectionHandle } from '@/src/components/ui/MobileXHeroSection';
-import { mediaAssetPath } from '@/src/lib/mediaAssetPath';
 import { getSectionRenderState } from '@/src/lib/fullPageSectionState';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
 
@@ -35,7 +34,6 @@ const PROJECTS_SECTION_INDEX = 5;
 const TEXT_SECTION_INDEX = 6;
 const TEAM_SECTION_INDEX = 7;
 const FINAL_CONTACT_SECTION_INDEX = 8;
-const MORPH_VIDEO_SRC = mediaAssetPath('/only_bg.mp4');
 const MORPH_TOP_VIDEO_SRC = publicAssetPath('/video_reels/top_video.optimized.mp4');
 const MORPH_BOTTOM_VIDEO_SRC = publicAssetPath('/video_reels/bottom_video.optimized.mp4');
 
@@ -443,7 +441,7 @@ export const MainScene = () => {
                     renderState={morphSectionRenderState}
                     onTimelineReadyChange={handleMorphTimelineReadyChange}
                     className="flex flex-col items-center"
-                    videoSrc={MORPH_VIDEO_SRC}
+                    videoSrc={MORPH_TOP_VIDEO_SRC}
                     topVideoSrc={MORPH_TOP_VIDEO_SRC}
                     bottomVideoSrc={MORPH_BOTTOM_VIDEO_SRC}
                     autoPlayTimeline={false}

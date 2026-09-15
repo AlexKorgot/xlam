@@ -1053,7 +1053,7 @@ const MorphSection = forwardRef<MorphSectionHandle, MorphSectionProps>(function 
                 expandedVideo.load();
             }
 
-            syncVideoTime(expandedVideo, topVideoRef.current?.currentTime ?? 0);
+            syncVideoTime(expandedVideo, 0);
             isExpandedVideoVisibleRef.current = true;
             clearExpandedPlayButtonTimeout();
 

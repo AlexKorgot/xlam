@@ -9,13 +9,13 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { useContactModal } from '@/src/components/ui/contact-modal';
 import { Container } from '@/src/components/ui/grid/Container';
-import { mediaAssetPath } from '@/src/lib/mediaAssetPath';
+import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import type { SectionRenderState } from '@/src/lib/fullPageSectionState';
 
 const TAGLINE =
   'Мы делаем шоу для платформ, рекламу для брендов и контент для бизнеса. Такие дела.';
 
-const onlyBgVideo = mediaAssetPath('/only_bg.mp4');
+const expandedVideoSrc = publicAssetPath('/video_reels/top_video.optimized.mp4');
 const EXPANDED_PLAY_BUTTON_TAP_THRESHOLD = 10;
 const mobileXClipPath =
   'polygon(99.943% 100%, 66.277% 48.911%, 91.502% 0%, 65.893% 0%, 49.971% 24.158%, 34.050% 0%, 8.440% 0%, 33.666% 48.911%, 0% 100%, 39.996% 100%, 49.971% 80.693%, 59.947% 100%)';
@@ -60,7 +60,7 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle, MobileXHe
         maskedVideoRef.current?.pause();
 
         if (expandedVideoRef.current && !expandedVideoRef.current.getAttribute('src')) {
-          expandedVideoRef.current.src = onlyBgVideo;
+          expandedVideoRef.current.src = expandedVideoSrc;
           expandedVideoRef.current.load();
         }
 
@@ -313,10 +313,11 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle, MobileXHe
       maskedVideoRef.current?.pause();
 
       if (!expandedVideo.getAttribute('src')) {
-        expandedVideo.src = onlyBgVideo;
+        expandedVideo.src = expandedVideoSrc;
         expandedVideo.load();
       }
 
+      expandedVideo.currentTime = 0;
       isExpandedVideoVisibleRef.current = true;
       clearExpandedPlayButtonTimeout();
       expandedTimelineRef.current?.kill();
@@ -463,7 +464,7 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle, MobileXHe
       <video
         ref={backgroundVideoRef}
         className="absolute inset-0 h-full w-full scale-x-[-1] object-cover"
-        src={isActive ? onlyBgVideo : undefined}
+        src={isActive ? expandedVideoSrc : undefined}
         autoPlay={isActive}
         muted
         loop
@@ -539,7 +540,7 @@ export const MobileXHeroSection = forwardRef<MobileXHeroSectionHandle, MobileXHe
               <video
                 ref={maskedVideoRef}
                 className="h-full w-full object-cover brightness-125 contrast-110"
-                src={isActive ? onlyBgVideo : undefined}
+                src={isActive ? expandedVideoSrc : undefined}
                 autoPlay={isActive}
                 muted
                 loop
