@@ -1,61 +1,43 @@
-# 🚀 Getting started with Strapi
+# XLAM MEDIA CMS
 
-Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/dev-docs/cli) (CLI) which lets you scaffold and manage your project in seconds.
+Self-hosted Strapi 5 Community application for editorial content. This source
+tree is separate from the static Next.js site. It does not serve `xlam.media`.
 
-### `develop`
+## Configuration
 
-Start your Strapi application with autoReload enabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-develop)
+Use PostgreSQL. Copy `.env.example` to an untracked `.env` and set a unique
+database password and fresh random values for every secret. Never commit `.env`,
+API tokens, database dumps, or uploaded files.
 
-```
-npm run develop
-# or
-yarn develop
-```
+The server binds to `127.0.0.1` by default. Configure its public admin URL,
+TLS proxy, PostgreSQL backups, dedicated non-root user, and REG.RU S3 upload
+provider before deployment. None of those server changes are part of this
+stage.
 
-### `start`
+## Projects
 
-Start your Strapi application with autoReload disabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-start)
+`Project` is a collection type with Draft & Publish. `Project Label` and
+`Project Preview` are repeatable components. Media fields support the Strapi
+Media Library, while URL fields preserve the existing site's local media paths
+for the first import. Do not publish imported drafts until their media is
+reachable from the preview site and editorial values have been reviewed.
 
-```
-npm run start
-# or
-yarn start
-```
+`data/projects.seed.json` contains the five original Projects. The import
+script validates it and defaults to a dry run:
 
-### `build`
-
-Build your admin panel. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-build)
-
-```
-npm run build
-# or
-yarn build
+```sh
+node scripts/import-projects.mjs
 ```
 
-## ⚙️ Deployment
+When Strapi and PostgreSQL are ready, set `CMS_BASE_URL` and a restricted
+`CMS_WRITE_TOKEN`, then run `node scripts/import-projects.mjs --apply`.
+The script creates **drafts only**, skips existing keys, and never overwrites
+entries. It does not upload media or alter the static site.
 
-Strapi gives you many possible deployment options for your project including [Strapi Cloud](https://cloud.strapi.io). Browse the [deployment section of the documentation](https://docs.strapi.io/dev-docs/deployment) to find the best solution for your use case.
+With `CMS_BASE_URL` and a restricted `CMS_READ_TOKEN`, run
+`node scripts/check-published-projects.mjs` to check that the published API
+returns nonempty, ordered, complete Projects. The future static build must
+fail if this check fails; the existing deployed version stays in place.
 
-```
-yarn strapi deploy
-```
-
-## 📚 Learn more
-
-- [Resource center](https://strapi.io/resource-center) - Strapi resource center.
-- [Strapi documentation](https://docs.strapi.io) - Official Strapi documentation.
-- [Strapi tutorials](https://strapi.io/tutorials) - List of tutorials made by the core team and the community.
-- [Strapi blog](https://strapi.io/blog) - Official Strapi blog containing articles made by the Strapi team and the community.
-- [Changelog](https://strapi.io/changelog) - Find out about the Strapi product updates, new features and general improvements.
-
-Feel free to check out the [Strapi GitHub repository](https://github.com/strapi/strapi). Your feedback and contributions are welcome!
-
-## ✨ Community
-
-- [Discord](https://discord.strapi.io) - Come chat with the Strapi community including the core team.
-- [Forum](https://forum.strapi.io/) - Place to discuss, ask questions and find answers, show your Strapi project and get feedback or just talk with other Community members.
-- [Awesome Strapi](https://github.com/strapi/awesome-strapi) - A curated list of awesome things related to Strapi.
-
----
-
-<sub>🤫 Psst! [Strapi is hiring](https://strapi.io/careers).</sub>
+The initial source and mapping are described in
+`../docs/strapi/projects-migration.md`.
