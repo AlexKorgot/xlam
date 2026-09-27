@@ -1,0 +1,10 @@
+{
+  "collectionName": "components_project_labels",
+  "info": {
+    "displayName": "Project Label",
+    "description": "One ordered tag or service label"
+  },
+  "attributes": {
+    "text": { "type": "string", "required": true }
+  }
+}

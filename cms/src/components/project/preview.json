@@ -1,0 +1,12 @@
+{
+  "collectionName": "components_project_previews",
+  "info": {
+    "displayName": "Project Preview",
+    "description": "One image and its alternative text"
+  },
+  "attributes": {
+    "url": { "type": "string" },
+    "image": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "alt": { "type": "string", "required": true }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "projects",
+  "info": {
+    "singularName": "project",
+    "pluralName": "projects",
+    "displayName": "Project",
+    "description": "Published projects shown in the cinematic slider"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "key": { "type": "string", "required": true, "unique": true },
+    "sortOrder": { "type": "integer", "required": true },
+    "eyebrow": { "type": "string", "required": true },
+    "title": { "type": "string", "required": true },
+    "description": { "type": "text", "required": true },
+    "tags": { "type": "component", "repeatable": true, "component": "project.label" },
+    "client": { "type": "string", "required": true },
+    "year": { "type": "string", "required": true },
+    "videoUrl": { "type": "string" },
+    "video": { "type": "media", "multiple": false, "allowedTypes": ["videos"] },
+    "mobileVideoUrl": { "type": "string" },
+    "mobileVideo": { "type": "media", "multiple": false, "allowedTypes": ["videos"] },
+    "posterUrl": { "type": "string" },
+    "poster": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "openedTitleLead": { "type": "string", "required": true },
+    "openedTitleAccent": { "type": "string", "required": true },
+    "openedBody": { "type": "text", "required": true },
+    "openedSecondaryBody": { "type": "text" },
+    "services": { "type": "component", "repeatable": true, "component": "project.label" },
+    "previews": { "type": "component", "repeatable": true, "component": "project.preview" },
+    "navLabel": { "type": "string", "required": true }
+  }
+}
