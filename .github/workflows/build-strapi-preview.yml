@@ -1,0 +1,68 @@
+name: Build Strapi preview artifact
+
+on:
+  push:
+    branches:
+      - strapi-integration
+
+permissions:
+  contents: read
+
+concurrency:
+  group: strapi-preview-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/strapi-integration' && vars.STRAPI_BUILD_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: strapi-preview-build
+    env:
+      STRAPI_URL: ${{ vars.STRAPI_URL }}
+      STRAPI_API_TOKEN: ${{ secrets.STRAPI_API_TOKEN }}
+
+    steps:
+      - name: Check CMS configuration
+        shell: bash
+        run: |
+          if [[ -z "$STRAPI_URL" || -z "$STRAPI_API_TOKEN" ]]; then
+            echo 'Strapi build requires STRAPI_URL and STRAPI_API_TOKEN.' >&2
+            exit 1
+          fi
+          if [[ "$STRAPI_URL" != https://* ]]; then
+            echo 'Strapi build requires an HTTPS CMS URL.' >&2
+            exit 1
+          fi
+
+      - name: Checkout working branch
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install site dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Check static export
+        shell: bash
+        run: |
+          test -s out/index.html
+          test -s out/main/index.html
+
+      - name: Save preview build
+        uses: actions/upload-artifact@v7
+        with:
+          name: strapi-preview-out-${{ github.run_id }}
+          path: out/
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
