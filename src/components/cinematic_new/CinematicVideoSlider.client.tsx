@@ -15,7 +15,6 @@ import {
 } from '@/src/components/ui/FullPageScroll';
 import { ModalPortal } from '@/src/components/ui/modal';
 import { Container } from '@/src/components/ui/grid/Container';
-import { cinematicSlides } from './data';
 import { getFilmStripChromeLayout } from './filmStripLayout';
 import type { SliderScene, SliderPointerAction } from './SliderScene';
 import type { CinematicOverlayState, CinematicSlide } from './types';
@@ -34,6 +33,7 @@ type CinematicVideoSliderProps = {
   className?: string;
   prepareScene?: boolean;
   renderState?: SectionRenderState;
+  slides: CinematicSlide[];
 };
 
 type CinematicChromeStyle = CSSProperties & {
@@ -75,8 +75,6 @@ const tickerLogos = [
   { id: 'men', src: publicAssetPath('/partners/m.png'), width: 96, height: 35, className: 'h-5 sm:h-6 md:h-7' },
   { id: 'frosto-foods', src: publicAssetPath('/partners/f.png'), width: 88, height: 35, className: 'h-5 sm:h-6 md:h-7' },
 ];
-const cinematicActiveVideoPreloadSources = [cinematicSlides[0].videoSrc];
-const cinematicPosterPreloadSources = cinematicSlides.map((slide) => slide.posterSrc);
 
 const getFocusableElements = (container: HTMLElement) =>
   Array.from(
@@ -251,6 +249,7 @@ export function CinematicVideoSlider({
   className = '',
   prepareScene,
   renderState = 'active',
+  slides,
 }: CinematicVideoSliderProps) {
   const rootRef = useRef<HTMLElement | null>(null);
   const canvasHostRef = useRef<HTMLDivElement | null>(null);
@@ -291,7 +290,8 @@ export function CinematicVideoSlider({
     '--cinematic-bottom-chrome-top': '68%',
     '--cinematic-bottom-chrome-gap': '20px',
   });
-  const slides = useMemo(() => cinematicSlides, []);
+  const cinematicActiveVideoPreloadSources = useMemo(() => [slides[0].videoSrc], [slides]);
+  const cinematicPosterPreloadSources = useMemo(() => slides.map((slide) => slide.posterSrc), [slides]);
   const activeSlide = slides[activeIndex];
   const slideCount = slides.length;
   const previousSlide = slides[(activeIndex - 1 + slideCount) % slideCount];
@@ -303,7 +303,9 @@ export function CinematicVideoSlider({
   const isDetailsLayerVisible = isActive && (isOpened || overlayState === 'closing');
   const isChromeVisible = isActive && (overlayState === 'slider' || overlayState === 'sliding');
 
-  isActiveRef.current = isActive;
+  useEffect(() => {
+    isActiveRef.current = isActive;
+  }, [isActive]);
 
   useImagePreload(cinematicPosterPreloadSources, { crossOrigin: 'anonymous' });
   useVideoPreload(cinematicActiveVideoPreloadSources, {
