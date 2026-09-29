@@ -1,0 +1,36 @@
+.pickerViewport {
+  --team-picker-height: min(390px, max(240px, calc(100svh - 190px)));
+  --team-row-height: 54px;
+}
+
+.portraitStage {
+  --team-portrait-top: calc(clamp(58px, 11svh, 92px) + 24px);
+}
+
+@media (min-width: 640px) and (max-width: 1023.98px) {
+  .pickerViewport {
+    --team-picker-height: min(430px, max(240px, calc(100svh - 230px)));
+    --team-row-height: 70px;
+  }
+
+  .portraitStage {
+    --team-portrait-top: 108px;
+  }
+}
+
+@media (max-width: 1023.98px) and (orientation: landscape) {
+  .pickerViewport {
+    --team-picker-height: 144px;
+    --team-row-height: 48px;
+  }
+
+  .portraitStage {
+    --team-portrait-top: 50%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .portraitStage {
+    --team-portrait-top: 50%;
+  }
+}

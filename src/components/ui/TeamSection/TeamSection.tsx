@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import Image, { type StaticImageData } from 'next/image';
+import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   FULLPAGE_SCROLL_EVENT,
@@ -11,144 +11,49 @@ import {
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
 import { Container } from '@/src/components/ui/grid/Container';
-import { publicAssetPath } from '@/src/lib/publicAssetPath';
+import styles from './TeamSection.module.scss';
+import { localTeamMembers, type TeamMember } from './team.data';
 
-const publicPersonImage = (filename: string): StaticImageData => ({
-  src: publicAssetPath(`/persones/${filename}.webp`),
-  width: 520,
-  height: 1280,
-});
-
-const aysarImage = publicPersonImage('character_6');
-const artemImage = publicPersonImage('character_1');
-const glebImage = publicPersonImage('character_2');
-const valeriyaImage = publicPersonImage('character_7');
-const evgeniyImage = publicPersonImage('character_3');
-const alexandrImage = publicPersonImage('character_9');
-const sergeyImage = publicPersonImage('character_5');
-const alexeyImage = publicPersonImage('character_8');
-const romanImage = publicPersonImage('character_4');
-
-type TeamMemberId =
-  | 'aysar'
-  | 'artem'
-  | 'gleb'
-  | 'valeriya'
-  | 'evgeniy'
-  | 'alexandr'
-  | 'sergey'
-  | 'alexey'
-  | 'roman';
-
-type TeamItem = {
-  id: string;
-  memberId: TeamMemberId;
-  name: string;
-  role: string;
-  image: StaticImageData;
-  roleClassName: string;
-  isMobileVisible?: boolean;
-  videoSrc?: string;
+const roleWidthByMemberId: Record<string, string> = {
+  aysar: 'lg:w-[141px]',
+  artem: 'lg:w-[326px]',
+  gleb: 'lg:w-[214px]',
+  valeriya: 'lg:w-[292px]',
+  evgeniy: 'lg:w-[272px]',
+  alexandr: 'lg:w-[439px]',
+  sergey: 'lg:w-[260px]',
+  alexey: 'lg:w-[408px]',
+  roman: 'lg:w-[138px]',
 };
 
-const teamItems: TeamItem[] = [
-  {
-    id: 'aysar',
-    memberId: 'aysar',
-    name: 'Айсар Альтавил',
-    role: 'CCO',
-    image: aysarImage,
-    roleClassName: 'lg:w-[141px]',
-  },
-  {
-    id: 'artem',
-    memberId: 'artem',
-    name: 'Артем Зозуля',
-    role: 'Head of Creative',
-    image: artemImage,
-    roleClassName: 'lg:w-[326px]',
-  },
-  {
-    id: 'gleb',
-    memberId: 'gleb',
-    name: 'Глеб Кучинский',
-    role: 'Director',
-    image: glebImage,
-    roleClassName: 'lg:w-[214px]',
-  },
-  {
-    id: 'valeriya',
-    memberId: 'valeriya',
-    name: 'Валерия Монастырская',
-    role: 'Line Producer',
-    image: valeriyaImage,
-    roleClassName: 'lg:w-[292px]',
-  },
-  {
-    id: 'evgeniy',
-    memberId: 'evgeniy',
-    name: 'Евгений Малов',
-    role: 'Art Director',
-    image: evgeniyImage,
-    roleClassName: 'lg:w-[272px]',
-  },
-  {
-    id: 'alexandr',
-    memberId: 'alexandr',
-    name: 'Александр Глебов',
-    role: 'Aerial Cinematographer',
-    image: alexandrImage,
-    roleClassName: 'lg:w-[439px]',
-  },
-  {
-    id: 'sergey',
-    memberId: 'sergey',
-    name: 'Сергей Киселев',
-    role: 'AI Producer',
-    image: sergeyImage,
-    roleClassName: 'lg:w-[260px]',
-    isMobileVisible: false,
-  },
-  {
-    id: 'alexey',
-    memberId: 'alexey',
-    name: 'Алексей Пейзан',
-    role: 'Full-stack Developer',
-    image: alexeyImage,
-    roleClassName: 'lg:w-[408px]',
-    isMobileVisible: false,
-  },
-  {
-    id: 'roman',
-    memberId: 'roman',
-    name: 'Роман Ковалев',
-    role: 'CEO',
-    image: romanImage,
-    roleClassName: 'lg:w-[138px]',
-    isMobileVisible: false,
-  },
-];
+const findTeamRow = (list: HTMLUListElement, id: string) =>
+  Array.from(list.querySelectorAll<HTMLLIElement>('[data-team-item-id]')).find(
+    (row) => row.dataset.teamItemId === id,
+  );
 
-export function TeamSection() {
+export function TeamSection({ members = localTeamMembers }: { members?: TeamMember[] }) {
+  const teamItems = members.length > 0 ? members : localTeamMembers;
   const [activeId, setActiveId] = useState(teamItems[0].id);
   const [isMobilePicker, setIsMobilePicker] = useState(false);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const headingRef = useRef<HTMLDivElement | null>(null);
+  const portraitRef = useRef<HTMLDivElement | null>(null);
+  const pickerViewportRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const scrollStopTimeoutRef = useRef<number | null>(null);
-  const snapScrollStopTimeoutRef = useRef<number | null>(null);
-  const isSnapScrollingRef = useRef(false);
-  const hasAlignedInitialItemRef = useRef(false);
+  const activeIdRef = useRef(teamItems[0].id);
+  const selectionFrameRef = useRef<number | null>(null);
+  const touchStartRef = useRef<{
+    x: number;
+    y: number;
+    wasAtTop: boolean;
+    wasAtBottom: boolean;
+  } | null>(null);
   const activeItem =
-    teamItems.find((item) => item.id === activeId) ?? teamItems[3];
-  const pickerItems = teamItems.map((item) => ({
-    item,
-    cycle: 0,
-    key: item.id,
-  }));
+    teamItems.find((item) => item.id === activeId) ?? teamItems[0];
   const scrollEdgeThreshold = 2;
 
   const isMobilePickerViewport = () =>
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 999.98px)').matches;
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 1023.98px)').matches;
 
   const canScrollList = (direction: 'up' | 'down') => {
     const list = listRef.current;
@@ -180,13 +85,61 @@ export function TeamSection() {
     }
 
     list.scrollTo({
-      top: Math.max(0, row.offsetTop),
+      top: row.offsetTop,
       behavior,
     });
   };
 
+  const selectItem = useCallback((id: string) => {
+    if (activeIdRef.current === id) {
+      return;
+    }
+
+    activeIdRef.current = id;
+    setActiveId(id);
+  }, []);
+
+  const updateSelection = useCallback(() => {
+    const list = listRef.current;
+
+    if (!list || !isMobilePickerViewport()) {
+      return;
+    }
+
+    const listRect = list.getBoundingClientRect();
+    const listTop = listRect.top;
+    const rows = list.querySelectorAll<HTMLLIElement>('[data-team-item-id]');
+    let closestId: string | undefined;
+    let closestDistance = Number.POSITIVE_INFINITY;
+
+    rows.forEach((row) => {
+      const rowRect = row.getBoundingClientRect();
+      const distance = Math.abs(rowRect.top - listTop);
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestId = row.dataset.teamItemId;
+      }
+    });
+
+    if (closestId) {
+      selectItem(closestId);
+    }
+  }, [selectItem]);
+
+  const queueSelectionUpdate = useCallback(() => {
+    if (selectionFrameRef.current !== null) {
+      return;
+    }
+
+    selectionFrameRef.current = window.requestAnimationFrame(() => {
+      selectionFrameRef.current = null;
+      updateSelection();
+    });
+  }, [updateSelection]);
+
   useEffect(() => {
-    const media = window.matchMedia('(max-width: 999.98px)');
+    const media = window.matchMedia('(max-width: 1023.98px)');
     const syncPickerMode = () => {
       setIsMobilePicker(media.matches);
     };
@@ -199,158 +152,90 @@ export function TeamSection() {
     };
   }, []);
 
-  const selectFirstVisibleListItem = useCallback((snapToItem = true) => {
-    const list = listRef.current;
-
-    if (!list || !isMobilePickerViewport()) {
-      return;
-    }
-
-    const listRect = list.getBoundingClientRect();
-    const listTop = listRect.top;
-    const rows = Array.from(list.querySelectorAll<HTMLLIElement>('[data-team-item-id]'));
-    const isAtListEnd =
-      list.scrollTop + list.clientHeight >= list.scrollHeight - scrollEdgeThreshold;
-    let closestRow: HTMLLIElement | null = isAtListEnd
-      ? (rows[rows.length - 1] ?? null)
-      : null;
-    let closestDistance = Number.POSITIVE_INFINITY;
-
-    if (!isAtListEnd) {
-      for (const row of rows) {
-        const rowRect = row.getBoundingClientRect();
-        const distance = Math.abs(rowRect.top - listTop);
-
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestRow = row;
-        }
-      }
-    }
-
-    const nextId = closestRow?.dataset.teamItemId;
-
-    if (!nextId) {
-      return;
-    }
-
-    if (snapToItem && closestRow) {
-      isSnapScrollingRef.current = true;
-      scrollRowToListStart(closestRow, 'smooth');
-
-      window.setTimeout(() => {
-        isSnapScrollingRef.current = false;
-      }, 260);
-    }
-
-    setActiveId(nextId);
-  }, []);
-
-  const scheduleFirstVisibleSelection = useCallback(
-    (delay = 150) => {
-      if (scrollStopTimeoutRef.current !== null) {
-        window.clearTimeout(scrollStopTimeoutRef.current);
-      }
-
-      scrollStopTimeoutRef.current = window.setTimeout(() => {
-        scrollStopTimeoutRef.current = null;
-        selectFirstVisibleListItem();
-      }, delay);
-    },
-    [selectFirstVisibleListItem],
-  );
-
-  const scheduleSnapScrollRelease = useCallback((delay = 160) => {
-    if (snapScrollStopTimeoutRef.current !== null) {
-      window.clearTimeout(snapScrollStopTimeoutRef.current);
-    }
-
-    snapScrollStopTimeoutRef.current = window.setTimeout(() => {
-      snapScrollStopTimeoutRef.current = null;
-      isSnapScrollingRef.current = false;
-    }, delay);
-  }, []);
-
   const alignAndSelectItem = useCallback((id: string) => {
     const list = listRef.current;
 
     if (!list || !isMobilePickerViewport()) {
-      setActiveId(id);
+      selectItem(id);
       return;
     }
 
-    const rows = Array.from(list.querySelectorAll<HTMLLIElement>(`[data-team-item-id="${id}"]`));
-    const listRect = list.getBoundingClientRect();
-    const listTop = listRect.top;
-    let row: HTMLLIElement | null = null;
-    let closestDistance = Number.POSITIVE_INFINITY;
-
-    for (const candidate of rows) {
-      const rowRect = candidate.getBoundingClientRect();
-      const distance = Math.abs(rowRect.top - listTop);
-
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        row = candidate;
-      }
-    }
+    const row = findTeamRow(list, id);
 
     if (!row) {
-      setActiveId(id);
       return;
     }
 
-    if (scrollStopTimeoutRef.current !== null) {
-      window.clearTimeout(scrollStopTimeoutRef.current);
-      scrollStopTimeoutRef.current = null;
-    }
-
-    isSnapScrollingRef.current = true;
-    scrollRowToListStart(row, 'smooth');
-    setActiveId(id);
-    scheduleSnapScrollRelease(350);
-  }, [scheduleSnapScrollRelease]);
+    scrollRowToListStart(row, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+    queueSelectionUpdate();
+  }, [queueSelectionUpdate, selectItem]);
 
   useEffect(() => {
     if (!isMobilePicker) {
       return undefined;
     }
 
-    if (hasAlignedInitialItemRef.current) {
-      return undefined;
-    }
-
-    hasAlignedInitialItemRef.current = true;
     const list = listRef.current;
 
     if (!list || !isMobilePickerViewport()) {
       return undefined;
     }
 
-    isSnapScrollingRef.current = true;
-    list.scrollTo({
-      top: 0,
-      behavior: 'auto',
-    });
+    const portraitElement = portraitRef.current;
+    const selectedRow = findTeamRow(list, activeIdRef.current);
 
-    const releaseInitialScroll = window.setTimeout(() => {
-      isSnapScrollingRef.current = false;
-    }, 50);
+    if (selectedRow) {
+      scrollRowToListStart(selectedRow, 'auto');
+    }
+
+    const syncPortraitPosition = () => {
+      const section = sectionRef.current;
+      const portrait = portraitRef.current;
+      const picker = pickerViewportRef.current;
+
+      if (!section || !portrait || !picker) {
+        return;
+      }
+
+      if (window.matchMedia('(orientation: landscape)').matches) {
+        portrait.style.removeProperty('--team-portrait-top');
+        return;
+      }
+
+      // The cutout images have empty space above the head; align the visible head with the first row.
+      const top = picker.getBoundingClientRect().top - section.getBoundingClientRect().top - 56;
+      portrait.style.setProperty('--team-portrait-top', `${top}px`);
+    };
+
+    syncPortraitPosition();
+    queueSelectionUpdate();
+    const resizeObserver = new ResizeObserver(() => {
+      syncPortraitPosition();
+      queueSelectionUpdate();
+    });
+    resizeObserver.observe(list);
+    if (headingRef.current) {
+      resizeObserver.observe(headingRef.current);
+    }
+    window.addEventListener('resize', syncPortraitPosition);
 
     return () => {
-      window.clearTimeout(releaseInitialScroll);
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', syncPortraitPosition);
+      portraitElement?.style.removeProperty('--team-portrait-top');
 
-      if (scrollStopTimeoutRef.current !== null) {
-        window.clearTimeout(scrollStopTimeoutRef.current);
-      }
-
-      if (snapScrollStopTimeoutRef.current !== null) {
-        window.clearTimeout(snapScrollStopTimeoutRef.current);
+      if (selectionFrameRef.current !== null) {
+        window.cancelAnimationFrame(selectionFrameRef.current);
+        selectionFrameRef.current = null;
       }
     };
-  }, [activeId, isMobilePicker]);
+  }, [isMobilePicker, queueSelectionUpdate]);
 
   const handleListWheel = (event: React.WheelEvent<HTMLUListElement>) => {
+    if (event.deltaY === 0) {
+      return;
+    }
+
     const direction = event.deltaY > 0 ? 'down' : 'up';
 
     if (canScrollList(direction)) {
@@ -363,16 +248,7 @@ export function TeamSection() {
   };
 
   const handleListScroll = () => {
-    if (!isMobilePickerViewport()) {
-      return;
-    }
-
-    if (isSnapScrollingRef.current) {
-      scheduleSnapScrollRelease();
-      return;
-    }
-
-    scheduleFirstVisibleSelection();
+    queueSelectionUpdate();
   };
 
   const handleListPointerDown = (event: React.PointerEvent<HTMLUListElement>) => {
@@ -383,6 +259,8 @@ export function TeamSection() {
     touchStartRef.current = {
       x: event.clientX,
       y: event.clientY,
+      wasAtTop: !canScrollList('up'),
+      wasAtBottom: !canScrollList('down'),
     };
   };
 
@@ -410,8 +288,10 @@ export function TeamSection() {
 
     const direction = getFullPageSwipeDirection(deltaY);
 
-    if (canScrollList(direction)) {
-      scheduleFirstVisibleSelection(180);
+    if (
+      canScrollList(direction) ||
+      !(direction === 'up' ? start.wasAtTop : start.wasAtBottom)
+    ) {
       return;
     }
 
@@ -422,11 +302,11 @@ export function TeamSection() {
 
   const handleListPointerCancel = () => {
     touchStartRef.current = null;
-    scheduleFirstVisibleSelection(220);
   };
 
   return (
     <section
+      ref={sectionRef}
       className="relative isolate h-full min-h-0 overflow-hidden bg-black font-normalidad text-white"
       aria-labelledby="team-heading"
     >
@@ -434,7 +314,7 @@ export function TeamSection() {
         outerClassName="h-full min-h-0"
         className="flex h-full min-h-0 flex-col pb-8 pt-[clamp(58px,11svh,92px)] max-lg:[@media_(orientation:landscape)]:justify-center max-lg:[@media_(orientation:landscape)]:pt-[var(--header-offset)] sm:pt-24 lg:justify-center lg:pb-0 lg:pt-0"
       >
-          <div className="relative z-50 max-w-[740px] max-lg:[@media_(orientation:landscape)]:max-w-[46vw]">
+          <div ref={headingRef} className="relative z-50 max-w-[740px] max-lg:[@media_(orientation:landscape)]:max-w-[46vw]">
             <h2
               id="team-heading"
               className="text-[2rem] font-black uppercase leading-none tracking-normal text-white md:text-[2.35rem] xl:text-[3rem]"
@@ -447,7 +327,7 @@ export function TeamSection() {
             </p>
           </div>
 
-          <div className="pointer-events-none absolute right-[-68px] top-[218px] z-40 flex justify-end max-lg:[@media_(orientation:landscape)]:right-[clamp(3rem,12vw,7rem)] max-lg:[@media_(orientation:landscape)]:top-1/2 max-lg:[@media_(orientation:landscape)]:-translate-y-1/2 lg:right-[-92px] lg:top-1/2 lg:block lg:-translate-y-[43%] min-[1080px]:right-0 min-[1450px]:right-[188px]">
+          <div ref={portraitRef} className={clsx('pointer-events-none absolute right-[-68px] top-[var(--team-portrait-top)] z-40 flex justify-end max-lg:[@media_(orientation:landscape)]:right-[clamp(3rem,12vw,7rem)] max-lg:[@media_(orientation:landscape)]:-translate-y-1/2 lg:right-[-92px] lg:block lg:-translate-y-[43%] min-[1080px]:right-0 min-[1450px]:right-[188px]', styles.portraitStage)}>
             {activeItem.videoSrc ? (
               <video
                 key={activeItem.id}
@@ -464,7 +344,7 @@ export function TeamSection() {
                 key={activeItem.id}
                 src={activeItem.image}
                 alt={`${activeItem.name}, ${activeItem.role}`}
-                loading="lazy"
+                loading={activeItem.id === teamItems[0].id ? 'eager' : 'lazy'}
                 unoptimized
                 sizes="(min-width: 1280px) 388px, (min-width: 1024px) 30vw, 58vw"
                 className="h-[520px] w-auto max-w-none object-contain max-lg:[@media_(orientation:landscape)]:h-[min(76svh,320px)] lg:h-[704px]"
@@ -472,14 +352,10 @@ export function TeamSection() {
             )}
           </div>
 
-          <div className="relative z-30 mt-8 h-[390px] min-h-0 w-full max-w-full flex-none overflow-hidden max-lg:[@media_(orientation:landscape)]:mt-3 max-lg:[@media_(orientation:landscape)]:h-[144px] max-lg:[@media_(orientation:landscape)]:max-w-[54vw] sm:h-[430px] lg:mt-[17px] lg:h-auto lg:flex-none lg:overflow-visible">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute left-0 right-[4px] top-0 z-20 hidden h-[54px] bg-[#66ff66]/[0.06] shadow-[0_0_42px_rgba(102,255,102,0.16)] max-lg:block max-lg:[@media_(orientation:landscape)]:h-[48px] sm:h-[70px]"
-            />
+          <div ref={pickerViewportRef} className={clsx('relative z-30 mt-2 h-[var(--team-picker-height)] min-h-0 w-full max-w-full flex-none overflow-hidden max-lg:[@media_(orientation:landscape)]:mt-3 max-lg:[@media_(orientation:landscape)]:max-w-[54vw] lg:mt-[17px] lg:h-auto lg:flex-none lg:overflow-visible', styles.pickerViewport)}>
             <ul
               ref={listRef}
-              className="relative z-10 h-full min-h-0 w-full max-w-full flex-1 touch-pan-y snap-y snap-mandatory overflow-y-auto overflow-x-hidden overscroll-contain pb-12 pr-1 [mask-image:linear-gradient(to_bottom,#000_0%,#000_88%,transparent_100%)] [scrollbar-width:none] max-lg:[@media_(orientation:landscape)]:!pb-[18px] sm:pb-[52px] lg:h-auto lg:flex-none lg:snap-none lg:overflow-visible lg:pb-0 lg:pr-0 lg:[mask-image:none] [&::-webkit-scrollbar]:hidden"
+              className="relative z-10 h-full min-h-0 w-full max-w-full flex-1 touch-pan-y snap-y snap-mandatory overflow-y-auto overflow-x-hidden overscroll-contain pb-[calc(var(--team-picker-height)-var(--team-row-height))] pr-1 [scrollbar-width:none] lg:h-auto lg:flex-none lg:snap-none lg:overflow-visible lg:pb-0 lg:pr-0 [&::-webkit-scrollbar]:hidden"
               {...{ [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' }}
               onScroll={handleListScroll}
               onWheel={handleListWheel}
@@ -487,15 +363,14 @@ export function TeamSection() {
               onPointerUp={handleListPointerUp}
               onPointerCancel={handleListPointerCancel}
             >
-              {pickerItems.map(({ item, cycle, key }) => (
+              {teamItems.map((item) => (
                 <TeamRow
-                  key={key}
+                  key={item.id}
                   item={item}
-                  cycle={cycle}
                   isActive={item.id === activeItem.id}
                   onActivate={() => {
                     if (!isMobilePickerViewport()) {
-                      setActiveId(item.id);
+                      selectItem(item.id);
                     }
                   }}
                   onSelect={() => alignAndSelectItem(item.id)}
@@ -510,13 +385,11 @@ export function TeamSection() {
 
 function TeamRow({
   item,
-  cycle,
   isActive,
   onActivate,
   onSelect,
 }: {
-  item: TeamItem;
-  cycle: number;
+  item: TeamMember;
   isActive: boolean;
   onActivate: () => void;
   onSelect: () => void;
@@ -524,14 +397,13 @@ function TeamRow({
   return (
     <li
       data-team-item-id={item.id}
-      data-team-cycle={cycle}
       className={clsx(
         'snap-start lg:border-t lg:border-white/55 lg:last:border-b',
       )}
     >
       <button
         type="button"
-        data-member-id={item.memberId}
+        data-member-id={item.id}
         aria-pressed={isActive}
         onMouseEnter={onActivate}
         onFocus={onActivate}
@@ -554,8 +426,8 @@ function TeamRow({
           </span>
           <span
             className={clsx(
-              'inline-flex h-4 w-[176px] items-center justify-center px-2.5 text-center text-[10px] font-medium leading-none transition-colors max-lg:[@media_(orientation:landscape)]:!h-4 max-lg:[@media_(orientation:landscape)]:w-[150px] max-lg:[@media_(orientation:landscape)]:text-[9px] sm:h-[22px] sm:min-w-[207px] sm:text-[12px] lg:h-6 lg:min-w-0 lg:text-[16px] min-[1401px]:h-7',
-              item.roleClassName,
+              'inline-flex h-4 w-fit min-w-[176px] max-w-full items-center justify-center overflow-hidden whitespace-nowrap px-2.5 text-center text-[10px] font-medium leading-none text-ellipsis transition-colors max-lg:[@media_(orientation:landscape)]:!h-4 max-lg:[@media_(orientation:landscape)]:!min-w-[150px] max-lg:[@media_(orientation:landscape)]:w-[150px] max-lg:[@media_(orientation:landscape)]:text-[9px] sm:h-[22px] sm:min-w-[207px] sm:text-[12px] lg:h-6 lg:min-w-max lg:text-[16px] min-[1401px]:h-7',
+              roleWidthByMemberId[item.id],
               isActive
                 ? 'bg-black text-white'
                 : 'bg-white text-black group-hover:bg-black group-hover:text-white',
