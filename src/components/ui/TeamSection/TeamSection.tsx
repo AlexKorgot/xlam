@@ -52,6 +52,8 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
   const listRef = useRef<HTMLUListElement | null>(null);
   const activeIdRef = useRef(teamItems[0].id);
   const selectionFrameRef = useRef<number | null>(null);
+  const loopRecenterTimerRef = useRef<number | null>(null);
+  const isTouchingListRef = useRef(false);
   const touchStartRef = useRef<{
     x: number;
     y: number;
@@ -61,7 +63,8 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
   const activeItem =
     teamItems.find((item) => item.id === activeId) ?? teamItems[0];
   const loopPicker = isMobilePicker && teamItems.length > 1;
-  const pickerCycles = loopPicker ? [0, 1, 2] : [0];
+  const middleCycle = 3;
+  const pickerCycles = loopPicker ? [0, 1, 2, 3, 4, 5, 6] : [0];
   const scrollEdgeThreshold = 2;
 
   const isMobilePickerViewport = () =>
@@ -72,6 +75,10 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
 
     if (!list) {
       return false;
+    }
+
+    if (loopPicker) {
+      return true;
     }
 
     if (direction === 'down') {
@@ -194,7 +201,7 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
     }
 
     const portraitElement = portraitRef.current;
-    const selectedRow = findTeamRow(list, activeIdRef.current, loopPicker ? 1 : 0);
+    const selectedRow = findTeamRow(list, activeIdRef.current, loopPicker ? middleCycle : 0);
 
     if (selectedRow) {
       scrollRowToListStart(selectedRow, 'auto');
@@ -236,6 +243,11 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
       window.removeEventListener('resize', syncPortraitPosition);
       portraitElement?.style.removeProperty('--team-portrait-top');
 
+      if (loopRecenterTimerRef.current !== null) {
+        window.clearTimeout(loopRecenterTimerRef.current);
+        loopRecenterTimerRef.current = null;
+      }
+
       if (selectionFrameRef.current !== null) {
         window.cancelAnimationFrame(selectionFrameRef.current);
         selectionFrameRef.current = null;
@@ -259,33 +271,56 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
     requestFullPageScroll(direction);
   };
 
-  const handleListScroll = () => {
+  const recenterLoop = () => {
     const list = listRef.current;
 
-    if (loopPicker && list) {
-      const cycleStarts = Array.from(
-        list.querySelectorAll<HTMLLIElement>('[data-team-cycle-start]'),
-      );
-      if (cycleStarts.length === 3) {
-        const cycleHeight = cycleStarts[1].offsetTop - cycleStarts[0].offsetTop;
-
-        if (cycleHeight <= 0) {
-          queueSelectionUpdate();
-          return;
-        }
-
-        // Move between identical copies before reaching a real scroll edge.
-        const upperLimit = cycleStarts[1].offsetTop - cycleHeight / 2;
-        const lowerLimit = cycleStarts[2].offsetTop - cycleHeight / 2;
-
-        if (list.scrollTop < upperLimit) {
-          list.scrollTop += cycleHeight;
-        } else if (list.scrollTop >= lowerLimit) {
-          list.scrollTop -= cycleHeight;
-        }
-      }
+    if (!loopPicker || !list || isTouchingListRef.current) {
+      return;
     }
 
+    const cycleStarts = Array.from(
+      list.querySelectorAll<HTMLLIElement>('[data-team-cycle-start]'),
+    );
+    if (cycleStarts.length !== 7) {
+      return;
+    }
+
+    const cycleHeight = cycleStarts[1].offsetTop - cycleStarts[0].offsetTop;
+    if (cycleHeight <= 0) {
+      return;
+    }
+
+    const relativeScrollTop = list.scrollTop - cycleStarts[middleCycle].offsetTop;
+    const cyclesFromMiddle = Math.floor(relativeScrollTop / cycleHeight);
+    if (cyclesFromMiddle === 0) {
+      return;
+    }
+
+    list.style.scrollSnapType = 'none';
+    list.scrollTop -= cyclesFromMiddle * cycleHeight;
+    window.requestAnimationFrame(() => {
+      list.style.removeProperty('scroll-snap-type');
+    });
+  };
+
+  const scheduleLoopRecenter = () => {
+    if (!loopPicker) {
+      return;
+    }
+
+    if (loopRecenterTimerRef.current !== null) {
+      window.clearTimeout(loopRecenterTimerRef.current);
+    }
+
+    // Keep native momentum and scroll snap uninterrupted while the user moves the list.
+    loopRecenterTimerRef.current = window.setTimeout(() => {
+      loopRecenterTimerRef.current = null;
+      recenterLoop();
+    }, 150);
+  };
+
+  const handleListScroll = () => {
+    scheduleLoopRecenter();
     queueSelectionUpdate();
   };
 
@@ -294,6 +329,7 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
       return;
     }
 
+    isTouchingListRef.current = true;
     touchStartRef.current = {
       x: event.clientX,
       y: event.clientY,
@@ -307,6 +343,8 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
       return;
     }
 
+    isTouchingListRef.current = false;
+    scheduleLoopRecenter();
     const start = touchStartRef.current;
     touchStartRef.current = null;
 
@@ -339,7 +377,9 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
   };
 
   const handleListPointerCancel = () => {
+    isTouchingListRef.current = false;
     touchStartRef.current = null;
+    scheduleLoopRecenter();
   };
 
   return (
@@ -409,7 +449,7 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
                     cycle={cycle}
                     isCycleStart={index === 0}
                     isCycleEnd={loopPicker && index === teamItems.length - 1}
-                    isClone={loopPicker && cycle !== 1}
+                    isClone={loopPicker && cycle !== middleCycle}
                     isActive={item.id === activeItem.id}
                     onActivate={() => {
                       if (!isMobilePickerViewport()) {
