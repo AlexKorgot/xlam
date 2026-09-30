@@ -3,6 +3,12 @@
   --team-row-height: 60px;
 }
 
+@media (max-width: 1023.98px) and (orientation: portrait) {
+  .heading {
+    top: -12px;
+  }
+}
+
 @media (max-width: 1023.98px) {
   .pickerViewport::after {
     position: absolute;

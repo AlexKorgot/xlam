@@ -392,7 +392,7 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
         outerClassName="h-full min-h-0"
         className="flex h-full min-h-0 flex-col pb-8 pt-[clamp(58px,11svh,92px)] max-lg:[@media_(orientation:landscape)]:justify-center max-lg:[@media_(orientation:landscape)]:pt-[var(--header-offset)] sm:pt-24 lg:justify-center lg:pb-0 lg:pt-0"
       >
-          <div ref={headingRef} className="relative z-50 max-w-[740px] max-lg:[@media_(orientation:landscape)]:max-w-[46vw]">
+          <div ref={headingRef} className={clsx('relative z-50 max-w-[740px] max-lg:[@media_(orientation:landscape)]:max-w-[46vw]', styles.heading)}>
             <h2
               id="team-heading"
               className="text-[2rem] font-black uppercase leading-none tracking-normal text-white md:text-[2.35rem] xl:text-[3rem]"
