@@ -1,6 +1,6 @@
 .pickerViewport {
-  --team-picker-height: min(390px, max(240px, calc(100svh - 190px)));
-  --team-row-height: 54px;
+  --team-picker-height: min(430px, max(264px, calc(100svh - 185px)));
+  --team-row-height: 60px;
 }
 
 @media (max-width: 1023.98px) {
@@ -32,8 +32,8 @@
 
 @media (min-width: 640px) and (max-width: 1023.98px) {
   .pickerViewport {
-    --team-picker-height: min(430px, max(240px, calc(100svh - 230px)));
-    --team-row-height: 70px;
+    --team-picker-height: min(470px, max(264px, calc(100svh - 220px)));
+    --team-row-height: 77px;
   }
 
   .portraitStage {
@@ -43,8 +43,8 @@
 
 @media (max-width: 1023.98px) and (orientation: landscape) {
   .pickerViewport {
-    --team-picker-height: 144px;
-    --team-row-height: 48px;
+    --team-picker-height: 159px;
+    --team-row-height: 53px;
   }
 
   .portraitStage {

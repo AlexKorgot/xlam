@@ -494,7 +494,7 @@ function TeamRow({
       aria-hidden={isClone || undefined}
       className={clsx(
         'snap-start lg:border-t lg:border-white/55 lg:last:border-b',
-        isCycleEnd && 'mb-[22px] lg:mb-0',
+        isCycleEnd && 'mb-[24px] lg:mb-0',
       )}
     >
       <button
@@ -506,7 +506,7 @@ function TeamRow({
         onFocus={onActivate}
         onClick={onSelect}
         className={clsx(
-          'group relative flex min-h-[54px] w-full min-w-0 overflow-hidden text-left uppercase transition-colors max-lg:[@media_(orientation:landscape)]:!h-[48px] max-lg:[@media_(orientation:landscape)]:!min-h-[48px] sm:min-h-[70px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#66ff66] lg:h-[59px] lg:min-h-[59px]',
+          'group relative flex min-h-[60px] w-full min-w-0 overflow-hidden text-left uppercase transition-colors max-lg:[@media_(orientation:landscape)]:!h-[53px] max-lg:[@media_(orientation:landscape)]:!min-h-[53px] sm:min-h-[77px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#66ff66] lg:h-[59px] lg:min-h-[59px]',
           isActive ? 'text-black' : 'text-white',
         )}
       >
