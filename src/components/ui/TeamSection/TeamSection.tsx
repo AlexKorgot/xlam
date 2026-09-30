@@ -26,10 +26,20 @@ const roleWidthByMemberId: Record<string, string> = {
   roman: 'lg:w-[138px]',
 };
 
-const findTeamRow = (list: HTMLUListElement, id: string) =>
+const findTeamRow = (list: HTMLUListElement, id: string, cycle: number) =>
   Array.from(list.querySelectorAll<HTMLLIElement>('[data-team-item-id]')).find(
-    (row) => row.dataset.teamItemId === id,
+    (row) => row.dataset.teamItemId === id && Number(row.dataset.teamCycle) === cycle,
   );
+
+const findNearestTeamRow = (list: HTMLUListElement, id: string) =>
+  Array.from(list.querySelectorAll<HTMLLIElement>('[data-team-item-id]'))
+    .filter((row) => row.dataset.teamItemId === id)
+    .reduce<HTMLLIElement | undefined>((nearest, row) =>
+      !nearest ||
+      Math.abs(row.offsetTop - list.scrollTop) < Math.abs(nearest.offsetTop - list.scrollTop)
+        ? row
+        : nearest,
+    undefined);
 
 export function TeamSection({ members = localTeamMembers }: { members?: TeamMember[] }) {
   const teamItems = members.length > 0 ? members : localTeamMembers;
@@ -50,6 +60,8 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
   } | null>(null);
   const activeItem =
     teamItems.find((item) => item.id === activeId) ?? teamItems[0];
+  const loopPicker = isMobilePicker && teamItems.length > 1;
+  const pickerCycles = loopPicker ? [0, 1, 2] : [0];
   const scrollEdgeThreshold = 2;
 
   const isMobilePickerViewport = () =>
@@ -160,7 +172,7 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
       return;
     }
 
-    const row = findTeamRow(list, id);
+    const row = findNearestTeamRow(list, id);
 
     if (!row) {
       return;
@@ -182,7 +194,7 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
     }
 
     const portraitElement = portraitRef.current;
-    const selectedRow = findTeamRow(list, activeIdRef.current);
+    const selectedRow = findTeamRow(list, activeIdRef.current, loopPicker ? 1 : 0);
 
     if (selectedRow) {
       scrollRowToListStart(selectedRow, 'auto');
@@ -229,7 +241,7 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
         selectionFrameRef.current = null;
       }
     };
-  }, [isMobilePicker, queueSelectionUpdate]);
+  }, [isMobilePicker, loopPicker, queueSelectionUpdate]);
 
   const handleListWheel = (event: React.WheelEvent<HTMLUListElement>) => {
     if (event.deltaY === 0) {
@@ -248,6 +260,32 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
   };
 
   const handleListScroll = () => {
+    const list = listRef.current;
+
+    if (loopPicker && list) {
+      const cycleStarts = Array.from(
+        list.querySelectorAll<HTMLLIElement>('[data-team-cycle-start]'),
+      );
+      if (cycleStarts.length === 3) {
+        const cycleHeight = cycleStarts[1].offsetTop - cycleStarts[0].offsetTop;
+
+        if (cycleHeight <= 0) {
+          queueSelectionUpdate();
+          return;
+        }
+
+        // Move between identical copies before reaching a real scroll edge.
+        const upperLimit = cycleStarts[1].offsetTop - cycleHeight / 2;
+        const lowerLimit = cycleStarts[2].offsetTop - cycleHeight / 2;
+
+        if (list.scrollTop < upperLimit) {
+          list.scrollTop += cycleHeight;
+        } else if (list.scrollTop >= lowerLimit) {
+          list.scrollTop -= cycleHeight;
+        }
+      }
+    }
+
     queueSelectionUpdate();
   };
 
@@ -355,7 +393,7 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
           <div ref={pickerViewportRef} className={clsx('relative z-30 mt-2 h-[var(--team-picker-height)] min-h-0 w-full max-w-full flex-none overflow-hidden max-lg:[@media_(orientation:landscape)]:mt-3 max-lg:[@media_(orientation:landscape)]:max-w-[54vw] lg:mt-[17px] lg:h-auto lg:flex-none lg:overflow-visible', styles.pickerViewport)}>
             <ul
               ref={listRef}
-              className="relative z-10 h-full min-h-0 w-full max-w-full flex-1 touch-pan-y snap-y snap-mandatory overflow-y-auto overflow-x-hidden overscroll-contain pb-[calc(var(--team-picker-height)-var(--team-row-height))] pr-1 [scrollbar-width:none] lg:h-auto lg:flex-none lg:snap-none lg:overflow-visible lg:pb-0 lg:pr-0 [&::-webkit-scrollbar]:hidden"
+              className={clsx('relative z-10 h-full min-h-0 w-full max-w-full flex-1 touch-pan-y snap-y snap-mandatory overflow-y-auto overflow-x-hidden overscroll-contain pb-[calc(var(--team-picker-height)-var(--team-row-height))] pr-1 [scrollbar-width:none] lg:h-auto lg:flex-none lg:snap-none lg:overflow-visible lg:pb-0 lg:pr-0 [&::-webkit-scrollbar]:hidden', styles.pickerList)}
               {...{ [FULLPAGE_SCROLL_IGNORE_ATTR]: 'true' }}
               onScroll={handleListScroll}
               onWheel={handleListWheel}
@@ -363,19 +401,25 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
               onPointerUp={handleListPointerUp}
               onPointerCancel={handleListPointerCancel}
             >
-              {teamItems.map((item) => (
-                <TeamRow
-                  key={item.id}
-                  item={item}
-                  isActive={item.id === activeItem.id}
-                  onActivate={() => {
-                    if (!isMobilePickerViewport()) {
-                      selectItem(item.id);
-                    }
-                  }}
-                  onSelect={() => alignAndSelectItem(item.id)}
-                />
-              ))}
+              {pickerCycles.flatMap((cycle) =>
+                teamItems.map((item, index) => (
+                  <TeamRow
+                    key={`${cycle}-${item.id}`}
+                    item={item}
+                    cycle={cycle}
+                    isCycleStart={index === 0}
+                    isCycleEnd={loopPicker && index === teamItems.length - 1}
+                    isClone={loopPicker && cycle !== 1}
+                    isActive={item.id === activeItem.id}
+                    onActivate={() => {
+                      if (!isMobilePickerViewport()) {
+                        selectItem(item.id);
+                      }
+                    }}
+                    onSelect={() => alignAndSelectItem(item.id)}
+                  />
+                )),
+              )}
             </ul>
           </div>
       </Container>
@@ -385,11 +429,19 @@ export function TeamSection({ members = localTeamMembers }: { members?: TeamMemb
 
 function TeamRow({
   item,
+  cycle,
+  isCycleStart,
+  isCycleEnd,
+  isClone,
   isActive,
   onActivate,
   onSelect,
 }: {
   item: TeamMember;
+  cycle: number;
+  isCycleStart: boolean;
+  isCycleEnd: boolean;
+  isClone: boolean;
   isActive: boolean;
   onActivate: () => void;
   onSelect: () => void;
@@ -397,14 +449,19 @@ function TeamRow({
   return (
     <li
       data-team-item-id={item.id}
+      data-team-cycle={cycle}
+      data-team-cycle-start={isCycleStart ? '' : undefined}
+      aria-hidden={isClone || undefined}
       className={clsx(
         'snap-start lg:border-t lg:border-white/55 lg:last:border-b',
+        isCycleEnd && 'mb-[22px] lg:mb-0',
       )}
     >
       <button
         type="button"
         data-member-id={item.id}
         aria-pressed={isActive}
+        tabIndex={isClone ? -1 : undefined}
         onMouseEnter={onActivate}
         onFocus={onActivate}
         onClick={onSelect}
