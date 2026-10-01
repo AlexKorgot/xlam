@@ -63,5 +63,7 @@ one person in the team section. The nine current members are prepared in
 `data/team-members.seed.json`. Validate them with
 `node scripts/import-team-members.mjs`. After backing up the local database,
 `--apply-local` creates missing drafts only in `cms/.tmp/local-check.db`.
-The site still reads `src/components/ui/TeamSection/team.data.ts`. See
+All nine members are published in the local test Strapi and returned by its
+published Content API. The site still reads
+`src/components/ui/TeamSection/team.data.ts`. See
 `../docs/strapi/team-migration.md` for the mapping and the next migration step.
