@@ -1,11 +1,27 @@
+.teamLayout {
+  --team-layout-base-top: clamp(58px, 11svh, 92px);
+  padding-top: var(--team-layout-base-top);
+}
+
 .pickerViewport {
   --team-picker-height: min(430px, max(264px, calc(100svh - 185px)));
   --team-row-height: 60px;
 }
 
 @media (max-width: 1023.98px) and (orientation: portrait) {
+  .teamLayout {
+    // Use the spare space on taller phones without clipping shorter screens.
+    padding-top: calc(var(--team-layout-base-top) + clamp(0px, calc(25svh - 162.5px), 55px));
+  }
+
   .heading {
     top: -12px;
+  }
+}
+
+@media (min-width: 640px) {
+  .teamLayout {
+    --team-layout-base-top: 96px;
   }
 }
 
@@ -48,6 +64,10 @@
 }
 
 @media (max-width: 1023.98px) and (orientation: landscape) {
+  .teamLayout {
+    padding-top: var(--header-offset);
+  }
+
   .pickerViewport {
     --team-picker-height: 159px;
     --team-row-height: 53px;
@@ -59,6 +79,10 @@
 }
 
 @media (min-width: 1024px) {
+  .teamLayout {
+    padding-top: 0;
+  }
+
   .portraitStage {
     --team-portrait-top: 50%;
   }
