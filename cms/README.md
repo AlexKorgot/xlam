@@ -92,3 +92,13 @@ is empty. Existing edits are never overwritten.
 Both single types are read during the static Next.js build when Strapi build
 variables are set. Publishing in Strapi alone does not update an already built
 site; it needs a new build and deployment.
+
+## SEO Settings
+
+`SEO Settings` holds the default page title and description previously defined
+in `src/app/layout.tsx`. The values in `data/seo-settings.seed.json` match the
+current site. Validate them with `node scripts/import-seo-settings.mjs`; after
+backing up the local database, `--apply-local` creates and publishes the single
+type only if it is empty. Existing editorial changes are never overwritten.
+The static build reads the published values and writes them into each page's
+HTML. A new build is required after publishing edits in Strapi.

@@ -1,0 +1,17 @@
+{
+  "kind": "singleType",
+  "collectionName": "seo_settings",
+  "info": {
+    "singularName": "seo-settings",
+    "pluralName": "seo-settings-list",
+    "displayName": "SEO Settings",
+    "description": "Default title and description for the static site"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "description": { "type": "text", "required": true }
+  }
+}
