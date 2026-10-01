@@ -52,11 +52,8 @@ jobs:
       - name: Build static site
         run: npm run build
 
-      - name: Check static export
-        shell: bash
-        run: |
-          test -s out/index.html
-          test -s out/main/index.html
+      - name: Verify static export and record build revision
+        run: node scripts/verify-static-export.mjs out
 
       - name: Save preview build
         uses: actions/upload-artifact@v7
