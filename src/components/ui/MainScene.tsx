@@ -26,6 +26,7 @@ import { getSectionRenderState } from '@/src/lib/fullPageSectionState';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import type { CinematicSlide } from '@/src/components/cinematic_new/types';
 import type { ServicesContent } from '@/src/components/ui/ServicesSliderSection/services.types';
+import type { TeamMember } from '@/src/components/ui/TeamSection/team.data';
 
 const INTRO_SECTION_INDEX = 0;
 const SECOND_SECTION_INDEX = 1;
@@ -149,9 +150,11 @@ function useResponsiveMorphMode() {
 export const MainScene = ({
   projectSlides,
   serviceContent,
+  teamMembers,
 }: {
   projectSlides: CinematicSlide[];
   serviceContent: ServicesContent;
+  teamMembers: TeamMember[];
 }) => {
   const setHeaderProgress = useHeaderProgress();
   const [activeSectionIndex, setActiveSectionIndex] = useState(INTRO_SECTION_INDEX);
@@ -518,7 +521,7 @@ export const MainScene = ({
           sectionIndex={TEAM_SECTION_INDEX}
           sectionId="about"
         >
-          <TeamSection />
+          <TeamSection members={teamMembers} />
         </DeferredSection>
 
         <DeferredSection
