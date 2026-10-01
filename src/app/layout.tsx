@@ -4,6 +4,7 @@ import localFont from 'next/font/local'
 import { HeaderProvider } from '@/src/components/ui/Header/HeaderProvider';
 import { ContactModalProvider } from '@/src/components/ui/contact-modal';
 import { getSiteSettings } from '@/src/lib/strapiSiteSettings';
+import { getSeoSettings } from '@/src/lib/strapiSeoSettings';
 
 const sans = localFont({
   src: [
@@ -39,10 +40,10 @@ export const viewport = {
 };
 
 
-export const metadata: Metadata = {
-  title: "XLAM Media",
-  description: "Production studio with motion-first digital experiences.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { title, description } = await getSeoSettings();
+  return { title, description };
+}
 
 export default async function RootLayout({
   children,
