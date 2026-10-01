@@ -1,4 +1,5 @@
 import { access, readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateServicesSeed } from './service-data.mjs';
@@ -23,9 +24,57 @@ for (const service of services) {
 }
 
 const apply = process.argv.includes('--apply');
+const applyLocal = process.argv.includes('--apply-local');
+if (apply && applyLocal) throw new Error('Choose either --apply or --apply-local');
 console.log(`Validated ${services.length} Services and the section text: ${services.map(({ key }) => key).join(', ')}`);
-if (!apply) {
-  console.log('Dry run. Pass --apply with CMS_BASE_URL and CMS_WRITE_TOKEN to create drafts locally.');
+if (!apply && !applyLocal) {
+  console.log('Dry run. Pass --apply-local for local SQLite or --apply with a write token.');
+  process.exit(0);
+}
+
+if (applyLocal) {
+  const cmsRoot = fileURLToPath(new URL('../', import.meta.url));
+  process.loadEnvFile(path.join(cmsRoot, '.env'));
+  const databasePath = path.resolve(cmsRoot, process.env.DATABASE_FILENAME ?? '');
+  if (process.env.DATABASE_CLIENT !== 'sqlite' ||
+      databasePath !== path.join(cmsRoot, '.tmp', 'local-check.db')) {
+    throw new Error('--apply-local is restricted to cms/.tmp/local-check.db (SQLite)');
+  }
+
+  const { compileStrapi, createStrapi } = createRequire(import.meta.url)('@strapi/core');
+  const app = await createStrapi(await compileStrapi({ appDir: cmsRoot })).load();
+  try {
+    const serviceDocuments = app.documents('api::service.service');
+    for (const service of services) {
+      const filters = { key: service.key };
+      const existingDraft = await serviceDocuments.findFirst({ filters, status: 'draft' });
+      const existingPublished = await serviceDocuments.findFirst({ filters, status: 'published' });
+      if (existingDraft || existingPublished) {
+        console.log(`Skipped existing service: ${service.key}`);
+        continue;
+      }
+      const created = await serviceDocuments.create({ data: service, status: 'draft' });
+      if (!created?.documentId || created.publishedAt !== null) {
+        throw new Error(`Draft creation could not be verified for ${service.key}`);
+      }
+      console.log(`Created draft: ${service.key}`);
+    }
+
+    const sectionDocuments = app.documents('api::services-section.services-section');
+    const existingDraft = await sectionDocuments.findFirst({ status: 'draft' });
+    const existingPublished = await sectionDocuments.findFirst({ status: 'published' });
+    if (existingDraft || existingPublished) {
+      console.log('Skipped existing Services Section');
+    } else {
+      const created = await sectionDocuments.create({ data: section, status: 'draft' });
+      if (!created?.documentId || created.publishedAt !== null) {
+        throw new Error('Services Section draft creation could not be verified');
+      }
+      console.log('Created Services Section draft');
+    }
+  } finally {
+    await app.destroy();
+  }
   process.exit(0);
 }
 

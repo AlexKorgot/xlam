@@ -48,5 +48,9 @@ The initial source and mapping are described in
 `Services Section` contains the shared copy below the carousel. The five original
 services and their media URLs are prepared in `data/services.seed.json`.
 `node scripts/import-services.mjs` validates them without changing Strapi;
-`--apply` creates drafts only. The site still reads its checked-in service data
-until the next integration stage. See `../docs/strapi/services-migration.md`.
+`--apply-local` imports drafts into the local SQLite test database without an API
+token. Back up `cms/.tmp/local-check.db` before using it. For a separately
+configured Strapi instance, `--apply` uses `CMS_BASE_URL` and a restricted
+`CMS_WRITE_TOKEN`. Both modes skip existing entries and create drafts only.
+The site still reads its checked-in service data until the next integration
+stage. See `../docs/strapi/services-migration.md`.
