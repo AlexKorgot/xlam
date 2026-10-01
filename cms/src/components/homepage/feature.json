@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_homepage_features",
+  "info": {
+    "displayName": "Homepage Feature",
+    "description": "Text in a fixed position of the Why Us grid"
+  },
+  "attributes": {
+    "key": {
+      "type": "enumeration",
+      "enum": ["equipment", "format", "worlds", "contractor", "senior", "platforms", "ai", "scale", "cycle"],
+      "required": true
+    },
+    "label": { "type": "string", "required": true }
+  }
+}

@@ -68,3 +68,27 @@ published Content API. With Strapi build variables set, the static site reads
 published members for `/`, `/main`, and `/about`; without them, local builds
 use `src/components/ui/TeamSection/team.data.ts`. See
 `../docs/strapi/team-migration.md` for the mapping and the next migration step.
+
+## Site Settings
+
+`Site Settings` holds the contact modal title, description, phone, email, and
+the labels and HTTPS URLs in the final social links block. A social item with
+an empty URL remains visible but cannot be opened. Its `column` selects the
+left or right list. `node scripts/import-site-settings.mjs` validates the
+current copy; after a backup, `--apply-local` creates and publishes it only if
+the local SQLite single type is empty. Existing edits are never overwritten.
+
+## Homepage
+
+`Homepage` holds copy for the production heading, the Why Us heading and nine
+features, and four statement slides. The keys on `Homepage Feature` and
+`Homepage Statement` identify fixed visual positions and artwork; edit their
+text, but keep each key exactly once. For statements, each newline is a visible
+line in the slide; use at most four nonempty lines, and keep `welcome` to one.
+`node scripts/import-homepage.mjs` validates the current copy; after a backup,
+`--apply-local` creates and publishes it only if the local SQLite single type
+is empty. Existing edits are never overwritten.
+
+Both single types are read during the static Next.js build when Strapi build
+variables are set. Publishing in Strapi alone does not update an already built
+site; it needs a new build and deployment.

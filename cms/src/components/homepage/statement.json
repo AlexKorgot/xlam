@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_homepage_statements",
+  "info": {
+    "displayName": "Homepage Statement",
+    "description": "One text slide; put each visual line on a separate line"
+  },
+  "attributes": {
+    "key": {
+      "type": "enumeration",
+      "enum": ["smooth", "noise", "idea", "welcome"],
+      "required": true
+    },
+    "lines": { "type": "text", "required": true }
+  }
+}

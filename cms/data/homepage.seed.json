@@ -1,0 +1,26 @@
+{
+  "productionLineOne": "НАШ ПРОДАКШН НАЧИНАЕТСЯ",
+  "productionLineTwoBeforeHighlight": "С",
+  "productionLineTwoHighlight": "ИДЕЙ",
+  "productionLineTwoAfterHighlight": ", КОТОРЫЕ ДРУГИЕ БЫ",
+  "productionLineThree": "ВЫБРОСИЛИ",
+  "whyHeadingBeforeHighlight": "ПОЧЕМУ",
+  "whyHeadingHighlight": "МЫ",
+  "whyFeatures": [
+    { "key": "equipment", "label": "Собственный парк оборудования" },
+    { "key": "format", "label": "Без рамок по формату" },
+    { "key": "worlds", "label": "Создаём визуальные миры через брендинг, CGI и моушн" },
+    { "key": "contractor", "label": "Генеральный медиаподрядчик, а не аутсорс-лотерея" },
+    { "key": "senior", "label": "Senior-специалисты под каждую задачу" },
+    { "key": "platforms", "label": "Работаем со всеми платформами и соцсетями" },
+    { "key": "ai", "label": "Актуальные AI-инструменты" },
+    { "key": "scale", "label": "Гибкость под любой масштаб и бюджет" },
+    { "key": "cycle", "label": "Полный цикл медиауслуг" }
+  ],
+  "statements": [
+    { "key": "smooth", "lines": "В идеальном мире все гладко,\nно гладкое\nне запоминается" },
+    { "key": "noise", "lines": "Не\nРаботаем по правилам\nиндустрии\n- мы пишем новые" },
+    { "key": "idea", "lines": "Если ваш бренд готов\nПерестать быть аккуратным\nи стать настоящим" },
+    { "key": "welcome", "lines": "Welcome" }
+  ]
+}

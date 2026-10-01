@@ -1,0 +1,24 @@
+{
+  "kind": "singleType",
+  "collectionName": "homepages",
+  "info": {
+    "singularName": "homepage",
+    "pluralName": "homepages",
+    "displayName": "Homepage",
+    "description": "Editable copy for the production, Why Us and statement sections"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "productionLineOne": { "type": "string", "required": true },
+    "productionLineTwoBeforeHighlight": { "type": "string", "required": true },
+    "productionLineTwoHighlight": { "type": "string", "required": true },
+    "productionLineTwoAfterHighlight": { "type": "string", "required": true },
+    "productionLineThree": { "type": "string", "required": true },
+    "whyHeadingBeforeHighlight": { "type": "string", "required": true },
+    "whyHeadingHighlight": { "type": "string", "required": true },
+    "whyFeatures": { "type": "component", "repeatable": true, "component": "homepage.feature" },
+    "statements": { "type": "component", "repeatable": true, "component": "homepage.statement" }
+  }
+}
