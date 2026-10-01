@@ -1,4 +1,3 @@
-import type { StaticImageData } from 'next/image';
 import adsModalDesktop from './assets/ads-modal.desktop.webp';
 import adsModalMobile from './assets/ads-modal.mobile.webp';
 import b2bModalDesktop from './assets/b2b-modal.desktop.webp';
@@ -10,9 +9,15 @@ import brandingModalMobile from './assets/branding-modal.mobile.webp';
 import showModalDesktop from './assets/show-modal.desktop.webp';
 import showModalMobile from './assets/show-modal.mobile.webp';
 
+export type ServiceImageSource = Readonly<{
+  src: string;
+  width?: number;
+  height?: number;
+}>;
+
 export type ServiceModalBackground = Readonly<{
-  desktop: StaticImageData;
-  mobile: StaticImageData;
+  desktop: ServiceImageSource;
+  mobile: ServiceImageSource;
 }>;
 
 export const serviceModalBackgrounds = {
@@ -37,8 +42,6 @@ export const serviceModalBackgrounds = {
     mobile: showModalMobile,
   },
 } as const satisfies Record<string, ServiceModalBackground>;
-
-export const serviceModalBackgroundList = Object.values(serviceModalBackgrounds);
 
 const mobileBackgroundMediaQuery = '(max-width: 999.98px)';
 const backgroundPreloadPromises = new Map<string, Promise<void>>();

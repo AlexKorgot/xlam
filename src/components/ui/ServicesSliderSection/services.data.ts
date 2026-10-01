@@ -152,6 +152,9 @@ const brandModalContent: ServiceModalContent = {
   ],
 };
 
+export const serviceClosingText =
+  'берем на себя все этапы создания продукта: сценарий, съемка, монтаж, саунд-дизайн и графика';
+
 export const serviceSlides: ServiceSlide[] = [
   {
     id: 'show',

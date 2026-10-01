@@ -1,5 +1,4 @@
-import type { StaticImageData } from 'next/image';
-import type { ServiceModalBackground } from './serviceModalBackground';
+import type { ServiceImageSource, ServiceModalBackground } from './serviceModalBackground';
 
 export type ServiceModalFeature = {
   title: string;
@@ -17,8 +16,8 @@ export type ServiceModalContent = {
 };
 
 export type ServicePoster = Readonly<{
-  desktop: StaticImageData;
-  mobile: StaticImageData;
+  desktop: ServiceImageSource;
+  mobile: ServiceImageSource;
 }>;
 
 export type ServiceSlide = {
@@ -28,4 +27,9 @@ export type ServiceSlide = {
   videoSrc?: string;
   poster: ServicePoster;
   modal: ServiceModalContent;
+};
+
+export type ServicesContent = {
+  slides: ServiceSlide[];
+  closingText: string;
 };
