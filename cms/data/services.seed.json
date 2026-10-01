@@ -1,0 +1,117 @@
+{
+  "section": {
+    "closingText": "берем на себя все этапы создания продукта: сценарий, съемка, монтаж, саунд-дизайн и графика"
+  },
+  "services": [
+    {
+      "key": "show",
+      "sortOrder": 10,
+      "cardTitle": "ШОУ ПОД КЛЮЧ",
+      "cardDescription": "ОТ ИДЕИ ДО ПРЕМЬЕРЫ: РАЗРАБАТЫВАЕМ, СНИМАЕМ И ВЫВОДИМ ШОУ В ЭФИР",
+      "cardVideoUrl": "/video/show.mp4",
+      "cardPosterDesktopUrl": "/service-media/show-card.desktop.webp",
+      "cardPosterMobileUrl": "/service-media/show-card.mobile.webp",
+      "detailTitle": "Шоу под ключ",
+      "detailSubtitle": "От идеи до премьеры: разрабатываем, снимаем и выводим шоу в эфир",
+      "detailDescription": "Вам не нужно контролировать несколько подрядчиков и сводить их работу — мы все сделаем за вас. Берем на себя весь процесс: разработка, съёмка, постпродакшн и упаковка.",
+      "ctaIntro": "Поговорим о вашей идее",
+      "ctaLabel": "Оставить заявку",
+      "detailBackgroundDesktopUrl": "/service-media/show-detail.desktop.webp",
+      "detailBackgroundMobileUrl": "/service-media/show-detail.mobile.webp",
+      "features": [
+        { "title": "Придумываем", "description": "Идея, концепция, формат, структура, сценарий" },
+        { "title": "Собираем", "description": "Кастинг ведущих и гостей, локация-студия, смета, графика, музыка" },
+        { "title": "Снимаем", "description": "Серийная съемка, режиссура, свет, звук, работа с гостями" },
+        { "title": "Выпускаем", "description": "Монтаж, графика, цветокор, саунд-дизайн, упаковка для платформ" }
+      ]
+    },
+    {
+      "key": "b2b",
+      "sortOrder": 20,
+      "cardTitle": "B2B ПРОДУКТ",
+      "cardDescription": "ПРОИЗВОДИМ СИСТЕМНЫЙ КОНТЕНТ: ИМИДЖ, ПРОДУКТ, КОММУНИКАЦИИ",
+      "cardVideoUrl": "/video/b2b.mp4",
+      "cardPosterDesktopUrl": "/service-media/b2b-card.desktop.webp",
+      "cardPosterMobileUrl": "/service-media/b2b-card.mobile.webp",
+      "detailTitle": "B2B Продукт",
+      "detailSubtitle": "Производим системный контент: имидж, продукт, коммуникация",
+      "detailDescription": "Знаем, что бизнесу всегда нужно «вчера». Строим визуальные системы: имиджевые ролики, продуктовые видео, корпоративный контент и  материалы для внутренних и внешних коммуникаций",
+      "ctaIntro": "Поговорим о вашей идее",
+      "ctaLabel": "Оставить заявку",
+      "detailBackgroundDesktopUrl": "/service-media/b2b-detail.desktop.webp",
+      "detailBackgroundMobileUrl": "/service-media/b2b-detail.mobile.webp",
+      "features": [
+        { "title": "Стратегия", "description": "Бизнес-цель, формат, целевая аудитория, ТЗ" },
+        { "title": "Идея", "description": "Концепция, структура, референсы, смета, питч" },
+        { "title": "Производство", "description": "Съемка, графика, разработка всех материалов" },
+        { "title": "Дистрибуция", "description": "Монтаж, графика, упаковка и адаптация под все каналы" }
+      ]
+    },
+    {
+      "key": "ads",
+      "sortOrder": 30,
+      "cardTitle": "РЕКЛАМА",
+      "cardDescription": "ДЕЛАЕМ РЕКЛАМУ, КОТОРУЮ ПЕРЕСЫЛАЮТ ДРУЗЬЯМ",
+      "cardVideoUrl": "/video/ads.mp4",
+      "cardPosterDesktopUrl": "/service-media/ads-card.desktop.webp",
+      "cardPosterMobileUrl": "/service-media/ads-card.mobile.webp",
+      "detailTitle": "Реклама",
+      "detailSubtitle": "Делаем рекламу, которую пересылают друзьям ",
+      "detailDescription": "Реклама — это короткое кино, где нет случайных кадров: каждая секунда продумана, каждый образ работает на идею. Сопровождаем проект на всех стадиях — от брифа до финальной упаковки",
+      "ctaIntro": "Поговорим о вашей идее",
+      "ctaLabel": "Оставить заявку",
+      "detailBackgroundDesktopUrl": "/service-media/ads-detail.desktop.webp",
+      "detailBackgroundMobileUrl": "/service-media/ads-detail.mobile.webp",
+      "features": [
+        { "title": "Задача", "description": "Бриф, целевая аудитория, рынок, конкурентное поле" },
+        { "title": "Идея", "description": "Концепция, сценарий, формат, раскадровка, смета" },
+        { "title": "Производство", "description": "Кастинг, локации, съемка, режиссура, продюсирование" },
+        { "title": "Постпродакшн", "description": "Монтаж, цветокор, графика, саунд-дизайн, адаптация и упаковка" }
+      ]
+    },
+    {
+      "key": "branding",
+      "sortOrder": 40,
+      "cardTitle": "AI КОНТЕНТ",
+      "cardDescription": "СОЗДАЕМ ВИЗУАЛ НОВОГО ПОКОЛЕНИЯ С ПОМОЩЬЮ ИИ",
+      "cardVideoUrl": "/video/ai.mp4",
+      "cardPosterDesktopUrl": "/service-media/branding-card.desktop.webp",
+      "cardPosterMobileUrl": "/service-media/branding-card.mobile.webp",
+      "detailTitle": "AI Контент",
+      "detailSubtitle": "СОЗДАЕМ ВИЗУАЛ НОВОГО ПОКОЛЕНИЯ С ПОМОЩЬЮ ИИ",
+      "detailDescription": "ИИ-контент под задачи любой сложности: быстро — когда время критично, масштабно — когда нужен объём, нестандартно — когда обычные решения не подходят.",
+      "ctaIntro": "Поговорим о вашей идее",
+      "ctaLabel": "Оставить заявку",
+      "detailBackgroundDesktopUrl": "/service-media/branding-detail.desktop.webp",
+      "detailBackgroundMobileUrl": "/service-media/branding-detail.mobile.webp",
+      "features": [
+        { "title": "Архитектура", "description": "Задача, визуальная стратегия, мудборд, концепция, эталоны" },
+        { "title": "Промтинг", "description": "Настройка моделей, воркфлоу, контроль персонажей, доводка" },
+        { "title": "Генерация", "description": "Производство на стеке нейросетей: видео, фото, голос, звук" },
+        { "title": "Сборка", "description": "Курация, монтаж, цветокор, саунд-дизайн, апскейл" }
+      ]
+    },
+    {
+      "key": "brand",
+      "sortOrder": 50,
+      "cardTitle": "БРЕНДИНГ",
+      "cardDescription": "ФОРМИРУЕМ ВИЗУАЛЬНЫЙ ЯЗЫК БРЕНДА И УПАКОВЫВАЕМ ЕГО В КОНТЕНТ",
+      "cardVideoUrl": "/video/branding.mp4",
+      "cardPosterDesktopUrl": "/service-media/brand-card.desktop.webp",
+      "cardPosterMobileUrl": "/service-media/brand-card.mobile.webp",
+      "detailTitle": "Брендинг",
+      "detailSubtitle": "Бренд как структура, а не набор красивых элементов",
+      "detailDescription": "Знаем, как айдентика живет в кадре, потому что сами снимаем шоу и рекламу. Делаем бренды, которые работают не только на бумаге, но и на экране. От стратегии до моушна и CGI.",
+      "ctaIntro": "Поговорим о вашей идее",
+      "ctaLabel": "Оставить заявку",
+      "detailBackgroundDesktopUrl": "/service-media/brand-detail.desktop.webp",
+      "detailBackgroundMobileUrl": "/service-media/brand-detail.mobile.webp",
+      "features": [
+        { "title": "Исследование", "description": "Рынок, конкуренты, аудитория, миссия, тон, визуальный аудит." },
+        { "title": "Стратегия", "description": "Позиционирование, платформа бренда, ключевые сообщения." },
+        { "title": "Айдентика", "description": "Логобук, брендбук, типографика, фирменный стиль." },
+        { "title": "Производство", "description": "Предпечатная подготовка, 3D-графика, CGI." }
+      ]
+    }
+  ]
+}

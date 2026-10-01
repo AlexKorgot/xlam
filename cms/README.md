@@ -41,3 +41,12 @@ fail if this check fails; the existing deployed version stays in place.
 
 The initial source and mapping are described in
 `../docs/strapi/projects-migration.md`.
+
+## Services
+
+`Service` contains the carousel card and its detail modal content.
+`Services Section` contains the shared copy below the carousel. The five original
+services and their media URLs are prepared in `data/services.seed.json`.
+`node scripts/import-services.mjs` validates them without changing Strapi;
+`--apply` creates drafts only. The site still reads its checked-in service data
+until the next integration stage. See `../docs/strapi/services-migration.md`.
