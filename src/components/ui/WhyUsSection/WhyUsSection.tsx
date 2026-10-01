@@ -4,49 +4,50 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Container } from "@/src/components/ui/grid/Container";
 import { mediaAssetPath } from "@/src/lib/mediaAssetPath";
 import { useNearViewport } from "@/src/lib/useNearViewport";
+import type { HomepageContent, HomepageFeatureKey } from '@/src/lib/homepage.types';
 import ballsPoster from "./why-us-balls.png";
 import styles from "./WhyUsSection.module.scss";
 
 type FeatureBlockData = {
-  label: string;
+  key: HomepageFeatureKey;
   className?: string;
 };
 
 const featureBlocks: FeatureBlockData[] = [
   {
-    label: "Собственный парк оборудования",
+    key: "equipment",
     className: styles.cardEquipment,
   },
   {
-    label: "Без рамок по формату",
+    key: "format",
     className: styles.cardFormat,
   },
   {
-    label: "Создаём визуальные миры через брендинг, CGI и моушн",
+    key: "worlds",
     className: styles.cardWorlds,
   },
   {
-    label: "Генеральный медиаподрядчик, а не аутсорс-лотерея",
+    key: "contractor",
     className: styles.cardContractor,
   },
   {
-    label: "Senior-специалисты под каждую задачу",
+    key: "senior",
     className: styles.cardSenior,
   },
   {
-    label: "Работаем со всеми платформами и соцсетями",
+    key: "platforms",
     className: styles.cardPlatforms,
   },
   {
-    label: "Актуальные AI-инструменты",
+    key: "ai",
     className: styles.cardAi,
   },
   {
-    label: "Гибкость под любой масштаб и бюджет",
+    key: "scale",
     className: styles.cardScale,
   },
   {
-    label: "Полный цикл медиауслуг",
+    key: "cycle",
     className: styles.cardCycle,
   },
 ];
@@ -73,7 +74,7 @@ function createRandomRevealDelays(count: number) {
   return delays;
 }
 
-export function WhyUsSection() {
+export function WhyUsSection({ content }: { content: HomepageContent['whyUs'] }) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [revealDelays, setRevealDelays] = useState<number[] | null>(null);
   const hasAnimatedIn = revealDelays !== null;
@@ -131,7 +132,8 @@ export function WhyUsSection() {
             id="why-us-heading"
             className="mx-auto w-full max-w-[713px] text-center text-[38px] font-black uppercase leading-[1.21] tracking-normal sm:text-5xl md:text-[56px] lg:text-[60px]"
           >
-            ПОЧЕМУ <span className="text-[#66ff66]">МЫ</span>
+            {content.headingBeforeHighlight}{' '}
+            <span className="text-[#66ff66]">{content.headingHighlight}</span>
           </h2>
 
           <ul
@@ -140,8 +142,8 @@ export function WhyUsSection() {
           >
             {featureBlocks.map((feature, index) => (
               <FeatureBlock
-                key={`${feature.label}-${index}`}
-                label={feature.label}
+                key={feature.key}
+                label={content.features[feature.key]}
                 className={feature.className}
                 revealDelayMs={revealDelays?.[index]}
               />

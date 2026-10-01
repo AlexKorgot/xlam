@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -20,6 +21,7 @@ import {
   getFullPageSwipeDirection,
 } from '@/src/components/ui/FullPageScroll';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
+import type { HomepageContent, HomepageStatementKey } from '@/src/lib/homepage.types';
 import styles from './TextSection.module.scss';
 
 type ResponsiveImageAsset = {
@@ -221,7 +223,7 @@ const GrayBottom = responsiveImageAsset(
 );
 
 type TextSlide = {
-  id: string;
+  id: HomepageStatementKey;
   lines: string[];
   topImage: ResponsiveImageAsset;
   bottomImage: ResponsiveImageAsset;
@@ -260,6 +262,7 @@ type TextSlideImagePositionConfig = Partial<{
 interface TextSectionProps {
   intervalMs?: number;
   isActive?: boolean;
+  statements: HomepageContent['statements'];
 }
 
 type TextSlideSlot = 'a' | 'b';
@@ -336,10 +339,9 @@ const defaultImagePosition: TextSlideImagePosition = {
   bottomHeight: 'clamp(260px, 38.02vw, 730px)',
 };
 
-const baseSlides: TextSlide[] = [
+const baseSlides: Omit<TextSlide, 'lines'>[] = [
   {
     id: 'smooth',
-    lines: ['В идеальном мире все гладко,', 'но гладкое', 'не запоминается'],
     topImage: BlueTop,
     bottomImage: BlueBottom,
     imagePosition: {
@@ -387,7 +389,6 @@ const baseSlides: TextSlide[] = [
   },
   {
     id: 'noise',
-    lines: ['Не','Работаем по правилам','индустрии', '- мы пишем новые'],
     topImage: GreenTop,
     bottomImage: GreenBottom,
     imagePosition: {
@@ -433,7 +434,6 @@ const baseSlides: TextSlide[] = [
   },
   {
     id: 'idea',
-    lines: ['Если ваш бренд готов', 'Перестать быть аккуратным', 'и стать настоящим'],
     topImage: GrayTop,
     bottomImage: GrayBottom,
     imagePosition: {
@@ -480,14 +480,6 @@ const baseSlides: TextSlide[] = [
 ];
 
 const ideaSlide = baseSlides[baseSlides.length - 1];
-const slides: TextSlide[] = [
-  ...baseSlides,
-  {
-    ...ideaSlide,
-    id: 'welcome',
-    lines: ['Welcome'],
-  },
-];
 
 const resolveResponsivePositionValue = (
   value: ResponsivePositionValue | undefined,
@@ -571,7 +563,11 @@ const createArtworkStyle = (
   } as CSSProperties;
 };
 
-export function TextSection({ intervalMs = 5000, isActive = false }: TextSectionProps) {
+export function TextSection({ intervalMs = 5000, isActive = false, statements }: TextSectionProps) {
+  const slides = useMemo<TextSlide[]>(() => [
+    ...baseSlides.map((slide) => ({ ...slide, lines: statements[slide.id] })),
+    { ...ideaSlide, id: 'welcome', lines: statements.welcome },
+  ], [statements]);
   const sectionRef = useRef<HTMLElement>(null);
   const backgroundRef = useRef<HTMLDivElement>(null);
   const slotATextRef = useRef<HTMLHeadingElement>(null);
@@ -634,7 +630,7 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
       preloadResponsiveImage(nextSlide.topImage),
       preloadResponsiveImage(nextSlide.bottomImage),
     ]);
-  }, [activeIndex, isActive]);
+  }, [activeIndex, isActive, slides]);
 
   const requestParentSectionScroll = useCallback((direction: 'up' | 'down') => {
     window.dispatchEvent(
@@ -660,7 +656,7 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
 
       setIncomingIndex(nextIndex);
     },
-    [requestParentSectionScroll],
+    [requestParentSectionScroll, slides.length],
   );
 
   useEffect(() => {
@@ -802,7 +798,7 @@ export function TextSection({ intervalMs = 5000, isActive = false }: TextSection
     return () => {
       window.clearInterval(timerId);
     };
-  }, [intervalMs]);
+  }, [intervalMs, slides.length]);
 
   const getBackgroundParallaxTween = (
     axis: 'x' | 'y',
@@ -1220,8 +1216,8 @@ function SlideArtwork({
               </span>
             </span>
           ) : (
-            slide.lines.map((line) => (
-              <span key={line} className="block">
+            slide.lines.map((line, index) => (
+              <span key={`${slide.id}-${index}`} className="block">
                 {line}
               </span>
             ))

@@ -4,7 +4,6 @@ import {
   forwardRef,
   useEffect,
   useImperativeHandle,
-  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -24,6 +23,7 @@ import FurryX from '@/src/lib/assets/main/x.webp';
 import FullPageSection from '@/src/components/ui/FullPageSection';
 import { Container } from '@/src/components/ui/grid/Container';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
+import type { HomepageContent } from '@/src/lib/homepage.types';
 
 export interface SecondSectionDesignHandle {
   setProgress: (progress: number) => void;
@@ -33,6 +33,7 @@ export interface SecondSectionDesignHandle {
 
 type SecondSectionDesignProps = {
   isActive?: boolean;
+  content: HomepageContent['production'];
 };
 
 type ArtKey =
@@ -648,7 +649,7 @@ export const SecondSectionDesign = forwardRef<
   SecondSectionDesignHandle,
   SecondSectionDesignProps
 >(
-  function SecondSectionDesign({ isActive = false }, ref) {
+  function SecondSectionDesign({ isActive = false, content }, ref) {
     const sectionRef = useRef<HTMLElement>(null);
     const titleRef = useRef<HTMLDivElement>(null);
     const artRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -661,14 +662,11 @@ export const SecondSectionDesign = forwardRef<
     const activeArtBreakpoint = artBreakpoint ?? 'desktop';
     const activeArtStage = artStages[activeArtBreakpoint];
 
-    const lines = useMemo(
-      () => [
-        'НАШ ПРОДАКШН НАЧИНАЕТСЯ',
-        'С ИДЕЙ, КОТОРЫЕ ДРУГИЕ БЫ',
-        'ВЫБРОСИЛИ',
-      ],
-      [],
-    );
+    const headingLabel = [
+      content.lineOne,
+      `${content.lineTwoBeforeHighlight} ${content.lineTwoHighlight}${content.lineTwoAfterHighlight}`,
+      content.lineThree,
+    ].join(' ');
 
     useEffect(() => {
       const syncBreakpoint = () => {
@@ -1008,14 +1006,16 @@ export const SecondSectionDesign = forwardRef<
             style={{ willChange: 'transform, opacity' }}
           >
             <h2
-              aria-label={lines.join(' ')}
+              aria-label={headingLabel}
               className="text-[clamp(2rem,3.125vw,3.75rem)] font-bold uppercase leading-[1.21] text-white"
             >
-              <span className="block">{lines[0]}</span>
+              <span className="block">{content.lineOne}</span>
               <span className="block">
-                С <span className="text-[#66FF66]">ИДЕЙ</span>, КОТОРЫЕ ДРУГИЕ БЫ
+                {content.lineTwoBeforeHighlight}{' '}
+                <span className="text-[#66FF66]">{content.lineTwoHighlight}</span>
+                {content.lineTwoAfterHighlight}
               </span>
-              <span className="block">{lines[2]}</span>
+              <span className="block">{content.lineThree}</span>
             </h2>
           </div>
         </section>

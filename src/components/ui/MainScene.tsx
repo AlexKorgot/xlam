@@ -27,6 +27,7 @@ import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import type { CinematicSlide } from '@/src/components/cinematic_new/types';
 import type { ServicesContent } from '@/src/components/ui/ServicesSliderSection/services.types';
 import type { TeamMember } from '@/src/components/ui/TeamSection/team.data';
+import type { HomepageContent } from '@/src/lib/homepage.types';
 
 const INTRO_SECTION_INDEX = 0;
 const SECOND_SECTION_INDEX = 1;
@@ -151,10 +152,12 @@ export const MainScene = ({
   projectSlides,
   serviceContent,
   teamMembers,
+  homepageContent,
 }: {
   projectSlides: CinematicSlide[];
   serviceContent: ServicesContent;
   teamMembers: TeamMember[];
+  homepageContent: HomepageContent;
 }) => {
   const setHeaderProgress = useHeaderProgress();
   const [activeSectionIndex, setActiveSectionIndex] = useState(INTRO_SECTION_INDEX);
@@ -424,6 +427,7 @@ export const MainScene = ({
           <SecondSectionDesign
             ref={secondSectionRef}
             isActive={activeSectionIndex === SECOND_SECTION_INDEX}
+            content={homepageContent.production}
           />
         </DeferredSection>
 
@@ -485,7 +489,7 @@ export const MainScene = ({
           sectionIndex={WHY_SECTION_INDEX}
           sectionId="why"
         >
-          <WhyUsSection />
+          <WhyUsSection content={homepageContent.whyUs} />
         </DeferredSection>
 
         <DeferredSection
@@ -513,6 +517,7 @@ export const MainScene = ({
           <TextSection
             intervalMs={0}
             isActive={activeSectionIndex === TEXT_SECTION_INDEX}
+            statements={homepageContent.statements}
           />
         </DeferredSection>
 
