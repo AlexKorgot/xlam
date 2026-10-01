@@ -1,0 +1,20 @@
+{
+  "kind": "singleType",
+  "collectionName": "site_settings",
+  "info": {
+    "singularName": "site-settings",
+    "pluralName": "site-settings-list",
+    "displayName": "Site Settings",
+    "description": "Contact details and social links shared across the site"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "contactTitle": { "type": "text", "required": true },
+    "contactDescription": { "type": "text", "required": true },
+    "phoneNumber": { "type": "string", "required": true },
+    "emailAddress": { "type": "email", "required": true },
+    "socialLinks": { "type": "component", "repeatable": true, "component": "site.social-link" }
+  }
+}

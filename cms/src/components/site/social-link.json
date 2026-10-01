@@ -1,0 +1,12 @@
+{
+  "collectionName": "components_site_social_links",
+  "info": {
+    "displayName": "Social Link",
+    "description": "One label in the final contacts section"
+  },
+  "attributes": {
+    "label": { "type": "string", "required": true },
+    "url": { "type": "string" },
+    "column": { "type": "enumeration", "enum": ["left", "right"], "required": true }
+  }
+}

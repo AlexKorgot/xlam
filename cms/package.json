@@ -15,6 +15,7 @@
     "check:projects": "node scripts/check-published-projects.mjs",
     "seed:services": "node scripts/import-services.mjs",
     "seed:team": "node scripts/import-team-members.mjs",
+    "seed:site-settings": "node scripts/import-site-settings.mjs",
     "upgrade": "npx @strapi/upgrade latest",
     "upgrade:dry": "npx @strapi/upgrade latest --dry"
   },

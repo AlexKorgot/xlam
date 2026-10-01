@@ -1,0 +1,14 @@
+{
+  "contactTitle": "Поговорим\nо вашей идее?",
+  "contactDescription": "Напишите нам на почту или в любой мессенджер.\nОтветим в течение дня и предложим формат\nреализации под ваш запрос.",
+  "phoneNumber": "+7 (961) 089-39-98",
+  "emailAddress": "xlammedia@mail.ru",
+  "socialLinks": [
+    { "label": "YOUTUBE", "column": "left" },
+    { "label": "INSTA", "column": "left" },
+    { "label": "TG", "column": "left" },
+    { "label": "RUTUBE", "url": "https://rutube.ru/channel/80320249", "column": "right" },
+    { "label": "ВКОНТАКТЕ", "url": "https://vk.ru/xlam_media", "column": "right" },
+    { "label": "MAX", "url": "https://max.ru/join/I5TMiVG9fJau4wFy0PUUkWiXfL2NnHvfYRsBPucE7FQ", "column": "right" }
+  ]
+}
