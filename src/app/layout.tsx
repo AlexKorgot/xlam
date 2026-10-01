@@ -3,6 +3,7 @@ import "./globals.css";
 import localFont from 'next/font/local'
 import { HeaderProvider } from '@/src/components/ui/Header/HeaderProvider';
 import { ContactModalProvider } from '@/src/components/ui/contact-modal';
+import { getSiteSettings } from '@/src/lib/strapiSiteSettings';
 
 const sans = localFont({
   src: [
@@ -43,18 +44,19 @@ export const metadata: Metadata = {
   description: "Production studio with motion-first digital experiences.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const siteSettings = await getSiteSettings();
   return (
     <html
       lang="ru"
       className={`h-full antialiased ${sans.variable}`}
     >
       <body className="flex min-h-[100svh] flex-col overflow-x-hidden">
-        <ContactModalProvider>
+        <ContactModalProvider settings={siteSettings}>
           <HeaderProvider>{children}</HeaderProvider>
         </ContactModalProvider>
       </body>

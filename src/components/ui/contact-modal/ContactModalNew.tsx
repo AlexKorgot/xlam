@@ -5,19 +5,18 @@ import { useId, type MouseEvent } from 'react';
 import { GlitchBrandXIcon } from '@/src/components/ui/GlitchBrandXIcon';
 import { BaseModal } from '@/src/components/ui/modal';
 import modalBottomImage from '@/src/components/textSection/assets/img/modal_bottom.png';
+import type { SiteSettings } from '@/src/lib/siteSettings.types';
 
 type ContactModalNewProps = {
   isOpen: boolean;
   onClose: () => void;
+  settings: SiteSettings;
 };
 
-const phoneNumber = '+7 (961) 089-39-98';
-const phoneHref = 'tel:+79610893998';
-const emailAddress = 'xlammedia@mail.ru';
-
-export function ContactModalNew({ isOpen, onClose }: ContactModalNewProps) {
+export function ContactModalNew({ isOpen, onClose, settings }: ContactModalNewProps) {
   const titleId = useId();
   const descriptionId = useId();
+  const phoneHref = `tel:${settings.phoneNumber.replace(/[^\d+]/g, '')}`;
 
   const handleBackdropMouseDown = (event: MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget) {
@@ -65,36 +64,34 @@ export function ContactModalNew({ isOpen, onClose }: ContactModalNewProps) {
               tabIndex={-1}
               className="max-w-[320px] text-[clamp(24px,6.6vw,30px)] font-black uppercase leading-[1.08] tracking-0 text-black outline-none"
             >
-              Поговорим
-              <br />
-              о вашей идее?
+              {settings.contactTitle.split('\n').map((line, index) => (
+                <span key={index}>{index > 0 && <br />}{line}</span>
+              ))}
             </h2>
 
             <p
               id={descriptionId}
               className="mt-[clamp(14px,4vw,19px)] max-w-[340px] text-[clamp(11px,3.1vw,14px)] font-medium leading-[0.94] text-black"
             >
-              Напишите нам на почту или в любой мессенджер.
-              <br />
-              Ответим в течение дня и предложим формат
-              <br />
-              реализации под ваш запрос.
+              {settings.contactDescription.split('\n').map((line, index) => (
+                <span key={index}>{index > 0 && <br />}{line}</span>
+              ))}
             </p>
 
             <address className="mt-[clamp(20px,5vw,26px)] flex flex-col items-start gap-[clamp(10px,2.8vw,14px)] not-italic">
               <a
                 className="whitespace-nowrap text-[clamp(24px,7vw,32px)] font-medium leading-none text-black no-underline transition-colors hover:text-[#168bd2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
                 href={phoneHref}
-                aria-label={`Позвонить по номеру ${phoneNumber}`}
+                aria-label={`Позвонить по номеру ${settings.phoneNumber}`}
               >
-                {phoneNumber}
+                {settings.phoneNumber}
               </a>
 
               <a
                 className="text-[clamp(23px,6.8vw,31px)] font-medium leading-none text-black underline decoration-[1px] underline-offset-[3px] transition-colors hover:text-[#168bd2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
-                href={`mailto:${emailAddress}`}
+                href={`mailto:${settings.emailAddress}`}
               >
-                {emailAddress}
+                {settings.emailAddress}
               </a>
             </address>
           </div>

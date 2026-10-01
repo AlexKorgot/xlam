@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { ContactModalContextValue } from './contactModal.types';
+import type { SiteSettings } from '@/src/lib/siteSettings.types';
 
 const loadContactModal = () =>
   import('./ContactModalNew').then(({ ContactModalNew: Component }) => ({
@@ -23,9 +24,10 @@ const ContactModalContext = createContext<ContactModalContextValue | null>(null)
 
 type ContactModalProviderProps = {
   children: ReactNode;
+  settings: SiteSettings;
 };
 
-export function ContactModalProvider({ children }: ContactModalProviderProps) {
+export function ContactModalProvider({ children, settings }: ContactModalProviderProps) {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [hasMountedContactModal, setHasMountedContactModal] = useState(false);
 
@@ -44,12 +46,13 @@ export function ContactModalProvider({ children }: ContactModalProviderProps) {
 
   const value = useMemo<ContactModalContextValue>(
     () => ({
+      settings,
       isContactModalOpen,
       preloadContactModal,
       openContactModal,
       closeContactModal,
     }),
-    [closeContactModal, isContactModalOpen, openContactModal, preloadContactModal],
+    [closeContactModal, isContactModalOpen, openContactModal, preloadContactModal, settings],
   );
 
   return (
@@ -60,6 +63,7 @@ export function ContactModalProvider({ children }: ContactModalProviderProps) {
           <ContactModalNew
             isOpen={isContactModalOpen}
             onClose={closeContactModal}
+            settings={settings}
           />
         </Suspense>
       ) : null}

@@ -5,28 +5,52 @@ import FullPageSection from '@/src/components/ui/FullPageSection';
 import { useContactModal } from '@/src/components/ui/contact-modal';
 import { Container } from '@/src/components/ui/grid/Container';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
+import type { SocialLink } from '@/src/lib/siteSettings.types';
 import { useNearViewport } from '@/src/lib/useNearViewport';
 
-const leftSocialItems = [
-  { label: 'YOUTUBE' },
-  { label: 'INSTA' },
-  { label: 'TG' },
-];
-
-const rightSocialItems = [
-  { label: 'RUTUBE', href: 'https://rutube.ru/channel/80320249' },
-  { label: 'ВКОНТАКТЕ', href: 'https://vk.ru/xlam_media' },
-  {
-    label: 'MAX',
-    href: 'https://max.ru/join/I5TMiVG9fJau4wFy0PUUkWiXfL2NnHvfYRsBPucE7FQ',
-  },
-];
 const mobileVideoSrc = publicAssetPath('/footer/mobile.mp4');
 const desktopVideoSrc = publicAssetPath('/footer/desktop.mp4');
 
+function SocialLinkRow({ link, side }: { link: SocialLink; side: 'left' | 'right' }) {
+  const rowClassName = side === 'left'
+    ? 'group relative flex h-[41px] w-full items-center overflow-hidden px-3 text-left text-[16px] font-medium uppercase leading-none text-white transition-colors hover:text-black sm:h-[52px] sm:text-[20px] max-[999px]:[@media_(orientation:landscape)]:h-[30px] max-[999px]:[@media_(orientation:landscape)]:px-2 max-[999px]:[@media_(orientation:landscape)]:text-[13px] min-[1000px]:h-[69px] min-[1000px]:px-3 min-[1000px]:text-[28px]'
+    : 'group relative flex h-[41px] w-full items-center justify-end overflow-hidden px-3 text-right text-[15px] font-medium uppercase leading-none text-white transition-colors hover:text-black sm:h-[52px] sm:text-[18px] max-[999px]:[@media_(orientation:landscape)]:h-[30px] max-[999px]:[@media_(orientation:landscape)]:px-2 max-[999px]:[@media_(orientation:landscape)]:text-[12px] min-[1000px]:h-[69px] min-[1000px]:text-[28px]';
+  const content = (
+    <>
+      <span
+        aria-hidden="true"
+        className={side === 'left'
+          ? 'pointer-events-none absolute inset-y-0 left-0 right-0 bg-[linear-gradient(90deg,#66ff66_0%,#66ff66_34%,rgba(102,255,102,0.62)_58%,rgba(102,255,102,0.16)_82%,rgba(102,255,102,0)_100%)] opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100'
+          : 'pointer-events-none absolute inset-y-0 left-0 right-0 bg-[linear-gradient(270deg,#66ff66_0%,#66ff66_34%,rgba(102,255,102,0.62)_58%,rgba(102,255,102,0.16)_82%,rgba(102,255,102,0)_100%)] opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100'}
+      />
+      <span className={side === 'left'
+        ? 'pointer-events-none relative z-10 origin-left transition-transform duration-300 ease-out group-hover:scale-[1.2]'
+        : 'pointer-events-none relative z-10 origin-right transition-transform duration-300 ease-out group-hover:scale-[1.2]'}>
+        {link.label}
+      </span>
+    </>
+  );
+
+  return (
+    <li className="border-t border-white/55 last:border-b">
+      {link.url ? (
+        <a href={link.url} target="_blank" rel="noopener noreferrer" className={rowClassName}>
+          {content}
+        </a>
+      ) : (
+        <span aria-disabled="true" className={rowClassName}>
+          {content}
+        </span>
+      )}
+    </li>
+  );
+}
+
 export function FinalContactSection() {
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
-  const { openContactModal, preloadContactModal } = useContactModal();
+  const { openContactModal, preloadContactModal, settings } = useContactModal();
+  const leftSocialItems = settings.socialLinks.filter((item) => item.column === 'left');
+  const rightSocialItems = settings.socialLinks.filter((item) => item.column === 'right');
   const sectionContentRef = useRef<HTMLDivElement | null>(null);
   const shouldLoadVideo = useNearViewport(sectionContentRef);
 
@@ -60,49 +84,17 @@ export function FinalContactSection() {
           <div className="relative z-20 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-0">
             <nav aria-label="Социальные сети">
               <ul className="max-w-none">
-                {leftSocialItems.map((item) => {
-                  return (
-                  <li key={item.label} className="border-t border-white/55 last:border-b">
-                    <span
-                      aria-disabled="true"
-                      className="group relative flex h-[41px] w-full items-center overflow-hidden px-3 text-left text-[16px] font-medium uppercase leading-none text-white transition-colors hover:text-black sm:h-[52px] sm:text-[20px] max-[999px]:[@media_(orientation:landscape)]:h-[30px] max-[999px]:[@media_(orientation:landscape)]:px-2 max-[999px]:[@media_(orientation:landscape)]:text-[13px] min-[1000px]:h-[69px] min-[1000px]:px-3 min-[1000px]:text-[28px]"
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="pointer-events-none absolute inset-y-0 left-0 right-0 bg-[linear-gradient(90deg,#66ff66_0%,#66ff66_34%,rgba(102,255,102,0.62)_58%,rgba(102,255,102,0.16)_82%,rgba(102,255,102,0)_100%)] opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100"
-                      />
-                      <span className="pointer-events-none relative z-10 origin-left transition-transform duration-300 ease-out group-hover:scale-[1.2]">
-                        {item.label}
-                      </span>
-                    </span>
-                  </li>
-                  );
-                })}
+                {leftSocialItems.map((item) => (
+                  <SocialLinkRow key={item.label} link={item} side="left" />
+                ))}
               </ul>
             </nav>
 
             <div className="ml-0 w-full max-w-none">
               <ul aria-label="Социальные сети">
-                {rightSocialItems.map((item) => {
-                  return (
-                  <li key={item.label} className="cursor-pointer border-t border-white/55 last:border-b">
-                    <a
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group relative flex h-[41px] w-full cursor-pointer items-center justify-end overflow-hidden px-3 text-right text-[15px] font-medium uppercase leading-none text-white transition-colors hover:text-black sm:h-[52px] sm:text-[18px] max-[999px]:[@media_(orientation:landscape)]:h-[30px] max-[999px]:[@media_(orientation:landscape)]:px-2 max-[999px]:[@media_(orientation:landscape)]:text-[12px] min-[1000px]:h-[69px] min-[1000px]:text-[28px]"
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="pointer-events-none absolute inset-y-0 left-0 right-0 bg-[linear-gradient(270deg,#66ff66_0%,#66ff66_34%,rgba(102,255,102,0.62)_58%,rgba(102,255,102,0.16)_82%,rgba(102,255,102,0)_100%)] opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100"
-                      />
-                      <span className="pointer-events-none relative z-10 origin-right transition-transform duration-300 ease-out group-hover:scale-[1.2]">
-                        {item.label}
-                      </span>
-                    </a>
-                  </li>
-                  );
-                })}
+                {rightSocialItems.map((item) => (
+                  <SocialLinkRow key={item.label} link={item} side="right" />
+                ))}
               </ul>
             </div>
           </div>
