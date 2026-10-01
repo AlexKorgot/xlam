@@ -7,8 +7,8 @@ The build job remains skipped until the repository variable `STRAPI_BUILD_ENABLE
 Before enabling the build, create the `strapi-preview-build` GitHub Environment and restrict it to the `strapi-integration` branch. Add these environment settings:
 
 - Variable `STRAPI_URL`: the test CMS HTTPS origin, for example `https://cms.xlam.media` once configured.
-- Secret `STRAPI_API_TOKEN`: a Content API token with read-only access to published Projects.
+- Secret `STRAPI_API_TOKEN`: a Content API token with read-only access to published Projects, Services and Services Section.
 
-Then set repository variable `STRAPI_BUILD_ENABLED=true` and push a new commit to `strapi-integration`. The job checks the settings, installs dependencies from `package-lock.json`, builds the static site, checks the export, and uploads `out`. Missing settings, CMS errors, invalid Projects, or a missing export fail the job. The previous site release is unaffected.
+Then set repository variable `STRAPI_BUILD_ENABLED=true` and push a new commit to `strapi-integration`. The job checks the settings, installs dependencies from `package-lock.json`, builds the static site, checks the export, and uploads `out`. Missing settings, CMS errors, invalid Projects or Services, or a missing export fail the job. The previous site release is unaffected.
 
 GitHub requires a `workflow_dispatch` workflow to exist on the repository's default branch before it can be run manually. This workflow uses a branch-restricted push trigger so it can stay entirely on `strapi-integration`. Do not copy it to `vps`, `main`, or `master` without separate approval. A publish webhook and preview deployment will be handled in later stages.

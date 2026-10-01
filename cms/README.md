@@ -52,5 +52,6 @@ services and their media URLs are prepared in `data/services.seed.json`.
 token. Back up `cms/.tmp/local-check.db` before using it. For a separately
 configured Strapi instance, `--apply` uses `CMS_BASE_URL` and a restricted
 `CMS_WRITE_TOKEN`. Both modes skip existing entries and create drafts only.
-The site still reads its checked-in service data until the next integration
-stage. See `../docs/strapi/services-migration.md`.
+Published Services and Services Section are read by the site during the static
+build when Strapi build variables are set. See
+`../docs/strapi/services-migration.md`.

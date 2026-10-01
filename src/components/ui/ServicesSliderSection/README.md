@@ -7,7 +7,8 @@ their extracted components and hooks belong to the same client tree.
 ## Data
 
 - `services.types.ts`: service, poster and modal content types.
-- `services.data.ts`: card order, copy, videos, posters and modal content.
+- `services.data.ts`: checked-in fallback content for local builds without Strapi settings.
+- `src/lib/strapiServices.ts`: validates published CMS data during the static build and passes it to this client section.
 - `serviceModalBackground.ts`: responsive modal backgrounds and cached preloading.
 
 ## Slider

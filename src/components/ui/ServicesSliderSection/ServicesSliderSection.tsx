@@ -6,11 +6,11 @@ import { Container } from '@/src/components/ui/grid/Container';
 import { useNearViewport } from '@/src/lib/useNearViewport';
 import { ServiceModal } from './ServiceModal';
 import { ServicesSlider } from './ServicesSlider';
-import { serviceSlides } from './services.data';
+import type { ServicesContent } from './services.types';
 import { useServiceModal } from './useServiceModal';
-import { preloadServiceModalBackground, serviceModalBackgroundList } from './serviceModalBackground';
+import { preloadServiceModalBackground } from './serviceModalBackground';
 
-interface ServicesSliderSectionProps {
+interface ServicesSliderSectionProps extends ServicesContent {
   allowSectionScrollOnEdges?: boolean;
   isActive?: boolean;
   onDiscoveryHintPlayed?: () => void;
@@ -18,6 +18,8 @@ interface ServicesSliderSectionProps {
 }
 
 export function ServicesSliderSection({
+  slides,
+  closingText,
   allowSectionScrollOnEdges = false,
   isActive = false,
   onDiscoveryHintPlayed,
@@ -28,17 +30,17 @@ export function ServicesSliderSection({
   const {
     renderedSlide, previousSlide, nextSlide, isOpen,
     openModal, closeModal, showPreviousSlide, showNextSlide, prepareModal,
-  } = useServiceModal(serviceSlides);
+  } = useServiceModal(slides);
 
   useEffect(() => {
     if (!shouldLoadVideos) {
       return;
     }
 
-    for (const background of serviceModalBackgroundList) {
-      void preloadServiceModalBackground(background);
+    for (const slide of slides) {
+      void preloadServiceModalBackground(slide.modal.backgroundImage);
     }
-  }, [shouldLoadVideos]);
+  }, [shouldLoadVideos, slides]);
 
   return (
     <>
@@ -49,7 +51,7 @@ export function ServicesSliderSection({
           className="flex h-full min-h-0 flex-col items-center justify-center gap-[clamp(0.75rem,2vh,2rem)]"
         >
           <ServicesSlider
-            slides={serviceSlides}
+            slides={slides}
             shouldLoadVideos={shouldLoadVideos}
             allowSectionScrollOnEdges={allowSectionScrollOnEdges}
             isActive={isActive}
@@ -60,7 +62,7 @@ export function ServicesSliderSection({
           />
           <div className="min-h-0 text-center" data-reveal>
             <p className="max-w-[1000px] m-auto text-[clamp(0.875rem,2.2vw,1.5625rem)] font-bold uppercase leading-[1.14] text-white mb-4">
-              берем на себя все этапы создания продукта: сценарий, съемка, монтаж, саунд-дизайн и графика
+              {closingText}
             </p>
             <p className="whitespace-nowrap text-[clamp(2.75rem,9vw,9.8125rem)] font-black uppercase leading-[0.99] tracking-[0.04em] text-white sm:tracking-[0.08em]">
               ХЛАМ MEDI<span className="text-[#63ff45]">A</span>

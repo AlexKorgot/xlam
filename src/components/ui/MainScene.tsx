@@ -25,6 +25,7 @@ import type { MobileXHeroSectionHandle } from '@/src/components/ui/MobileXHeroSe
 import { getSectionRenderState } from '@/src/lib/fullPageSectionState';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import type { CinematicSlide } from '@/src/components/cinematic_new/types';
+import type { ServicesContent } from '@/src/components/ui/ServicesSliderSection/services.types';
 
 const INTRO_SECTION_INDEX = 0;
 const SECOND_SECTION_INDEX = 1;
@@ -145,7 +146,13 @@ function useResponsiveMorphMode() {
   return mode;
 }
 
-export const MainScene = ({ projectSlides }: { projectSlides: CinematicSlide[] }) => {
+export const MainScene = ({
+  projectSlides,
+  serviceContent,
+}: {
+  projectSlides: CinematicSlide[];
+  serviceContent: ServicesContent;
+}) => {
   const setHeaderProgress = useHeaderProgress();
   const [activeSectionIndex, setActiveSectionIndex] = useState(INTRO_SECTION_INDEX);
   const [transitionTargetIndex, setTransitionTargetIndex] = useState<number | null>(null);
@@ -461,6 +468,8 @@ export const MainScene = ({ projectSlides }: { projectSlides: CinematicSlide[] }
           sectionId="services"
         >
           <ServicesSliderSection
+            slides={serviceContent.slides}
+            closingText={serviceContent.closingText}
             allowSectionScrollOnEdges
             isActive={activeSectionIndex === SERVICES_SECTION_INDEX}
             onDiscoveryHintPlayed={handleServicesDiscoveryHintPlayed}
