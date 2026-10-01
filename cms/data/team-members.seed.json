@@ -1,0 +1,13 @@
+{
+  "members": [
+    { "key": "aysar", "sortOrder": 10, "name": "Айсар Альтавил", "role": "CCO", "portraitUrl": "/persones/character_6.webp" },
+    { "key": "artem", "sortOrder": 20, "name": "Артем Зозуля", "role": "Head of Creative", "portraitUrl": "/persones/character_1.webp" },
+    { "key": "gleb", "sortOrder": 30, "name": "Глеб Кучинский", "role": "Director", "portraitUrl": "/persones/character_2.webp" },
+    { "key": "valeriya", "sortOrder": 40, "name": "Валерия Монастырская", "role": "Line Producer", "portraitUrl": "/persones/character_7.webp" },
+    { "key": "evgeniy", "sortOrder": 50, "name": "Евгений Малов", "role": "Art Director", "portraitUrl": "/persones/character_3.webp" },
+    { "key": "alexandr", "sortOrder": 60, "name": "Александр Глебов", "role": "Aerial Cinematographer", "portraitUrl": "/persones/character_9.webp" },
+    { "key": "sergey", "sortOrder": 70, "name": "Сергей Киселев", "role": "AI Producer", "portraitUrl": "/persones/character_5.webp" },
+    { "key": "alexey", "sortOrder": 80, "name": "Алексей Пейзан", "role": "Full-stack Developer", "portraitUrl": "/persones/character_8.webp" },
+    { "key": "roman", "sortOrder": 90, "name": "Роман Ковалев", "role": "CEO", "portraitUrl": "/persones/character_4.webp" }
+  ]
+}

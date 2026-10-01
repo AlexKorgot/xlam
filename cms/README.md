@@ -55,3 +55,11 @@ configured Strapi instance, `--apply` uses `CMS_BASE_URL` and a restricted
 Published Services and Services Section are read by the site during the static
 build when Strapi build variables are set. See
 `../docs/strapi/services-migration.md`.
+
+## Team Members
+
+`Team Member` defines the name, role, order, and portrait or optional video for
+one person in the team section. The nine current members are prepared in
+`data/team-members.seed.json` but have not been imported into Strapi. The site
+still reads `src/components/ui/TeamSection/team.data.ts`. See
+`../docs/strapi/team-migration.md` for the mapping and the next migration step.

@@ -1,0 +1,23 @@
+{
+  "kind": "collectionType",
+  "collectionName": "team_members",
+  "info": {
+    "singularName": "team-member",
+    "pluralName": "team-members",
+    "displayName": "Team Member",
+    "description": "Name, role and portrait for one member of the team section"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "key": { "type": "string", "required": true, "unique": true },
+    "sortOrder": { "type": "integer", "required": true },
+    "name": { "type": "string", "required": true },
+    "role": { "type": "string", "required": true },
+    "portraitUrl": { "type": "string" },
+    "portrait": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "videoUrl": { "type": "string" },
+    "video": { "type": "media", "multiple": false, "allowedTypes": ["videos"] }
+  }
+}
