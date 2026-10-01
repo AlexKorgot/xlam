@@ -1,0 +1,11 @@
+{
+  "collectionName": "components_service_features",
+  "info": {
+    "displayName": "Service Feature",
+    "description": "One ordered feature in a service detail view"
+  },
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "description": { "type": "text", "required": true }
+  }
+}

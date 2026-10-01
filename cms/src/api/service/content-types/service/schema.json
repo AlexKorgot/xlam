@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "site_services",
+  "info": {
+    "singularName": "service",
+    "pluralName": "services",
+    "displayName": "Service",
+    "description": "Card and detail content for one service"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "key": { "type": "string", "required": true, "unique": true },
+    "sortOrder": { "type": "integer", "required": true },
+    "cardTitle": { "type": "string", "required": true },
+    "cardDescription": { "type": "text", "required": true },
+    "cardVideoUrl": { "type": "string" },
+    "cardVideo": { "type": "media", "multiple": false, "allowedTypes": ["videos"] },
+    "cardPosterDesktopUrl": { "type": "string" },
+    "cardPosterDesktop": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "cardPosterMobileUrl": { "type": "string" },
+    "cardPosterMobile": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "detailTitle": { "type": "string", "required": true },
+    "detailSubtitle": { "type": "text", "required": true },
+    "detailDescription": { "type": "text", "required": true },
+    "ctaIntro": { "type": "string", "required": true },
+    "ctaLabel": { "type": "string", "required": true },
+    "detailBackgroundDesktopUrl": { "type": "string" },
+    "detailBackgroundDesktop": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "detailBackgroundMobileUrl": { "type": "string" },
+    "detailBackgroundMobile": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "features": { "type": "component", "repeatable": true, "component": "service.feature" }
+  }
+}

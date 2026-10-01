@@ -1,0 +1,16 @@
+{
+  "kind": "singleType",
+  "collectionName": "services_sections",
+  "info": {
+    "singularName": "services-section",
+    "pluralName": "services-sections",
+    "displayName": "Services Section",
+    "description": "Shared copy below the services carousel"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "closingText": { "type": "text", "required": true }
+  }
+}
