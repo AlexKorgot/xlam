@@ -1,5 +1,6 @@
 import type { StaticImageData } from 'next/image';
 import { mediaAssetPath, remoteImageAsset } from '@/src/lib/mediaAssetPath';
+import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import logoBig from '@/src/lib/assets/logo_big.svg';
 import sliderBackground from '@/src/lib/assets/slider_bg.png';
 import teleImage from '@/src/lib/assets/tele.png';
@@ -76,6 +77,15 @@ const video = (
   priority,
 });
 
+const publicVideo = (
+  path: `/${string}`,
+  priority: MediaPreloadPriority = 'idle',
+): MediaPreloadItem => ({
+  src: publicAssetPath(path),
+  kind: 'video',
+  priority,
+});
+
 export const mediaPreloadManifest: MediaPreloadItem[] = [
   image(logo, 'immediate'),
   image(logoBig, 'immediate'),
@@ -123,7 +133,7 @@ export const mediaPreloadManifest: MediaPreloadItem[] = [
   image(cinematicMerLogo),
   image(cinematicNikeLogo),
 
-  video('/balls.mp4'),
+  publicVideo('/balls.mp4'),
   video('/Mer.mp4'),
   video('/now.mp4'),
   video('/vote.mp4'),

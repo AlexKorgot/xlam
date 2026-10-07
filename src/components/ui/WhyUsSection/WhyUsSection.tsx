@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Container } from "@/src/components/ui/grid/Container";
-import { mediaAssetPath } from "@/src/lib/mediaAssetPath";
+import { publicAssetPath } from "@/src/lib/publicAssetPath";
 import { useNearViewport } from "@/src/lib/useNearViewport";
 import type { HomepageContent, HomepageFeatureKey } from '@/src/lib/homepage.types';
 import ballsPoster from "./why-us-balls.png";
@@ -115,12 +115,13 @@ export function WhyUsSection({ content }: { content: HomepageContent['whyUs'] })
       <video
         aria-hidden="true"
         autoPlay
+        loop
         className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover min-[1000px]:object-contain"
         muted
         playsInline
         poster={ballsPoster.src}
-        preload="none"
-        src={shouldLoadVideo ? mediaAssetPath("/balls.mp4") : undefined}
+        preload="auto"
+        src={shouldLoadVideo ? publicAssetPath("/balls.mp4") : undefined}
       />
       <div
         aria-hidden="true"
