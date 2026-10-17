@@ -4,9 +4,9 @@
   "phoneNumber": "+7 (961) 089-39-98",
   "emailAddress": "xlammedia@mail.ru",
   "socialLinks": [
-    { "label": "YOUTUBE", "column": "left" },
-    { "label": "INSTA", "column": "left" },
-    { "label": "TG", "column": "left" },
+    { "label": "YOUTUBE", "url": "https://www.youtube.com/@xlam_media", "column": "left" },
+    { "label": "INST", "url": "https://www.instagram.com/xlam_media", "column": "left" },
+    { "label": "TG", "url": "https://t.me/xlam_media", "column": "left" },
     { "label": "RUTUBE", "url": "https://rutube.ru/channel/80320249", "column": "right" },
     { "label": "ВКОНТАКТЕ", "url": "https://vk.ru/xlam_media", "column": "right" },
     { "label": "MAX", "url": "https://max.ru/join/I5TMiVG9fJau4wFy0PUUkWiXfL2NnHvfYRsBPucE7FQ", "column": "right" }
