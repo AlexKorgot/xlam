@@ -1,11 +1,13 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import FullPageSection from '@/src/components/ui/FullPageSection';
 import { useContactModal } from '@/src/components/ui/contact-modal';
 import { Container } from '@/src/components/ui/grid/Container';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
 import type { SocialLink } from '@/src/lib/siteSettings.types';
+import { legalDetails } from '@/src/lib/legalDetails';
 import { useNearViewport } from '@/src/lib/useNearViewport';
 
 const mobileVideoSrc = publicAssetPath('/footer/mobile.mp4');
@@ -129,17 +131,26 @@ export function FinalContactSection() {
 
           <footer
             className="relative z-20 flex shrink-0 flex-col items-center gap-2 text-center text-[12px] leading-[1.2] text-[#6E6E6E] [&>p]:min-w-0 min-[1000px]:grid min-[1000px]:grid-cols-4 min-[1000px]:items-start min-[1000px]:gap-8 min-[1000px]:pb-5 min-[1000px]:text-left"
-            style={{ display: 'none' }}
           >
             <p>
-              Общество с ограниченной ответственностью «ХЛАМ МЕДИА»
+              <strong>{legalDetails.operator}</strong>
               <br />
-              ОГРН 1187746893597 ИНН 9715326279
+              ОГРНИП {legalDetails.ogrnip}
               <br />
-              Юридический адрес: 123456, г. Москва.
+              ИНН {legalDetails.inn}
+              <br />
+              Юридический адрес: {legalDetails.address}
             </p>
-            <p>Политика в отношении обработки персональных данных</p>
-            <p>Пользовательское соглашение</p>
+            <p>
+              <Link href="/legal/privacy/" className="underline underline-offset-2 transition-colors hover:text-[#66ff66] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#66ff66]">
+                Политика в отношении обработки персональных данных
+              </Link>
+            </p>
+            <p>
+              <Link href="/legal/terms/" className="underline underline-offset-2 transition-colors hover:text-[#66ff66] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#66ff66]">
+                Пользовательское соглашение
+              </Link>
+            </p>
             <p className="min-[1000px]:text-right">18+</p>
           </footer>
         </Container>
