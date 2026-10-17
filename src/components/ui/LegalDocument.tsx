@@ -35,7 +35,7 @@ export function LegalDocument({ kind, title, lead, sections }: LegalDocumentProp
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#66ff66]">
             XLAM MEDIA / Правовая информация
           </p>
-          <h1 className="mt-5 max-w-[1100px] text-[clamp(2.25rem,7vw,6.5rem)] font-black uppercase leading-[0.95] tracking-tight [overflow-wrap:anywhere]">
+          <h1 className="mt-5 max-w-[1100px] text-[clamp(2rem,5vw,4.5rem)] font-black uppercase leading-[1.02] tracking-tight [overflow-wrap:anywhere]">
             {title}
           </h1>
           <p className="mt-7 max-w-[760px] text-base leading-relaxed text-[#c6c6c6] sm:text-lg">

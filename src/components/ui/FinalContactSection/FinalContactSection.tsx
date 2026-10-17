@@ -138,8 +138,6 @@ export function FinalContactSection() {
               ОГРНИП {legalDetails.ogrnip}
               <br />
               ИНН {legalDetails.inn}
-              <br />
-              Юридический адрес: {legalDetails.address}
             </p>
             <p>
               <Link href="/legal/privacy/" className="underline underline-offset-2 transition-colors hover:text-[#66ff66] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#66ff66]">
