@@ -1,0 +1,23 @@
+[Unit]
+Description=XLAM Strapi CMS
+After=network.target
+
+[Service]
+Type=simple
+User=xlam-cms
+Group=xlam-cms
+WorkingDirectory=/srv/xlam-cms/app
+Environment=NODE_ENV=production
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/local/bin/npm run start
+Restart=on-failure
+RestartSec=10
+UMask=0077
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=full
+PrivateTmp=true
+ReadWritePaths=/srv/xlam-cms
+
+[Install]
+WantedBy=multi-user.target
