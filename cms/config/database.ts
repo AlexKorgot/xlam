@@ -4,6 +4,7 @@ import { isDatabaseClientKind } from '@strapi/database';
 
 const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Database => {
   const client = env('DATABASE_CLIENT', 'postgres');
+  const sqliteFilename = env('DATABASE_FILENAME', '.tmp/data.db');
 
   if (!isDatabaseClientKind(client)) {
     throw new Error(
@@ -55,7 +56,9 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Database 
     sqlite: {
       client: 'sqlite',
       connection: {
-        filename: path.join(__dirname, '..', '..', env('DATABASE_FILENAME', '.tmp/data.db')),
+        filename: path.isAbsolute(sqliteFilename)
+          ? sqliteFilename
+          : path.join(__dirname, '..', '..', sqliteFilename),
       },
       useNullAsDefault: true,
     },
