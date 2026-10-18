@@ -1,5 +1,8 @@
 import 'server-only';
 
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { cinematicSlides } from '@/src/components/cinematic_new/data';
 import type { CinematicSlide } from '@/src/components/cinematic_new/types';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
@@ -47,9 +50,22 @@ function mediaUrl(
 ): string {
   const url = string(value, field);
   if (/^https:\/\//i.test(url)) return url;
-  if (/^http:\/\//i.test(url) && new URL(url).hostname === '127.0.0.1') return url;
+  if (/^http:\/\//i.test(url)) {
+    const absolute = new URL(url);
+    if (!['127.0.0.1', 'localhost'].includes(absolute.hostname)) {
+      throw new Error(`Strapi Projects: ${field} must use HTTPS`);
+    }
+    return mediaUrl(absolute.pathname, field, cmsOrigin);
+  }
   if (!url.startsWith('/') || url.startsWith('//')) {
     throw new Error(`Strapi Projects: ${field} must be an absolute URL or a root-relative path`);
+  }
+  if (['127.0.0.1', 'localhost'].includes(new URL(cmsOrigin).hostname) && url.startsWith('/uploads/')) {
+    const filename = url.slice('/uploads/'.length);
+    if (!/^[a-zA-Z0-9._-]+$/.test(filename) || !existsSync(join(process.cwd(), 'public', 'uploads', filename))) {
+      throw new Error(`Strapi Projects: staged media missing for ${field}: ${url}`);
+    }
+    return publicAssetPath(url as `/${string}`);
   }
   return localAsset ? publicAssetPath(url as `/${string}`) : new URL(url, cmsOrigin).toString();
 }

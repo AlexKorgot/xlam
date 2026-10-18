@@ -128,5 +128,6 @@ exports
 .local-config/
 dist
 build
+types/generated/
 .strapi-updater.json
 .strapi-cloud.json
