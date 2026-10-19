@@ -1,13 +1,10 @@
+import { spawn } from 'node:child_process';
+import { timingSafeEqual } from 'node:crypto';
 import { createServer } from 'node:http';
-import { randomUUID, timingSafeEqual } from 'node:crypto';
 
 const secret = process.env.STRAPI_WEBHOOK_SECRET;
-const githubToken = process.env.GITHUB_TRIGGER_TOKEN;
+const token = process.env.STRAPI_API_TOKEN;
 const port = Number(process.env.PORT ?? 8787);
-const githubApi = process.env.GITHUB_API_URL ?? 'https://api.github.com';
-const markerPath = '.strapi-publish-trigger';
-const branch = 'strapi-integration';
-const repository = 'AlexKorgot/xlam';
 const acceptedEvents = new Set(['entry.publish', 'entry.unpublish', 'entry.delete']);
 const acceptedModels = new Set([
   'api::project.project',
@@ -19,8 +16,8 @@ const acceptedModels = new Set([
   'api::seo-settings.seo-settings',
 ]);
 
-if (!secret || secret.length < 32 || !githubToken) {
-  throw new Error('STRAPI_WEBHOOK_SECRET (32+ chars) and GITHUB_TRIGGER_TOKEN are required.');
+if (!secret || secret.length < 32 || !token) {
+  throw new Error('STRAPI_WEBHOOK_SECRET (32+ chars) and STRAPI_API_TOKEN are required.');
 }
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
   throw new Error('Invalid PORT.');
@@ -49,42 +46,34 @@ async function readJson(request) {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 
-async function githubRequest(method, url, data) {
-  const response = await fetch(url, {
-    method,
-    headers: {
-      accept: 'application/vnd.github+json',
-      authorization: `Bearer ${githubToken}`,
-      'content-type': 'application/json',
-      'x-github-api-version': '2026-03-10',
-    },
-    body: data ? JSON.stringify(data) : undefined,
-    signal: AbortSignal.timeout(15000),
-  });
-  if (response.status === 404 && method === 'GET') return { status: 404 };
-  if (!response.ok) {
-    throw new Error(`GitHub API returned HTTP ${response.status}.`);
-  }
-  return { status: response.status, body: await response.json() };
-}
+let running = false;
+let pending = false;
+let timer;
 
-async function triggerBuild() {
-  const url = `${githubApi}/repos/${repository}/contents/${markerPath}`;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const current = await githubRequest('GET', `${url}?ref=${branch}`);
-    const data = {
-      message: 'Build published Strapi content',
-      branch,
-      content: Buffer.from(`${new Date().toISOString()} ${randomUUID()}\n`).toString('base64'),
-      ...(current.status === 404 ? {} : { sha: current.body.sha }),
-    };
-    try {
-      await githubRequest('PUT', url, data);
-      return;
-    } catch (error) {
-      if (attempt === 2 || !String(error).includes('HTTP 409')) throw error;
-    }
-  }
+function scheduleBuild() {
+  if (running || timer || !pending) return;
+  timer = setTimeout(() => {
+    timer = undefined;
+    if (!pending) return;
+    pending = false;
+    running = true;
+    const build = spawn('bash', ['scripts/build-strapi-on-vps.sh'], {
+      cwd: '/srv/xlam-deploy/source',
+      env: process.env,
+      stdio: 'inherit',
+    });
+    build.on('error', (error) => {
+      console.error('Unable to start static build:', error);
+      running = false;
+      scheduleBuild();
+    });
+    build.on('exit', (code) => {
+      if (code !== 0) console.error(`Static build failed with exit code ${code}.`);
+      else console.log('Static build and deployment completed.');
+      running = false;
+      scheduleBuild();
+    });
+  }, 3000);
 }
 
 createServer(async (request, response) => {
@@ -107,14 +96,10 @@ createServer(async (request, response) => {
     send(response, 204, 'Ignored event');
     return;
   }
-  try {
-    await triggerBuild();
-    console.log(`Queued build for ${payload.event}: ${payload.uid}`);
-    send(response, 202, 'Build queued');
-  } catch (error) {
-    console.error('Unable to queue GitHub build:', error);
-    send(response, 503, 'Unable to queue build');
-  }
+  pending = true;
+  scheduleBuild();
+  console.log(`Queued static build for ${payload.event}: ${payload.uid}`);
+  send(response, 202, 'Build queued');
 }).listen(port, '127.0.0.1', () => {
   console.log(`Strapi publish bridge listening on 127.0.0.1:${port}`);
 });

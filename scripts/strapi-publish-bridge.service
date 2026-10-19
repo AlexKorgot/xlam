@@ -1,19 +1,20 @@
 [Unit]
-Description=Xlam Strapi publish to GitHub build bridge
-After=network-online.target
+Description=Xlam Strapi publish to static site bridge
+After=network-online.target xlam-cms.service
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=xlam-hook
-Group=xlam-hook
-WorkingDirectory=/srv/xlam-hook
-EnvironmentFile=/srv/xlam-hook/bridge.env
-ExecStart=/usr/local/bin/node /srv/xlam-hook/bridge.mjs
+User=xlam-deploy
+Group=xlam-deploy
+WorkingDirectory=/srv/xlam-deploy/source
+EnvironmentFile=/srv/xlam-deploy/build.env
+ExecStart=/usr/local/bin/node /srv/xlam-deploy/source/scripts/strapi-publish-bridge.mjs
 Restart=on-failure
 RestartSec=5
 NoNewPrivileges=true
 ProtectSystem=strict
+ReadWritePaths=/srv/xlam-deploy /srv/xlam-production
 ProtectHome=true
 PrivateTmp=true
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
