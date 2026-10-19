@@ -6,6 +6,7 @@ const sourceDir = '/srv/xlam-deploy/source';
 const statePath = '/srv/xlam-deploy/published-content.sha256';
 const cmsOrigin = 'https://cms.xlam.media';
 const intervalMs = 60_000;
+const failedBuildRetryMs = 5 * 60_000;
 const token = process.env.STRAPI_API_TOKEN;
 const collections = ['projects', 'services', 'team-members'];
 const singleTypes = ['homepage', 'services-section', 'site-settings', 'seo-settings'];
@@ -101,6 +102,9 @@ async function buildSite() {
   });
 }
 
+let failedDigest;
+let retryAfter = 0;
+
 async function poll() {
   const latest = await publishedDigest();
   const previous = await savedDigest();
@@ -108,9 +112,17 @@ async function poll() {
     await saveDigest(latest);
     console.log('Recorded initial published Strapi content.');
   } else if (latest !== previous) {
+    if (latest === failedDigest && Date.now() < retryAfter) return;
     console.log('Published Strapi content changed; building the static site.');
-    await buildSite();
+    try {
+      await buildSite();
+    } catch (error) {
+      failedDigest = latest;
+      retryAfter = Date.now() + failedBuildRetryMs;
+      throw error;
+    }
     await saveDigest(latest);
+    failedDigest = undefined;
     console.log('Static build completed and published content recorded.');
   }
 }
