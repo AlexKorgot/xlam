@@ -63,3 +63,28 @@ jobs:
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
+
+  stage-on-vps:
+    needs: build
+    if: github.ref == 'refs/heads/strapi-integration'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VPS_DEPLOY_SSH_KEY: ${{ secrets.VPS_DEPLOY_SSH_KEY }}
+      STRAPI_DEPLOY_ENABLED: ${{ vars.STRAPI_DEPLOY_ENABLED }}
+
+    steps:
+      - name: Checkout deployment script
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Download verified static build
+        uses: actions/download-artifact@v8
+        with:
+          name: strapi-preview-out-${{ github.run_id }}
+          path: out/
+
+      - name: Stage release on VPS
+        shell: bash
+        run: bash scripts/deploy-strapi-production.sh
