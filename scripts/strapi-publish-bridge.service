@@ -1,0 +1,22 @@
+[Unit]
+Description=Xlam Strapi publish to GitHub build bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=xlam-hook
+Group=xlam-hook
+WorkingDirectory=/srv/xlam-hook
+EnvironmentFile=/srv/xlam-hook/bridge.env
+ExecStart=/usr/local/bin/node /srv/xlam-hook/bridge.mjs
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target
