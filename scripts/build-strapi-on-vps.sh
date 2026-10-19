@@ -8,7 +8,6 @@ die() {
 
 [[ "$(id -un)" == xlam-deploy ]] || die 'Run as xlam-deploy.'
 [[ -n "${STRAPI_API_TOKEN:-}" ]] || die 'STRAPI_API_TOKEN is missing.'
-[[ -n "${STRAPI_WEBHOOK_SECRET:-}" ]] || die 'STRAPI_WEBHOOK_SECRET is missing.'
 [[ "$(pwd -P)" == /srv/xlam-deploy/source ]] || die 'Unexpected source directory.'
 
 exec 9>/srv/xlam-deploy/build.lock

@@ -1,5 +1,5 @@
 [Unit]
-Description=Xlam Strapi publish to static site bridge
+Description=Xlam published Strapi content watcher
 After=network-online.target xlam-cms.service
 Wants=network-online.target
 
@@ -9,7 +9,7 @@ User=xlam-deploy
 Group=xlam-deploy
 WorkingDirectory=/srv/xlam-deploy/source
 EnvironmentFile=/srv/xlam-deploy/build.env
-ExecStart=/usr/local/bin/node /srv/xlam-deploy/source/scripts/strapi-publish-bridge.mjs
+ExecStart=/usr/local/bin/node /srv/xlam-deploy/source/scripts/watch-strapi-content.mjs
 Restart=on-failure
 RestartSec=5
 NoNewPrivileges=true

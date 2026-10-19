@@ -5,7 +5,6 @@ import getpass
 import os
 import pathlib
 import pwd
-import secrets
 
 
 target = pathlib.Path('/srv/xlam-deploy/build.env')
@@ -22,7 +21,6 @@ descriptor = os.open(target, flags, 0o600)
 try:
     with os.fdopen(descriptor, 'w', encoding='utf-8') as file:
         file.write(f'STRAPI_API_TOKEN={token}\n')
-        file.write(f'STRAPI_WEBHOOK_SECRET={secrets.token_hex(32)}\n')
         file.write('XLAM_ACTIVATE=false\n')
     os.chown(target, account.pw_uid, account.pw_gid)
 except Exception:
