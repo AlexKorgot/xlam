@@ -22,6 +22,7 @@
 @source not "../components/ui/ServicesSliderSection/ModalPortal.tsx";
 
 :root {
+  --app-font-default: "normalidad-text", Arial, sans-serif;
   --background: #050505;
   --foreground: #f5f1e8;
   --surface: rgba(255, 255, 255, 0.06);
@@ -44,6 +45,32 @@
 
 @theme {
   --font-normalidad: var(--app-font-default);
+}
+
+/* Preserve the original site's Text and Wide choices for each weight. */
+@utility font-normal {
+  font-family: "normalidad-text", Arial, sans-serif;
+  font-weight: 400;
+}
+
+@utility font-medium {
+  font-family: "normalidad-wide", Arial, sans-serif;
+  font-weight: 500;
+}
+
+@utility font-bold {
+  font-family: "normalidad-text", Arial, sans-serif;
+  font-weight: 700;
+}
+
+@utility font-black {
+  font-family: "normalidad-wide", Arial, sans-serif;
+  font-weight: 900;
+}
+
+.font-normalidad.font-medium,
+.font-normalidad.font-black {
+  font-family: "normalidad-wide", Arial, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
