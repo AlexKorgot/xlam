@@ -1,5 +1,6 @@
 {
   "members": [
+    { "key": "andrey-beburishvili", "sortOrder": 0, "name": "Андрей Бебуришвили", "role": "CCO (Chief Content Officer)", "portraitUrl": "/persones/placeholder.svg" },
     { "key": "aysar", "sortOrder": 10, "name": "Айсар Альтавил", "role": "CCO", "portraitUrl": "/persones/character_6.webp" },
     { "key": "artem", "sortOrder": 20, "name": "Артем Зозуля", "role": "Head of Creative", "portraitUrl": "/persones/character_1.webp" },
     { "key": "gleb", "sortOrder": 30, "name": "Глеб Кучинский", "role": "Director", "portraitUrl": "/persones/character_2.webp" },

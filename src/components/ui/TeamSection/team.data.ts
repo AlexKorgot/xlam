@@ -18,6 +18,16 @@ const publicPersonImage = (filename: string): StaticImageData => ({
 
 export const localTeamMembers: TeamMember[] = [
   {
+    id: 'andrey-beburishvili',
+    name: 'Андрей Бебуришвили',
+    role: 'CCO (Chief Content Officer)',
+    image: {
+      src: publicAssetPath('/persones/placeholder.svg'),
+      width: 460,
+      height: 800,
+    },
+  },
+  {
     id: 'aysar',
     name: 'Айсар Альтавил',
     role: 'CCO',
