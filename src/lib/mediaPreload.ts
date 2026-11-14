@@ -41,9 +41,8 @@ const cinematicShowPreviewOne = remoteImageAsset('/podcast1.png', 412, 208);
 const cinematicShowPreviewTwo = remoteImageAsset('/podcast2.png', 412, 208);
 const cinematicPodcastPreviewOne = remoteImageAsset('/show1.png', 412, 208);
 const cinematicPodcastPreviewTwo = remoteImageAsset('/show2.png', 412, 208);
-const cinematicDzenLogo = remoteImageAsset('/dzen.svg', 147, 44);
-const cinematicMerLogo = remoteImageAsset('/mer.svg', 163, 35);
-const cinematicNikeLogo = remoteImageAsset('/nike.svg', 104, 37);
+const cinematicDzenLogo = publicAssetPath('/partners/dzen.svg');
+const cinematicMerLogo = publicAssetPath('/partners/mer.svg');
 
 export type MediaPreloadKind = 'image' | 'video';
 export type MediaPreloadPriority = 'immediate' | 'idle';
@@ -131,7 +130,6 @@ export const mediaPreloadManifest: MediaPreloadItem[] = [
   image(cinematicPodcastPreviewTwo),
   image(cinematicDzenLogo),
   image(cinematicMerLogo),
-  image(cinematicNikeLogo),
 
   publicVideo('/balls.mp4'),
   video('/Mer.mp4'),

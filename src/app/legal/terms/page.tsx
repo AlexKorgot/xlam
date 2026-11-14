@@ -7,6 +7,8 @@ import { getSiteSettings } from '@/src/lib/strapiSiteSettings';
 export const metadata: Metadata = {
   title: 'Пользовательское соглашение — XLAM MEDIA',
   description: 'Условия использования сайта XLAM MEDIA.',
+  alternates: { canonical: '/legal/terms/' },
+  openGraph: { title: 'Пользовательское соглашение — XLAM MEDIA', description: 'Условия использования сайта XLAM MEDIA.', url: '/legal/terms/' },
 };
 
 export default async function TermsPage() {

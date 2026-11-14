@@ -3,6 +3,9 @@ import { getProjectSlides } from "@/src/lib/strapiProjects";
 import { getServicesContent } from "@/src/lib/strapiServices";
 import { getTeamMembers } from "@/src/lib/strapiTeam";
 import { getHomepageContent } from "@/src/lib/strapiHomepage";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 export default async function Home() {
   const [projectSlides, serviceContent, teamMembers, homepageContent] = await Promise.all([

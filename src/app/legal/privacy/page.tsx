@@ -7,6 +7,8 @@ import { getSiteSettings } from '@/src/lib/strapiSiteSettings';
 export const metadata: Metadata = {
   title: 'Политика обработки персональных данных — XLAM MEDIA',
   description: 'Как XLAM MEDIA обрабатывает данные посетителей сайта и обращений.',
+  alternates: { canonical: '/legal/privacy/' },
+  openGraph: { title: 'Политика обработки персональных данных — XLAM MEDIA', description: 'Как XLAM MEDIA обрабатывает данные посетителей сайта и обращений.', url: '/legal/privacy/' },
 };
 
 export default async function PrivacyPage() {

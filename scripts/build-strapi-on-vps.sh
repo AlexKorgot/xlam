@@ -26,20 +26,28 @@ export NODE_OPTIONS=--max-old-space-size=2048
 export GITHUB_SHA="$(git rev-parse HEAD)"
 export GITHUB_RUN_ID="$release_id"
 
+staged_images="$(mktemp -d /srv/xlam-deploy/.project-images-XXXXXXXX)"
+cleanup() {
+  if [[ -d "$incoming" && ! -L "$incoming" ]]; then
+    rm -r -- "$incoming"
+  fi
+  if [[ "$staged_images" == /srv/xlam-deploy/.project-images-* && -d "$staged_images" && ! -L "$staged_images" ]]; then
+    rm -r -- "$staged_images"
+  fi
+}
+trap cleanup EXIT
+export XLAM_STAGED_PROJECT_UPLOADS_DIR="$staged_images"
+node scripts/stage-project-images.mjs "$staged_images"
+
 printf 'Building published Strapi content into %s\n' "$release_id"
 npm run build
 node scripts/verify-static-export.mjs out
 [[ -z "$(find out -type l -print -quit)" ]] || die 'Static export contains a symlink.'
 
-cleanup() {
-  if [[ -d "$incoming" && ! -L "$incoming" ]]; then
-    rm -r -- "$incoming"
-  fi
-}
-trap cleanup EXIT
-
 mkdir -- "$incoming"
 cp -a -- out/. "$incoming/"
+mkdir -p -- "$incoming/uploads"
+cp -a -- "$staged_images/." "$incoming/uploads/"
 chmod -R a+rX -- "$incoming"
 for page in index.html main/index.html about/index.html contacts/index.html; do
   [[ -s "$incoming/$page" ]] || die "Missing static page: $page"

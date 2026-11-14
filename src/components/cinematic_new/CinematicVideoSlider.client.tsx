@@ -18,14 +18,13 @@ import { Container } from '@/src/components/ui/grid/Container';
 import { getFilmStripChromeLayout } from './filmStripLayout';
 import type { SliderScene, SliderPointerAction } from './SliderScene';
 import type { CinematicOverlayState, CinematicSlide } from './types';
-import { remoteImageAsset } from '@/src/lib/mediaAssetPath';
 import { useImagePreload } from '@/src/lib/imagePreload';
 import { useVideoPreload } from '@/src/lib/videoPreload';
 import type { SectionRenderState } from '@/src/lib/fullPageSectionState';
 import { publicAssetPath } from '@/src/lib/publicAssetPath';
 
-const dzenLogo = remoteImageAsset('/dzen.svg', 147, 44);
-const merLogo = remoteImageAsset('/mer.svg', 163, 35);
+const dzenLogo = publicAssetPath('/partners/dzen.svg');
+const merLogo = publicAssetPath('/partners/mer.svg');
 
 gsap.registerPlugin(useGSAP);
 

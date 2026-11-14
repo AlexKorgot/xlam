@@ -47,6 +47,7 @@ function mediaUrl(
   field: string,
   cmsOrigin: string,
   localAsset = false,
+  stageProjectImage = false,
 ): string {
   const url = string(value, field);
   if (/^https:\/\//i.test(url)) return url;
@@ -55,10 +56,18 @@ function mediaUrl(
     if (!['127.0.0.1', 'localhost'].includes(absolute.hostname)) {
       throw new Error(`Strapi Projects: ${field} must use HTTPS`);
     }
-    return mediaUrl(absolute.pathname, field, cmsOrigin);
+    return mediaUrl(absolute.pathname, field, cmsOrigin, localAsset, stageProjectImage);
   }
   if (!url.startsWith('/') || url.startsWith('//')) {
     throw new Error(`Strapi Projects: ${field} must be an absolute URL or a root-relative path`);
+  }
+  const stagedUploads = process.env.XLAM_STAGED_PROJECT_UPLOADS_DIR;
+  if (stageProjectImage && stagedUploads && url.startsWith('/uploads/')) {
+    const filename = url.slice('/uploads/'.length);
+    if (!/^[a-zA-Z0-9._-]+$/.test(filename) || !existsSync(join(stagedUploads, filename))) {
+      throw new Error(`Strapi Projects: staged media missing for ${field}: ${url}`);
+    }
+    return publicAssetPath(url as `/${string}`);
   }
   if (['127.0.0.1', 'localhost'].includes(new URL(cmsOrigin).hostname) && url.startsWith('/uploads/')) {
     const filename = url.slice('/uploads/'.length);
@@ -103,7 +112,7 @@ function toSlide(value: unknown, cmsOrigin: string): { slide: CinematicSlide; so
     const preview = object(item, `${key}.previews[${index}]`);
     const image = preview.image == null ? undefined : object(preview.image, `${key}.previews[${index}].image`);
     const src = image?.url != null
-      ? mediaUrl(image.url, `${key}.previews[${index}].image.url`, cmsOrigin)
+      ? mediaUrl(image.url, `${key}.previews[${index}].image.url`, cmsOrigin, false, true)
       : mediaUrl(preview.url, `${key}.previews[${index}].url`, cmsOrigin, true);
     return { src, alt: string(preview.alt, `${key}.previews[${index}].alt`) };
   });

@@ -13,7 +13,16 @@ export const viewport = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const { title, description } = await getSeoSettings();
-  return { title, description };
+  const siteTitle = title === 'XLAM Media' ? 'XLAM MEDIA — продакшн полного цикла' : title;
+  const siteDescription = description === 'Production studio with motion-first digital experiences.'
+    ? 'XLAM MEDIA — продакшн полного цикла: съёмка, креатив и производство медиапроектов.'
+    : description;
+  return {
+    metadataBase: new URL('https://xlam.media'),
+    title: siteTitle,
+    description: siteDescription,
+    openGraph: { type: 'website', siteName: 'XLAM MEDIA', title: siteTitle, description: siteDescription, url: '/' },
+  };
 }
 
 export default async function RootLayout({
