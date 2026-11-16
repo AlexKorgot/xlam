@@ -164,6 +164,7 @@ export const MainScene = ({
   const [transitionTargetIndex, setTransitionTargetIndex] = useState<number | null>(null);
   const [hasMountedMorphSection, setHasMountedMorphSection] = useState(false);
   const [hasPlayedServicesDiscoveryHint, setHasPlayedServicesDiscoveryHint] = useState(false);
+  const [hasVisitedWhySection, setHasVisitedWhySection] = useState(false);
   const [hasVisitedProjectsSection, setHasVisitedProjectsSection] = useState(false);
   const responsiveMorphMode = useResponsiveMorphMode();
   const responsiveMorphModeRef = useRef(responsiveMorphMode);
@@ -258,6 +259,10 @@ export const MainScene = ({
 
     if (index === SECOND_SECTION_INDEX || index === MORPH_SECTION_INDEX) {
       setHasMountedMorphSection(true);
+    }
+
+    if (index === WHY_SECTION_INDEX) {
+      setHasVisitedWhySection(true);
     }
 
     if (index === PROJECTS_SECTION_INDEX) {
@@ -486,6 +491,7 @@ export const MainScene = ({
 
         <DeferredSection
           activeSectionIndex={activeSectionIndex}
+          keepMounted={hasVisitedWhySection}
           sectionIndex={WHY_SECTION_INDEX}
           sectionId="why"
         >

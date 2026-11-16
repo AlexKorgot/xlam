@@ -115,7 +115,6 @@ export function WhyUsSection({ content }: { content: HomepageContent['whyUs'] })
       <video
         aria-hidden="true"
         autoPlay
-        loop
         className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover min-[1000px]:object-contain"
         muted
         playsInline
